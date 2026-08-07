@@ -45,6 +45,24 @@ const FILES = [
 
 const BANNER = "/* vendored from zero-design-system/projects/design-system-home/design-system — do not edit, run `npm run sync:ds` */\n";
 
+/**
+ * Transforms applied while vendoring.
+ *
+ * `indicator.css` pulls `tokens.css`, which also styles `body` and hardcodes a
+ * dark-first palette. Inside an Allure report that repaints the host chrome and
+ * fights the report's own theme, so the import is dropped here and the handful
+ * of variables the primitive needs is supplied by `kit.css` — mapped onto the
+ * report's tokens where they exist. Standalone pages load `theme/standalone.css`,
+ * which brings `tokens.css` back.
+ */
+const TRANSFORMS = {
+  "css/indicator.css": (content) =>
+    content.replace(
+      /@import url\("tokens\.css"\);\n/,
+      "/* sync-ds: tokens.css import dropped — see kit.css (host owns the chrome) */\n",
+    ),
+};
+
 function findSource() {
   for (const candidate of DEFAULT_SOURCES) {
     if (candidate && existsSync(join(candidate, "css/widget-tile.css"))) {
@@ -55,7 +73,8 @@ function findSource() {
 }
 
 function withBanner(file, content) {
-  return file.endsWith(".css") || file.endsWith(".js") ? BANNER + content : content;
+  const transformed = TRANSFORMS[file]?.(content) ?? content;
+  return file.endsWith(".css") || file.endsWith(".js") ? BANNER + transformed : transformed;
 }
 
 function main() {

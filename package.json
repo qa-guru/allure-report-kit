@@ -51,7 +51,11 @@
     "sync:ds": "node scripts/sync-ds.mjs",
     "test": "node --test test/*.test.mjs",
     "smoke": "node scripts/smoke-dogfood.mjs",
-    "verify": "npm run build && npm test && npm run smoke"
+    "verify": "npm run build && npm test && npm run smoke",
+    "smoke:report": "node scripts/smoke-report.mjs",
+    "build:fork": "npm --prefix packages/web-awesome run build",
+    "report": "npm --prefix e2e run report",
+    "verify:report": "npm run build && npm run build:fork && npm run report && npm run smoke:report"
   },
   "peerDependencies": {
     "@allurereport/charts-api": ">=3.13",

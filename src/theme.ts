@@ -40,22 +40,18 @@ const LAYER_TOKENS_DARK: KitTokens = {
   "--ark-status-passed": "#49cb68",
 };
 
-const SURFACE_TOKENS_LIGHT: KitTokens = {
-  "--ark-surface": "#ffffff",
-  "--ark-surface-soft": "#f2f2f2",
-  "--ark-text": "#1c1917",
-  "--ark-text-muted": "rgba(28, 25, 23, 0.55)",
-  "--ark-border": "rgba(28, 25, 23, 0.12)",
-  /* Ink drawn on top of a saturated band (pyramid tiers, filled bars). */
+/**
+ * Ink drawn on top of a saturated band (pyramid tiers, filled bars).
+ *
+ * Surfaces, text and borders are deliberately absent from the theme: inside a
+ * report they belong to the host, and `kit.css` maps them onto the report's own
+ * tokens. A theme that repaints the chrome would fight Allure's light/dark.
+ */
+const BAND_INK_LIGHT: KitTokens = {
   "--ark-band-ink": "rgba(255, 255, 255, 0.92)",
 };
 
-const SURFACE_TOKENS_DARK: KitTokens = {
-  "--ark-surface": "#2c2a26",
-  "--ark-surface-soft": "#383530",
-  "--ark-text": "#f1f5f9",
-  "--ark-text-muted": "rgba(255, 255, 255, 0.45)",
-  "--ark-border": "rgba(255, 255, 255, 0.1)",
+const BAND_INK_DARK: KitTokens = {
   "--ark-band-ink": "rgba(28, 25, 23, 0.82)",
 };
 
@@ -72,8 +68,8 @@ export function qaGuru(overrides: Partial<KitThemeConfig> = {}): KitThemeConfig 
     id: "qa-guru",
     mode: "auto",
     tokens: { ...STATUS_TOKENS },
-    tokensLight: { ...LAYER_TOKENS_LIGHT, ...SURFACE_TOKENS_LIGHT },
-    tokensDark: { ...LAYER_TOKENS_DARK, ...SURFACE_TOKENS_DARK },
+    tokensLight: { ...LAYER_TOKENS_LIGHT, ...BAND_INK_LIGHT },
+    tokensDark: { ...LAYER_TOKENS_DARK, ...BAND_INK_DARK },
     tile: { bar: true, indicators: true, indicatorMix: 100 },
     header: { ...DEFAULT_HEADER },
   };
@@ -128,9 +124,11 @@ export function themeToCss(theme: KitThemeConfig): string {
     blocks.push(`${selector} {\n${body}\n}`);
   };
 
+  // No `html` prefix: Allure marks the theme with a bare `[data-theme]`
+  // attribute selector and may carry it on a wrapper rather than the root.
   emit(":root", theme.tokens);
-  emit(':root, html[data-theme="light"]', theme.tokensLight);
-  emit('html[data-theme="dark"]', theme.tokensDark);
+  emit(':root, [data-theme="light"]', theme.tokensLight);
+  emit('[data-theme="dark"]', theme.tokensDark);
 
   if (theme.tile?.indicatorMix !== undefined) {
     blocks.push(`.widget-tile {\n  --indicator-mix: ${theme.tile.indicatorMix}%;\n}`);

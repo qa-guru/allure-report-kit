@@ -4,8 +4,8 @@ DX kit for **Allure Report 3**: a theme, pluggable chart renderers, custom
 panels with bar indicators, and a real design-system header on top of the
 report.
 
-> v0.1 — the vertical slice runs and is covered by tests and a headless smoke.
-> The forked plugin packages are not published yet; see `soft-fork/README.md`.
+> v0.1 — works inside a real generated Allure 3 report. Nothing is published to
+> npm yet; the packages resolve through `file:` links. See `soft-fork/README.md`.
 
 ## Why
 
@@ -162,22 +162,38 @@ npm run sync:ds           # update from the monorepo design-system
 npm run sync:ds -- --check  # CI: fail when the copy is stale
 ```
 
+## Theme and the host
+
+The kit theme owns the **chart palette** — status and layer colours are a locked
+canon. The **chrome** (surfaces, text, borders) belongs to the host: `kit.css`
+declares it in a cascade layer that resolves to Allure's own tokens, so a tile
+follows the report's light/dark instead of repainting it. Standalone pages add
+the design-system layer back with `@qa-guru/allure-report-kit/theme/standalone.css`.
+
+Canvas backends read CSS custom properties once, at draw time, so
+`runtime.observeTheme()` redraws tiles when the theme flips.
+
 ## Development
 
 ```bash
 npm run build          # tsc → dist/
 npm test               # node --test
 npm run sync:ds        # refresh vendored design-system primitives
+npm run verify         # build + unit tests + dogfood smoke
 
-# dogfood stand (from the monorepo root)
-python scripts/stands/ensure.py ark-dogfood
-node projects/allure-report-kit-home/allure-report-kit/scripts/smoke-dogfood.mjs
+npm run build:fork     # webpack → packages/web-awesome/dist
+npm run verify:report  # build + fork + real report + report smoke
 ```
 
-The dogfood page at <http://localhost:3021/dogfood/> renders the locked 2×2 with
-mixed renderers, the custom panel with `fromSeries` indicators, the amCharts
-stub, the stock passthrough and the DS header — all built from the same manifest
-`withKit` produces for the report.
+Two levels of proof:
+
+| | What it proves | Stand |
+|---|---|---|
+| `dogfood/` | renderers, panels, indicators, DS header — standalone | `ensure.py ark-dogfood` → :3021 |
+| `e2e/` | the soft-fork inside a generated Allure report | `ensure.py ark-report` → :3024 |
+
+`e2e/` builds its own deterministic fixture (18 tests over six layers, three runs
+so history exists), so it depends on nobody's build output.
 
 ## Licences
 

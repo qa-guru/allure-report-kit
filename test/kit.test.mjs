@@ -160,8 +160,21 @@ test("theme serialises tokens per colour scheme", () => {
   const css = themeToCss(theme.qaGuru());
 
   assert.match(css, /--ark-status-failed: #fd5a3e;/);
-  assert.match(css, /html\[data-theme="dark"\] \{[\s\S]*--ark-layer-e2e: #ff574f;/);
+  // Bare attribute selector — Allure may carry `data-theme` off the root.
+  assert.match(css, /\[data-theme="dark"\] \{[\s\S]*--ark-layer-e2e: #ff574f;/);
+  assert.doesNotMatch(css, /html\[data-theme/);
   assert.match(css, /--indicator-mix: 100%;/);
+});
+
+test("the theme owns the chart palette, not the host chrome", () => {
+  const css = themeToCss(theme.qaGuru());
+
+  // Surfaces and text come from the report via kit.css fallbacks; a theme that
+  // emitted them would repaint Allure's own light/dark.
+  for (const token of ["--ark-surface", "--ark-text", "--ark-border"]) {
+    assert.doesNotMatch(css, new RegExp(`${token}\\s*:`));
+  }
+  assert.match(css, /--ark-band-ink:/);
 });
 
 test("theme.header is the DS primitive and stays under theme", () => {

@@ -1,0 +1,20 @@
+.footer-logo {
+  color: var(--color-text-secondary);
+  a {
+    text-decoration: none;
+  }
+}
+
+.logo {
+  margin-left: 8px;
+}
+
+.version {
+  color: var(--color-text-muted);
+}
+
+.footer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

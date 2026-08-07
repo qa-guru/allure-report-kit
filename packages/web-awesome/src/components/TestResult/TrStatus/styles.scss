@@ -1,0 +1,3 @@
+@import "~@allurereport/web-components/mixins.scss";
+
+@include status-label-shape("test-result-status", "test-result-status-icon", "test-result-status-text");

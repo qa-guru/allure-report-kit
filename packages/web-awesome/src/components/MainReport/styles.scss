@@ -1,0 +1,32 @@
+@use "../../styles/pane-active" as paneActive;
+
+.content {
+  position: relative;
+  box-shadow: var(--shadow-small);
+  background: var(--color-bg-primary);
+  border-radius: 12px;
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+.scroll-inside {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+}
+
+.main-report-header {
+  flex-shrink: 0;
+}
+
+.main-report-tabs {
+  padding: 0 24px;
+}
+
+.main-report-tabs-nav {
+  flex-shrink: 0;
+}
+
+.main-report-tabs-content {
+  border-top: 1px solid var(--color-border-default);
+}

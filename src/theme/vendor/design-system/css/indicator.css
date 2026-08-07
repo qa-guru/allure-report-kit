@@ -1,5 +1,5 @@
 /* vendored from zero-design-system/projects/design-system-home/design-system — do not edit, run `npm run sync:ds` */
-@import url("tokens.css");
+/* sync-ds: tokens.css import dropped — see kit.css (host owns the chrome) */
 
 /*
  * Indicator — a small signal dot. Neutral (muted) by default; modifiers cover

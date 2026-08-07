@@ -1,18 +1,58 @@
-/* @qa-guru/allure-report-kit — theme entry point.
+/* @qa-guru/allure-report-kit — theme entry point (report-safe).
  *
- * Loads the vendored design-system primitives and bridges the kit's public
- * `--ark-*` tokens onto the variable names those primitives already use, so a
- * theme object stays the single place where colours are defined.
+ * Two layers, on purpose:
+ *   chart palette — owned by the kit theme (`--ark-status-*`, `--ark-layer-*`),
+ *                   because the pyramid and status colours are a locked canon;
+ *   chrome        — owned by the host. Surfaces, text and borders resolve to
+ *                   Allure's own tokens first, so a tile follows the report's
+ *                   light/dark instead of repainting it.
  *
- * Known v0.1 limitation: the vendored `tokens.css` also styles `body`. Inside a
- * real Allure report that is broader than we want — scoping it is tracked in
- * PLAN-0.1.md ("theme scope").
+ * The fallback chain is: Allure token → design-system token → literal. That is
+ * what makes the same stylesheet work inside a report and on a standalone page
+ * (which adds the design-system layer via `theme/standalone.css`).
+ *
+ * No global `body` rule ships from here — see scripts/sync-ds.mjs.
  */
 
 @import url("vendor/design-system/css/widget-tile.css");
 @import url("vendor/design-system/css/indicator.css");
 
+/* Chrome defaults live in a cascade layer so an unlayered design-system
+ * `tokens.css` (loaded only by `theme/standalone.css`) overrides them: unlayered
+ * declarations always beat layered ones. Inside a report nothing overrides the
+ * layer, so the values resolve to Allure's own tokens. */
+@layer ark-chrome {
+  :root {
+    --color-surface: var(--color-bg-primary, #ffffff);
+    --color-surface-soft: var(--color-bg-secondary, #f2f2f2);
+    --color-text: var(--color-text-primary, #1c1917);
+    --color-text-muted: var(--color-text-secondary, rgba(28, 25, 23, 0.55));
+    --color-border: var(--color-bg-neutral, rgba(127, 127, 127, 0.22));
+    --color-success: #49cb68;
+    --color-warning: #ffd050;
+    --color-danger: #fd5a3e;
+    --color-info: #459bde;
+
+    --space-2: 8px;
+    --space-3: 12px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --font-size-xs: 0.6875rem;
+    --font-size-sm: 0.875rem;
+    --panel-dot-gap: 5px;
+    --panel-dot-size: 8px;
+  }
+}
+
 :root {
+  /* Public chrome tokens follow whatever won above — never the reverse, or the
+   * two names would reference each other and both resolve to invalid. */
+  --ark-surface: var(--color-surface);
+  --ark-surface-soft: var(--color-surface-soft);
+  --ark-text: var(--color-text);
+  --ark-text-muted: var(--color-text-muted);
+  --ark-border: var(--color-border);
+
   /* Chart swatches — DS names ← kit tokens */
   --color-status-passed-chart: var(--ark-status-passed, #49cb68);
   --color-status-failed: var(--ark-status-failed, #fd5a3e);
@@ -56,6 +96,18 @@
   .ark-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---- Report grid cell ----
+ * A report column is ~700px wide on a desktop; an unbounded aspect ratio would
+ * make every tile half a screen tall. Cap the body and let the chart fit. */
+
+.ark-report-tile > .widget-tile {
+  height: 100%;
+}
+
+.ark-report-tile .widget-tile__body {
+  max-height: var(--ark-report-tile-max-height, 360px);
 }
 
 /* ---- Renderer host ---- */

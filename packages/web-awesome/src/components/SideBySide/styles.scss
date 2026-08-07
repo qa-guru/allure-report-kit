@@ -1,0 +1,83 @@
+.side {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  max-width: 1920px;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 8px;
+}
+
+.wrapper {
+  width: 100%;
+  flex-direction: column;
+  margin: auto;
+}
+
+.side-left {
+  display: flex;
+  flex-direction: column;
+  margin-right: auto;
+  border-radius: 12px 0 0 12px;
+  box-shadow: var(--shadow-small);
+  overflow: hidden;
+  min-height: 0;
+  border-top: 2px solid transparent;
+
+  &[data-pane-active] {
+    border-top-color: var(--color-intent-primary-text);
+  }
+
+  > * {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+.side-right {
+  flex: 1 1 auto;
+  margin-left: auto;
+  border-radius: 0 12px 12px 0;
+  box-shadow: var(--shadow-small);
+  overflow: hidden;
+  border-top: 2px solid transparent;
+
+  &[data-pane-active] {
+    border-top-color: var(--color-intent-primary-text);
+  }
+}
+
+[dir="ltr"] {
+  .side {
+    direction: ltr;
+    flex-direction: row;
+  }
+}
+
+[dir="rtl"] {
+  .side {
+    direction: ltr;
+    flex-direction: row-reverse;
+  }
+
+  .side-left {
+    direction: rtl;
+  }
+
+  .side-right {
+    direction: rtl;
+  }
+}
+
+.tree-ctrl {
+  overflow: hidden;
+}
+
+.gutter {
+  background: var(--color-bg-secondary) no-repeat 50%;
+  height: 100%;
+}
+
+.gutter:hover {
+  cursor: ew-resize;
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@qa-guru/allure-report-kit-awesome",
+  "version": "0.1.0",
+  "description": "Allure 3 Awesome plugin wired to the allure-report-kit renderer registry",
+  "license": "Apache-2.0",
+  "author": "QA Guru",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qa-guru/allure-report-kit.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@qa-guru/allure-report-kit-web-awesome": "file:../web-awesome"
+  },
+  "peerDependencies": {
+    "@allurereport/plugin-awesome": ">=3.13"
+  },
+  "devDependencies": {
+    "@allurereport/plugin-awesome": "3.13.0",
+    "@allurereport/web-awesome": "3.13.0"
+  }
+}

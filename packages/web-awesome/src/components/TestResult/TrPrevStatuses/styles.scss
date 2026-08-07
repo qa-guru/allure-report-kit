@@ -1,0 +1,57 @@
+.test-result-prev-statuses {
+  display: flex;
+  align-items: center;
+}
+
+.test-result-prev-status {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+
+  &:not(:first-child) {
+    padding-left: 8px;
+
+    &:before {
+      content: "";
+      width: 8px;
+      position: absolute;
+      height: 2px;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      background: var(--color-border-medium);
+    }
+  }
+}
+
+.status-passed {
+  color: var(--color-status-passed-chart);
+}
+
+.status-failed {
+  color: var(--color-status-failed-chart);
+}
+
+.status-broken {
+  color: var(--color-status-broken-chart);
+}
+
+.status-skipped {
+  color: var(--color-status-skipped-chart);
+}
+
+.status-unknown {
+  color: var(--color-status-unknown-chart);
+}
+
+.test-result-prev-status-tooltip {
+  text-align: center;
+  background-color: var(--color-bg-inverse-raised);
+  color: var(--color-text-inverse);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 600px;
+  min-width: max-content;
+}

@@ -1,0 +1,30 @@
+.test-result-severity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+}
+
+.test-result-severity-text {
+  color: var(--color-text-secondary);
+}
+
+.severity-blocker {
+  color: var(--color-intent-danger-text);
+}
+
+.severity-critical {
+  color: var(--color-intent-warning-text);
+}
+
+.severity-normal {
+  color: var(--color-icon-secondary);
+}
+
+.severity-minor {
+  color: var(--color-intent-primary-text);
+}
+
+.severity-trivial {
+  color: var(--color-intent-success-text);
+}

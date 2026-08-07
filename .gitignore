@@ -8,3 +8,7 @@ allure-results/
 allure-report/
 out/
 *.tsbuildinfo
+
+# stray allure artifacts (e2e keeps its own under e2e/)
+history.jsonl
+known.json

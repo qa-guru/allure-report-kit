@@ -1,0 +1,11 @@
+/* Standalone entry point — for kit tiles outside an Allure report
+ * (dogfood page, component galleries, screenshots).
+ *
+ * Adds the design-system token layer that `kit.css` deliberately does not ship:
+ * inside a report those variables come from Allure, here nothing would provide
+ * them. `tokens.css` also styles `body` and flips light/dark on
+ * `html.theme-light`, which is exactly what a standalone page wants.
+ */
+
+@import url("vendor/design-system/css/tokens.css");
+@import url("kit.css");

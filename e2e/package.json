@@ -1,0 +1,17 @@
+{
+  "name": "allure-report-kit-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Generates a real Allure 3 report with the kit soft-fork plugin",
+  "scripts": {
+    "fixture": "node make-fixture.mjs",
+    "report": "node run.mjs"
+  },
+  "dependencies": {
+    "@qa-guru/allure-report-kit": "file:..",
+    "@qa-guru/allure-report-kit-awesome": "file:../packages/plugin-awesome",
+    "allure": "3.14.3",
+    "echarts": "^6.1.0",
+    "highcharts": "^13.0.0"
+  }
+}
