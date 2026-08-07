@@ -1,0 +1,111 @@
+/* Dogfood page chrome. Not part of the published theme — the tiles themselves
+ * are styled entirely by src/theme/kit.css. */
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* No padding-top here — `.ark-report--with-header` owns it (kit.css). */
+.ark-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-inline: var(--space-4);
+  padding-bottom: var(--space-8);
+}
+
+.ark-page__head {
+  padding-top: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.ark-page__title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.ark-page__lead {
+  margin: 0;
+  max-width: 68ch;
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.ark-page__section + .ark-page__section {
+  margin-top: var(--space-8);
+}
+
+.ark-page__subtitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.ark-grid {
+  --ark-grid-cols: 2;
+  --ark-grid-gap: 16px;
+}
+
+/* Give every tile room; the body keeps its own aspect ratio. */
+.ark-grid > .widget-tile {
+  max-width: 520px;
+}
+
+.ark-legend {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-xs);
+}
+
+.ark-legend__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ark-legend__name {
+  min-width: 22ch;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--color-text-muted);
+}
+
+.ark-legend__badge {
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.ark-legend__badge[data-renderer="echarts"] {
+  color: var(--ark-layer-manual);
+}
+
+.ark-legend__badge[data-renderer="highcharts"] {
+  color: var(--ark-layer-component);
+}
+
+.ark-legend__badge[data-renderer="svg"] {
+  color: var(--ark-layer-unit);
+}
+
+.ark-legend__note {
+  color: var(--color-text-muted);
+}
+
+.ark-error {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--ark-status-failed);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  white-space: pre-wrap;
+}

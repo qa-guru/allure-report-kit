@@ -1,0 +1,116 @@
+/* @qa-guru/allure-report-kit — theme entry point.
+ *
+ * Loads the vendored design-system primitives and bridges the kit's public
+ * `--ark-*` tokens onto the variable names those primitives already use, so a
+ * theme object stays the single place where colours are defined.
+ *
+ * Known v0.1 limitation: the vendored `tokens.css` also styles `body`. Inside a
+ * real Allure report that is broader than we want — scoping it is tracked in
+ * PLAN-0.1.md ("theme scope").
+ */
+
+@import url("vendor/design-system/css/widget-tile.css");
+@import url("vendor/design-system/css/indicator.css");
+
+:root {
+  /* Chart swatches — DS names ← kit tokens */
+  --color-status-passed-chart: var(--ark-status-passed, #49cb68);
+  --color-status-failed: var(--ark-status-failed, #fd5a3e);
+  --color-status-broken: var(--ark-status-broken, #ffd050);
+  --color-status-skipped: var(--ark-status-skipped, #aaaaaa);
+  --color-status-unknown: var(--ark-status-unknown, #b46fd8);
+  --color-status-orange: var(--ark-status-orange, #ff8200);
+
+  /* Pyramid layers */
+  --layer-unit: var(--ark-layer-unit, #94ca66);
+  --layer-component: var(--ark-layer-component, #ff8200);
+  --layer-integration: var(--ark-layer-integration, #7e22ce);
+  --layer-api: var(--ark-layer-api, #e8bd00);
+  --layer-e2e: var(--ark-layer-e2e, #dc2626);
+  --layer-manual: var(--ark-layer-manual, #459bde);
+  --layer-other: var(--ark-layer-other, #64748b);
+
+  /* Default series ramp for panels that do not name their colours */
+  --ark-series-0: var(--ark-status-passed, #49cb68);
+  --ark-series-1: var(--ark-status-orange, #ff8200);
+  --ark-series-2: var(--ark-status-broken, #ffd050);
+  --ark-series-3: var(--ark-status-unknown, #b46fd8);
+  --ark-series-4: var(--ark-status-failed, #fd5a3e);
+  --ark-series-5: var(--ark-layer-manual, #459bde);
+}
+
+/* ---- Report grid ---- */
+
+.ark-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--ark-grid-cols, 2), minmax(0, 1fr));
+  gap: var(--ark-grid-gap, 12px);
+  align-items: stretch;
+}
+
+.ark-grid > .widget-tile {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .ark-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Renderer host ---- */
+
+/* Canvas/SVG backends measure their host, so it must own the body box. */
+.widget-tile__body > .ark-chart,
+.widget-tile__body > div[_echarts_instance_],
+.widget-tile__body > .highcharts-container {
+  width: 100%;
+  height: 100%;
+}
+
+.widget-tile__body {
+  position: relative;
+}
+
+/* ---- Stub (renderer unavailable / spike) ---- */
+
+.ark-stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-3, 12px);
+  border: 1px dashed var(--color-border, rgba(127, 127, 127, 0.35));
+  border-radius: var(--radius-sm, 8px);
+  text-align: center;
+}
+
+.ark-stub__title {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--color-text, currentColor);
+}
+
+.ark-stub__note {
+  font-size: var(--font-size-xs, 0.6875rem);
+  line-height: 1.35;
+  color: var(--color-text-muted, rgba(127, 127, 127, 0.9));
+}
+
+/* ---- theme.header ---- */
+
+/* DS header is fixed — push the report body below the occupied band. Padding,
+ * not margin: a top margin on the first child collapses through the body. */
+.ark-report--with-header {
+  padding-top: var(--header-occupied-height, 40px);
+}
+
+.ark-header__product {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--color-text-muted, rgba(127, 127, 127, 0.9));
+  white-space: nowrap;
+}

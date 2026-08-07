@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru" class="theme-light" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>allure-report-kit — dogfood v0.1</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%2349cb68'/%3E%3C/svg%3E"
+    />
+
+    <link rel="stylesheet" href="/src/theme/header.css" />
+    <link rel="stylesheet" href="/src/theme/kit.css" />
+    <link rel="stylesheet" href="/dogfood/dogfood.css" />
+
+    <script type="importmap">
+      {
+        "imports": {
+          "echarts": "/node_modules/echarts/dist/echarts.esm.min.mjs",
+          "highcharts": "/node_modules/highcharts/esm/highcharts.js"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <main id="dogfood-report" class="ark-page">
+      <header class="ark-page__head">
+        <h1 class="ark-page__title">allure-report-kit — vertical slice v0.1</h1>
+        <p class="ark-page__lead">
+          Locked 2×2 из ADR 006 в микс-рендере: ECharts, Highcharts, SVG-канон пирамиды.
+          Ниже — кастомная панель с индикаторами <code>fromSeries</code>, amCharts-спайк
+          и stock-проброс. Всё построено из манифеста, который отдаёт <code>withKit</code>.
+        </p>
+      </header>
+
+      <pre id="dogfood-error" class="ark-error" hidden></pre>
+
+      <section id="dogfood-panels" class="ark-page__section">
+        <div id="dogfood-grid" class="ark-grid"></div>
+      </section>
+
+      <section class="ark-page__section">
+        <h2 class="ark-page__subtitle">Кто нарисовал тайл</h2>
+        <ul id="dogfood-legend" class="ark-legend"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="/dogfood/dogfood.js"></script>
+  </body>
+</html>

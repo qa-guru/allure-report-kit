@@ -1,0 +1,10 @@
+/* `theme.header` stylesheet — load only when the DS report header is enabled.
+ * Kept separate from kit.css so reports without a header pay nothing. */
+
+@import url("vendor/design-system/css/tokens.css");
+@import url("vendor/design-system/css/header.css");
+@import url("vendor/design-system/css/link.css");
+@import url("vendor/design-system/css/icon-btn.css");
+@import url("vendor/design-system/css/icon.css");
+@import url("vendor/design-system/css/input.css");
+@import url("vendor/design-system/css/lang-toggle.css");

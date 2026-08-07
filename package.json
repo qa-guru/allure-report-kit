@@ -1,0 +1,80 @@
+{
+  "name": "@qa-guru/allure-report-kit",
+  "version": "0.1.0",
+  "description": "DX kit for Allure Report 3: theme, pluggable chart renderers, custom panels, DS report header",
+  "keywords": [
+    "allure",
+    "allure3",
+    "report",
+    "charts",
+    "echarts",
+    "highcharts",
+    "amcharts",
+    "testing"
+  ],
+  "license": "Apache-2.0",
+  "author": "QA Guru",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qa-guru/allure-report-kit.git"
+  },
+  "homepage": "https://github.com/qa-guru/allure-report-kit#readme",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./theme.css": "./src/theme/kit.css",
+    "./theme/*": "./src/theme/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src/theme",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "sync:ds": "node scripts/sync-ds.mjs",
+    "test": "node --test test/*.test.mjs",
+    "smoke": "node scripts/smoke-dogfood.mjs",
+    "verify": "npm run build && npm test && npm run smoke"
+  },
+  "peerDependencies": {
+    "@allurereport/charts-api": ">=3.13",
+    "echarts": ">=5",
+    "highcharts": ">=11"
+  },
+  "peerDependenciesMeta": {
+    "@amcharts/amcharts5": {
+      "optional": true
+    },
+    "@allurereport/charts-api": {
+      "optional": true
+    },
+    "echarts": {
+      "optional": true
+    },
+    "highcharts": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "echarts": "^6.1.0",
+    "highcharts": "^13.0.0",
+    "typescript": "^5.7.0"
+  }
+}
