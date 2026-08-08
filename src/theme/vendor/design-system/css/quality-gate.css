@@ -63,6 +63,12 @@
 /* ---- Hybrid tile (D bar + H split id + C message + L formula) ---- */
 
 .quality-gate:has(.quality-gate__bar) {
+  /* Same chrome tokens as widget-tile (bar 28 · title 0.75rem · inset from indicator). */
+  --wt-bar-height: 28px;
+  --wt-title-size: 0.75rem;
+  --indicator-size: 10px;
+  --wt-bar-inset: calc((var(--wt-bar-height) - var(--indicator-size)) / 2);
+
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -119,30 +125,23 @@
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
+  justify-content: flex-start;
+  gap: 6px;
   box-sizing: border-box;
   flex-shrink: 0;
-  /* Standalone / shell: roomier bar. Inside widget-tile — overridden to --wt-bar-height. */
-  min-height: 2.25rem;
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-soft);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-}
-
-/* Tile already clips corners — bar must not paint a second rounded card top.
- * Inherits --wt-bar-inset from .widget-tile: first indicator top=left=bottom;
- * .qg-info owns the trailing inset so the trigger gets top=bottom=right. */
-.widget-tile--quality-gate > .widget-tile__body > .quality-gate > .quality-gate__bar {
-  border-radius: 0;
-  background: color-mix(in srgb, var(--color-text) 3%, transparent);
-  height: var(--wt-bar-height, 28px);
-  min-height: var(--wt-bar-height, 28px);
+  height: var(--wt-bar-height);
+  min-height: var(--wt-bar-height);
   padding: 0;
   padding-left: var(--wt-bar-inset);
-  gap: 6px;
-  justify-content: flex-start;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-text) 3%, transparent);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  overflow: hidden;
+}
+
+/* Tile already clips corners — bar must not paint a second rounded card top. */
+.widget-tile--quality-gate > .widget-tile__body > .quality-gate > .quality-gate__bar {
+  border-radius: 0;
 }
 
 .quality-gate:has(.quality-gate__bar).quality-gate--failed .quality-gate__bar {
@@ -172,20 +171,20 @@
   flex-shrink: 0;
   box-sizing: border-box;
   line-height: 0;
-  padding: var(--wt-bar-inset);
-  padding-left: 0;
+  /* Trailing inset only — top/bottom center in the 28px bar (trigger > indicator). */
+  padding: 0 var(--wt-bar-inset) 0 0;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info .qg-info__trigger {
-  /* Info glyph must read larger than the status dot beside the title. */
-  width: 1.375rem;
-  height: 1.375rem;
-  min-width: 1.375rem;
-  min-height: 1.375rem;
+  /* Readable vs 10px status dot; still fits in --wt-bar-height 28. */
+  width: 1.125rem;
+  height: 1.125rem;
+  min-width: 1.125rem;
+  min-height: 1.125rem;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info .qg-info__trigger .icon {
-  --icon-size-md: 1.125rem;
+  --icon-size-md: 1rem;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar-title {

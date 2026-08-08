@@ -12,13 +12,13 @@
 
 .qg-info__trigger {
   /* Hit target ≥ icon; do not size to --indicator-size (status dots). */
-  width: 1.375rem;
-  height: 1.375rem;
+  width: 1.125rem;
+  height: 1.125rem;
   color: var(--color-text-muted);
 }
 
 .qg-info__trigger .icon {
-  --icon-size-md: 1.125rem;
+  --icon-size-md: 1rem;
 }
 
 .qg-info__trigger:hover,
