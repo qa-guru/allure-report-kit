@@ -15,6 +15,10 @@ failed/info. Переснять: `node scripts/capture-readme-gallery.mjs stock`
 
 ### Charts — stock vs kit
 
+Все скрины — с одного e2e Dashboard. Слоты locked 2×2 с `renderer: stock`
+выглядят как upstream, но живут внутри kit-отчёта (шапка, тема, соседние
+kit-панели).
+
 <table>
 <thead>
 <tr><th>Widget</th><th>Stock Allure</th><th>With kit</th></tr>
@@ -23,12 +27,12 @@ failed/info. Переснять: `node scripts/capture-readme-gallery.mjs stock`
 <tr>
 <td><strong>Current status</strong> (<code>currentStatus</code>)</td>
 <td><img src="docs/readme/stock-current-status.png" alt="Stock current status" /></td>
-<td>— <em>stock renderer в locked 2×2</em></td>
+<td><img src="docs/readme/kit-current-status.png" alt="Current status in kit report" /></td>
 </tr>
 <tr>
 <td><strong>Duration dynamics</strong> (<code>durationDynamics</code>)</td>
 <td><img src="docs/readme/stock-duration-dynamics.png" alt="Stock duration dynamics" /></td>
-<td>— <em>stock renderer в locked 2×2</em></td>
+<td><img src="docs/readme/kit-duration-dynamics.png" alt="Duration dynamics in kit report" /></td>
 </tr>
 <tr>
 <td><strong>Testing pyramid</strong> (<code>testingPyramid</code>)</td>
@@ -43,31 +47,39 @@ failed/info. Переснять: `node scripts/capture-readme-gallery.mjs stock`
 <tr>
 <td><strong>Status dynamics</strong></td>
 <td><img src="docs/readme/stock-status-dynamics.png" alt="Stock status dynamics" /></td>
-<td>—</td>
+<td><img src="docs/readme/kit-status-dynamics.png" alt="Status dynamics in kit report" /></td>
 </tr>
 <tr>
 <td><strong>Severities</strong></td>
 <td><img src="docs/readme/stock-severity.png" alt="Stock severities" /></td>
-<td>—</td>
+<td><img src="docs/readme/kit-severity.png" alt="Severities in kit report" /></td>
 </tr>
+</tbody>
+</table>
+
+### Kit-only panels
+
+Новые типы тайлов — в stock Allure их нет.
+
+<table>
+<thead>
+<tr><th>Widget</th><th>With kit</th></tr>
+</thead>
+<tbody>
 <tr>
 <td><strong>Services status</strong> (custom panel)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-current-status-services.png" alt="Kit services donut" /></td>
 </tr>
 <tr>
 <td><strong>Pass rate gauge</strong> (<code>panels.fromRun</code>)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-gauge.png" alt="Kit pass-rate gauge" /></td>
 </tr>
 <tr>
 <td><strong>Tests by layer</strong> (table, <code>fromRun</code>)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-layers-table.png" alt="Kit layers table" /></td>
 </tr>
 <tr>
 <td><strong>Pass rate trend</strong> (<code>fromHistory</code>)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-pass-rate-trend.png" alt="Kit pass-rate trend" /></td>
 </tr>
 </tbody>
@@ -75,63 +87,53 @@ failed/info. Переснять: `node scripts/capture-readme-gallery.mjs stock`
 
 ### Quality gates — Allure + Sonar
 
-В stock Allure нет виджета QG на дашборде (только CI / конфиг). Kit — DS-тайлы в
+В stock Allure нет виджета QG на дашборде. Kit — DS-тайлы в
 <code>widget-tile</code>: passed/failed, popover по <code>i</code>, ссылки на
 config/rules в GitHub.
 
 <table>
 <thead>
-<tr><th></th><th>Stock Allure</th><th>With kit</th></tr>
+<tr><th></th><th>With kit</th></tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>Allure QG — passed</strong></td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-allure-passed.png" alt="Allure QG passed" /></td>
 </tr>
 <tr>
 <td><strong>Allure QG — failed</strong></td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-allure-failed.png" alt="Allure QG failed" /></td>
 </tr>
 <tr>
 <td><strong>Sonar QG — passed</strong></td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-sonar-passed.png" alt="Sonar QG passed" /></td>
 </tr>
 <tr>
 <td><strong>Sonar QG — failed</strong></td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-sonar-failed.png" alt="Sonar QG failed" /></td>
 </tr>
 <tr>
 <td><strong><code>i</code> hover</strong> (Allure, passed, live report)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-info-hover.png" alt="QG info hover" /></td>
 </tr>
 <tr>
 <td><strong>Popover + links + JSON</strong> (Allure, passed)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-info-links.png" alt="QG info links" /></td>
 </tr>
 <tr>
 <td><strong>Popover + links</strong> (Allure, failed)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-allure-failed-info.png" alt="Failed Allure QG info" /></td>
 </tr>
 <tr>
 <td><strong>Links detail</strong> (Allure, failed)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-allure-failed-links.png" alt="Failed Allure QG links" /></td>
 </tr>
 <tr>
 <td><strong>Popover + links</strong> (Sonar, failed)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-sonar-failed-info.png" alt="Failed Sonar QG info" /></td>
 </tr>
 <tr>
 <td><strong>Popover + links</strong> (Sonar, passed)</td>
-<td>—</td>
 <td><img src="docs/readme/kit-qg-sonar-passed-info.png" alt="Passed Sonar QG info" /></td>
 </tr>
 </tbody>

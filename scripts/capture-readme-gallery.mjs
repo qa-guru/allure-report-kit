@@ -104,10 +104,18 @@ if (mode === "kit" || mode === "all") {
     ["kit-current-status-services.png", "Текущий статус по сервисам"],
     ["kit-gauge.png", "Прошло тестов"],
     ["kit-layers-table.png", "Тесты по слоям"],
-    ["kit-flaky-bar.png", "Flaky по слоям"],
     ["kit-pass-rate-trend.png", "Pass rate по прогонам"],
   ]) {
     await shotReportWidget(page, file, title, { kit: true });
+  }
+  // Upstream renderers as they appear inside the kit report (locked 2×2 + extras)
+  for (const [file, title] of [
+    ["kit-current-status.png", "Текущий статус"],
+    ["kit-duration-dynamics.png", "Динамика длительности"],
+    ["kit-status-dynamics.png", "Динамика статусов"],
+    ["kit-severity.png", "Результаты по severity"],
+  ]) {
+    await shotReportWidget(page, file, title, { kit: false });
   }
 }
 
