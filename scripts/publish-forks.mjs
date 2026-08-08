@@ -78,6 +78,15 @@ function run(cwd, args) {
   }
 }
 
+/** True when this exact version is already on the registry. */
+function alreadyPublished(name, version) {
+  const result = spawnSync("npm", ["view", `${name}@${version}`, "version"], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+  return result.status === 0 && result.stdout?.trim() === version;
+}
+
 function prepare(pkgPath, { publishDeps, files }) {
   const path = join(pkgPath, "package.json");
   const original = readFileSync(path, "utf8");
@@ -110,7 +119,13 @@ async function main() {
     const prepared = prepare(pkgPath, spec);
     try {
       console.log(`\npublish-forks: ${prepared.name}@${prepared.version}`);
-      const args = ["publish", "--access", "public"];
+      if (alreadyPublished(prepared.name, prepared.version)) {
+        console.log(
+          `publish-forks: skip ${prepared.name}@${prepared.version} (already on npm)`,
+        );
+        continue;
+      }
+      const args = ["publish", "--access", "public", "--tag", "latest"];
       if (dryRun) {
         args.push("--dry-run");
       }
