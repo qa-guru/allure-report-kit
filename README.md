@@ -8,8 +8,32 @@ header on top of the report.
 
 ## Gallery
 
-Screens from the e2e Dashboard fixture (`npm run verify:report` → stand
-`ark-report` :3024).
+Screens from the e2e fixture (`npm run verify:report` → stands `ark-report`
+:3024 and `ark-dogfood` :3021).
+
+### Awesome vs Dashboard
+
+Same kit layout leads both surfaces — locked 2×2, then Allure + Sonar quality
+gates.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Awesome** — Charts tab
+
+<img src="docs/readme/overview-awesome.png" alt="Awesome Charts tab with kit panels" />
+
+</td>
+<td width="50%" valign="top">
+
+**Dashboard** — full layout
+
+<img src="docs/readme/overview-dashboard.png" alt="Dashboard overview with kit panels" />
+
+</td>
+</tr>
+</table>
 
 ### Stock Allure vs kit
 
@@ -47,16 +71,83 @@ Dark theme:
 
 <img src="docs/readme/kit-quality-gates-dark.png" alt="Quality gates in dark theme" />
 
-### Also on the same page
+### Custom, fromRun, fromHistory
 
-| | |
-|---|---|
-| **DS header** | `theme.header` — product name, theme switch mirrored with the report |
-| **Custom + fromRun** | services donut (`dots: "fromSeries"`) and pass-rate gauge from the store |
+DS header, services donut + pass-rate gauge, layer table, flaky bar, pass-rate
+trend.
 
 <img src="docs/readme/header.png" alt="Design-system header on the Allure report" />
 
 <img src="docs/readme/kit-services-gauge.png" alt="Kit services donut and pass-rate gauge" />
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Pyramid** (svg)
+
+<img src="docs/readme/kit-pyramid-closeup.png" alt="Testing pyramid close-up" />
+
+</td>
+<td width="50%" valign="top">
+
+**Gauge** (`panels.fromRun`, svg)
+
+<img src="docs/readme/kit-gauge-closeup.png" alt="Pass-rate gauge close-up" />
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**Table** (`panels.fromRun`, dom)
+
+<img src="docs/readme/kit-layers-table.png" alt="Tests by layer table" />
+
+</td>
+<td width="50%" valign="top">
+
+**Flaky by layer** (highcharts bar)
+
+<img src="docs/readme/kit-flaky-bar.png" alt="Flaky rate by layer bar chart" />
+
+</td>
+</tr>
+</table>
+
+<img src="docs/readme/kit-pass-rate-trend.png" alt="Pass rate trend from history" />
+
+### Theme flip (same tile)
+
+Chrome follows the host light/dark; chart palette stays on the kit canon.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Light**
+
+<img src="docs/readme/kit-services-light.png" alt="Services donut in light theme" />
+
+</td>
+<td width="50%" valign="top">
+
+**Dark**
+
+<img src="docs/readme/kit-services-dark.png" alt="Services donut in dark theme" />
+
+</td>
+</tr>
+</table>
+
+### Multi-renderer (dogfood)
+
+Same model, different backends — Highcharts pie next to the amCharts adapter
+stub (`ark-dogfood`).
+
+<img src="docs/readme/kit-highcharts-amcharts.png" alt="Highcharts pie vs amCharts adapter stub" />
+
+<img src="docs/readme/kit-multi-renderer.png" alt="Dogfood multi-renderer comparison section" />
 
 ## Why
 
