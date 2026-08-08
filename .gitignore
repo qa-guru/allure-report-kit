@@ -5,8 +5,11 @@ dist/
 .env
 .env.*
 allure-results/
+allure-results-e2e/
 allure-report/
 out/
+config/*.runtime.json
+/collage-telegram.png
 *.tsbuildinfo
 
 # stray allure artifacts (e2e keeps its own under e2e/)

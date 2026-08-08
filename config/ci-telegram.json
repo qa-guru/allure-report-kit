@@ -1,0 +1,69 @@
+{
+  "base": {
+    "project": "allure-report-kit",
+    "environment": "CI",
+    "comment": "Q4 quality contour · this-run Allure",
+    "language": "ru",
+    "allureFolder": "../allure-report",
+    "allureResultsFolder": "../allure-results",
+    "enableChart": true,
+    "darkMode": true,
+    "enableSuitesPublishing": false,
+    "chart": {
+      "mode": "collage",
+      "layout": "free",
+      "width": 870,
+      "height": 1080,
+      "headerHeight": 56,
+      "cardGap": 14,
+      "tilePad": 6,
+      "gridCols": 10,
+      "gridRows": 10,
+      "items": [
+        {
+          "type": "currentStatus",
+          "x": 0,
+          "y": 0,
+          "w": 4,
+          "h": 4
+        },
+        {
+          "type": "suites",
+          "x": 4,
+          "y": 0,
+          "w": 6,
+          "h": 4
+        },
+        {
+          "type": "testingPyramid",
+          "x": 0,
+          "y": 4,
+          "w": 3,
+          "h": 3
+        },
+        {
+          "type": "durations",
+          "x": 3,
+          "y": 4,
+          "w": 4,
+          "h": 3,
+          "groupBy": "layer"
+        }
+      ],
+      "pyramidFallback": "none"
+    },
+    "links": {
+      "report": "https://allure.qa.guru/project/5321",
+      "dashboard": "https://github.com/qa-guru/allure-report-kit/actions",
+      "testops": "https://allure.qa.guru/project/5321",
+      "build": "https://github.com/qa-guru/allure-report-kit/actions"
+    }
+  },
+  "telegram": {
+    "token": "",
+    "chat": "",
+    "topic": "",
+    "replyTo": "",
+    "templatePath": "/templates/telegram.ftl"
+  }
+}
