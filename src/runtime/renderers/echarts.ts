@@ -218,8 +218,12 @@ function qualityRamp(context: RenderContext): (score: number) => string {
   ];
   return (score) => {
     const clamped = Math.min(Math.max(score, 0), 1);
-    const stop = stops.reduce((best, candidate) =>
-      Math.abs(candidate.at - clamped) < Math.abs(best.at - clamped) ? candidate : best,
+    const stop = stops.reduce(
+      (best, candidate) =>
+        Math.abs(candidate.at - clamped) < Math.abs(best.at - clamped)
+          ? candidate
+          : best,
+      stops[0]!,
     );
     return stop.color;
   };

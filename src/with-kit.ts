@@ -68,7 +68,7 @@ function defaultDots(tile: KitTile): DotsSpec {
   if (tile.dots !== undefined) {
     return tile.dots;
   }
-  return isCustomPanel(tile) ? "fromSeries" : "fromSeries";
+  return "fromSeries";
 }
 
 function tileKey(tile: KitTile, index: number, listKey: string): string {
