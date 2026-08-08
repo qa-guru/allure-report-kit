@@ -131,12 +131,14 @@
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
-/* Tile already clips corners — bar must not paint a second rounded card top. */
+/* Tile already clips corners — bar must not paint a second rounded card top.
+ * Inherits --wt-bar-inset from .widget-tile: first indicator top=left=bottom;
+ * .qg-info owns the trailing inset so the trigger gets top=bottom=right. */
 .widget-tile--quality-gate > .widget-tile__body > .quality-gate > .quality-gate__bar {
   border-radius: 0;
   background: color-mix(in srgb, var(--color-text) 3%, transparent);
-  /* Right inset owned by .qg-info so top/bottom/right of the trigger match. */
-  padding-right: 0;
+  padding: 0;
+  padding-left: var(--wt-bar-inset);
   gap: 6px;
   justify-content: flex-start;
 }
@@ -160,11 +162,6 @@
   flex-shrink: 0;
 }
 
-/* Match .widget-tile --indicator-size (10px), not the legacy 8px callout. */
-.widget-tile--quality-gate .quality-gate__bar .indicator {
-  --indicator-size: 10px;
-}
-
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info {
   display: inline-flex;
   align-items: center;
@@ -173,14 +170,19 @@
   flex-shrink: 0;
   box-sizing: border-box;
   line-height: 0;
-  /* Equal inset to top / bottom / right of the bar. */
-  padding: 4px;
+  padding: var(--wt-bar-inset);
   padding-left: 0;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info .qg-info__trigger {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: var(--indicator-size);
+  height: var(--indicator-size);
+  min-width: var(--indicator-size);
+  min-height: var(--indicator-size);
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info .qg-info__trigger .icon {
+  --icon-size-md: var(--indicator-size);
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar-title {
