@@ -135,7 +135,12 @@ export class KitRuntime {
 
     const elements = options.element
       ? (adoptTile(options.element) ??
-        createTile({ title: options.title ?? model.title, layout: tile.layout, tier: tile.tier }))
+        createTile({
+          title: options.title ?? model.title,
+          layout: tile.layout,
+          tier: tile.tier,
+          bar: model.kind === "qualityGate" ? false : this.theme.tile?.bar !== false,
+        }))
       : createTile({
           title: options.title ?? model.title,
           layout: tile.layout,
@@ -148,9 +153,11 @@ export class KitRuntime {
 
     if (!options.element && options.container) {
       options.container.append(elements.root);
-    }
-    if (options.element && !elements.root.isConnected && options.container) {
-      options.container.append(elements.root);
+    } else if (options.element && elements.root !== options.element) {
+      // Adoption failed and a fresh tile was built — replace, never nest.
+      options.element.replaceWith(elements.root);
+    } else if (options.element && !elements.root.isConnected && options.container) {
+      options.container.replaceChildren(elements.root);
     }
 
     // Re-applied rather than set at creation: an adopted tile is being redrawn

@@ -85,11 +85,26 @@ export function createTile(options: CreateTileOptions = {}): TileElements {
 
 /** Reuse existing tile markup when the host is already a `.widget-tile`. */
 export function adoptTile(root: HTMLElement): TileElements | undefined {
-  const bar = root.querySelector<HTMLElement>(":scope > .widget-tile__bar");
-  const body = root.querySelector<HTMLElement>(":scope > .widget-tile__body");
-  const title = root.querySelector<HTMLElement>(".widget-tile__title");
-  if (!bar || !body || !title) {
+  if (!root.classList.contains("widget-tile")) {
     return undefined;
+  }
+  const body = root.querySelector<HTMLElement>(":scope > .widget-tile__body");
+  if (!body) {
+    return undefined;
+  }
+
+  // Quality-gate tiles drop `__bar` on mount (the DS primitive owns the chrome).
+  // A missing bar must not fail adoption — otherwise resize remounts nest a
+  // second `.widget-tile` inside the cell (panel-in-panel).
+  let bar = root.querySelector<HTMLElement>(":scope > .widget-tile__bar");
+  let title = root.querySelector<HTMLElement>(":scope > .widget-tile__bar > .widget-tile__title, :scope > .widget-tile__title");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.className = "widget-tile__bar";
+  }
+  if (!title) {
+    title = document.createElement("figcaption");
+    title.className = "widget-tile__title";
   }
   return { root, bar, title, body };
 }
