@@ -9,7 +9,7 @@
  * Nothing here imports a chart library or touches the DOM.
  */
 import { DEFAULT_RENDERER, normalizeRenderer } from "./renderers.js";
-import { matchesOverview, DEFAULT_OVERVIEW_PRESET } from "./presets.js";
+import { matchesLeadLayout, DEFAULT_OVERVIEW_PRESET } from "./presets.js";
 import { mergeTheme, qaGuru } from "./theme.js";
 import type {
   DotsSpec,
@@ -118,7 +118,7 @@ function checkOverviewPreset(tiles: KitTile[], where: string, diagnostics: KitDi
   if (tiles.length === 0) {
     return;
   }
-  if (!matchesOverview(tiles, DEFAULT_OVERVIEW_PRESET)) {
+  if (!matchesLeadLayout(tiles, DEFAULT_OVERVIEW_PRESET)) {
     diagnostics.push({
       level: "warn",
       code: "overview-preset",

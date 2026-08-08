@@ -26,6 +26,12 @@ process.env.ALLURE_REPORT_KIT_SILENT = "1";
 const { createKitPlugin } = await import("../packages/plugin-core/src/index.js");
 const { charts, panels, presets, withKit } = await import("../dist/index.js");
 
+const leadCharts = () => [
+  panels.qualityGate({ id: "allureQualityGate" }),
+  panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
+  ...presets.fromOverview(),
+];
+
 const resolveFrom = createRequire(
   join(dirname(fileURLToPath(import.meta.url)), "../packages/plugin-awesome/src/index.js"),
 );
@@ -108,7 +114,7 @@ test("update without done injects the kit bundle and re-keys charts", async () =
       awesome: {
         options: {
           charts: [
-            ...presets.lockedQuad(),
+            ...leadCharts(),
             panels.fromRun({
               id: "passRate",
               title: "Прошло тестов",
@@ -140,10 +146,10 @@ test("update without done injects the kit bundle and re-keys charts", async () =
   assert.match(html, new RegExp(`src="${forkMain}"`));
 
   const chartsJson = JSON.parse(files.get("widgets/charts.json")?.toString("utf8") ?? "{}");
-  assert.ok(chartsJson.general["ark-charts-0"]);
-  assert.equal(chartsJson.general["ark-charts-0"].type, "currentStatus");
-  assert.ok(chartsJson.general["ark-charts-1"]);
-  assert.equal(chartsJson.general["ark-charts-1"].type, "durationDynamics");
+  assert.ok(chartsJson.general["ark-charts-2"]);
+  assert.equal(chartsJson.general["ark-charts-2"].type, "currentStatus");
+  assert.ok(chartsJson.general["ark-charts-3"]);
+  assert.equal(chartsJson.general["ark-charts-3"].type, "durationDynamics");
   assert.ok(!chartsJson.general["2af2dfef-871d-44f1-8966-470cf8f48e62"]);
 
   const panelPath = "widgets/kit-panels/passRate.json";

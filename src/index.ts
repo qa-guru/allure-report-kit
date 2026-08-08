@@ -13,14 +13,21 @@ export * as presets from "./presets.js";
 
 export { withKit, SOFT_FORK_IMPORTS } from "./with-kit.js";
 export { DEFAULT_RENDERER, normalizeRenderer } from "./renderers.js";
-export { lockedQuad, isLockedQuad, PYRAMID_LAYERS } from "./presets.js";
+export { PYRAMID_LAYERS } from "./presets.js";
 export {
   overview,
   fromOverview,
   matchesOverview,
+  matchesLeadLayout,
+  leadOffset,
   DEFAULT_OVERVIEW_PRESET,
 } from "./presets.js";
-export type { OverviewPreset, OverviewTileSpec, FromOverviewOptions } from "./presets.js";
+export type {
+  OverviewPreset,
+  OverviewTileSpec,
+  OverviewQualityGateSpec,
+  FromOverviewOptions,
+} from "./presets.js";
 export { themeToCss } from "./theme.js";
 export { STATUS_FAMILIES } from "./types.js";
 

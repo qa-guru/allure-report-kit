@@ -26,6 +26,7 @@ const config = withKit({
   name: "allure-report-kit dogfood",
   historyPath: "./history.jsonl",
   softFork: true,
+  qualityGate: { rules: [{ maxFailures: 0 }] },
   theme: theme.qaGuru({
     header: theme.header({
       productName: "Reference App",
@@ -41,6 +42,19 @@ const config = withKit({
     awesome: {
       options: {
         charts: [
+          panels.qualityGate({ id: "allureQualityGate", title: "Allure Quality Gate" }),
+          panels.custom({
+            id: "sonarQualityGate",
+            title: "Sonar Quality Gate",
+            kind: "qualityGate",
+            dots: false,
+            data: {
+              status: "OK",
+              passed: true,
+              title: "Sonar Quality Gate",
+              rules: [],
+            },
+          }),
           // overview preset — mixed renderers on purpose
           ...presets.fromOverview({
             preset: OVERVIEW_PRESET,
@@ -98,6 +112,8 @@ const manifest = config.plugins.awesome.options.kit;
 const declaredCharts = config.plugins.awesome.options.charts;
 
 const MODELS = [
+  null,
+  null,
   currentStatusModel,
   durationDynamicsModel,
   testingPyramidModel,
@@ -183,9 +199,14 @@ async function main() {
   const legend = document.getElementById("dogfood-legend");
 
   for (const [index, tile] of manifest.tiles.entries()) {
-    const model = MODELS[index] ?? MODELS[0];
+    const model = MODELS[index];
     const title = declaredCharts[index]?.title ?? tile.type;
-    const mounted = await runtime.mountTile({ tile, model, title, container: grid });
+    const mounted = await runtime.mountTile({
+      tile,
+      ...(model ? { model } : {}),
+      title,
+      container: grid,
+    });
     legend.append(legendRow(tile, mounted.result));
   }
 

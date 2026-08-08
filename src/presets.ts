@@ -31,8 +31,14 @@ export interface OverviewTileSpec {
   layersKey?: string;
 }
 
+export interface OverviewQualityGateSpec {
+  id: string;
+  layout?: string;
+}
+
 export interface OverviewPreset {
   id: string;
+  qualityGates?: readonly OverviewQualityGateSpec[];
   tiles: OverviewTileSpec[];
   renderers?: Partial<Record<OverviewChart, RendererRef>>;
   titles?: Partial<Record<OverviewChart, string>>;
@@ -58,6 +64,10 @@ const DEFAULT_TITLES: Record<OverviewChart, string> = {
 /** Built-in overview preset — same content as `presets/overview-preset.mjs`. */
 export const DEFAULT_OVERVIEW_PRESET: OverviewPreset = {
   id: "overview",
+  qualityGates: [
+    { id: "allureQualityGate", layout: "2x1" },
+    { id: "sonarQualityGate", layout: "2x1" },
+  ],
   tiles: [
     { chart: "currentStatus" },
     { chart: "durationDynamics", limit: 20 },
@@ -133,7 +143,7 @@ export function fromOverview(options: FromOverviewOptions = {}): KitChartTile[] 
   );
 }
 
-/** True when the leading tiles match the overview preset spec. */
+/** True when the leading tiles match the overview preset spec (charts only). */
 export function matchesOverview(
   tiles: readonly unknown[],
   preset: OverviewPreset = DEFAULT_OVERVIEW_PRESET,
@@ -172,18 +182,32 @@ export function matchesOverview(
   return true;
 }
 
-/** @deprecated Use `fromOverview()`. */
-export type LockedQuadSlot = OverviewChart;
+/** Index where overview chart tiles start (after optional quality-gate panels). */
+export function leadOffset(preset: OverviewPreset = DEFAULT_OVERVIEW_PRESET): number {
+  return preset.qualityGates?.length ?? 0;
+}
 
-/** @deprecated Use `FromOverviewOptions`. */
-export type LockedQuadOptions = FromOverviewOptions;
+/** True when quality gates (if any) + overview charts match the preset lead section. */
+export function matchesLeadLayout(
+  tiles: readonly unknown[],
+  preset: OverviewPreset = DEFAULT_OVERVIEW_PRESET,
+): boolean {
+  const gates = preset.qualityGates ?? [];
+  const minLen = gates.length + preset.tiles.length;
+  if (tiles.length < minLen) {
+    return false;
+  }
 
-/** @deprecated Use `fromOverview()`. */
-export const lockedQuad = fromOverview;
+  for (let i = 0; i < gates.length; i++) {
+    const spec = gates[i]!;
+    const tile = tiles[i] as { type?: string; id?: string } | undefined;
+    if (tile?.type !== "custom" || tile.id !== spec.id) {
+      return false;
+    }
+  }
 
-/** @deprecated Use `matchesOverview()`. */
-export const isLockedQuad = (tiles: readonly unknown[]): boolean =>
-  matchesOverview(tiles, DEFAULT_OVERVIEW_PRESET);
+  return matchesOverview(tiles.slice(gates.length), preset);
+}
 
 /** Shorthand for the built-in overview preset. */
 export const overview = fromOverview;

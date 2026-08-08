@@ -222,8 +222,7 @@ Full example: `examples/minimal/allurerc.mjs`. E2e with Allure **and** Sonar QG:
 | `panels.fromRun` / `panels.fromHistory` | Panel whose data the plugin computes from the run / history |
 | `theme.qaGuru / tokensOnly / header` | Token sets and the report header |
 | `renderers.stock / nivo / highcharts / amcharts / svg / dom` | Renderer specs (inert data) |
-| `presets.fromOverview / overview / matchesOverview` | Overview preset (`presets/overview-preset.mjs`) |
-| `presets.lockedQuad / isLockedQuad` | Deprecated aliases for `fromOverview` / `matchesOverview` |
+| `presets.fromOverview / overview / matchesOverview / matchesLeadLayout` | Overview preset (`presets/overview-preset.mjs`) |
 | `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, QG/Sonar render, `mountReportHeader` |
 
 ## Renderers

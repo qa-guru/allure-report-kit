@@ -12,7 +12,7 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { charts, panels, presets, renderers, theme, withKit, isLockedQuad, matchesOverview, themeToCss } =
+const { charts, panels, presets, renderers, theme, withKit, matchesOverview, matchesLeadLayout, themeToCss } =
   await import("../dist/index.js");
 const { resolveDots } = await import("../dist/runtime/indicators.js");
 const { familyForColor, orderFamilies } = await import("../dist/runtime/palette.js");
@@ -39,23 +39,39 @@ test("fromOverview matches overview-preset.mjs", () => {
   ]);
   assert.ok(!tiles[2].layers.includes("visual"));
   assert.ok(matchesOverview(tiles));
-  assert.ok(isLockedQuad(tiles));
+});
+
+test("matchesLeadLayout expects quality gates before overview charts", () => {
+  const lead = [
+    panels.qualityGate({ id: "allureQualityGate", title: "Allure QG" }),
+    panels.custom({ id: "sonarQualityGate", title: "Sonar QG", kind: "qualityGate" }),
+    ...presets.fromOverview(),
+  ];
+  assert.ok(matchesLeadLayout(lead));
+  assert.ok(!matchesLeadLayout(presets.fromOverview()));
 });
 
 test("withKit resolves the page default renderer per tile", () => {
   const config = withKit({
     name: "T",
     renderer: renderers.stock(),
+    softFork: true,
     plugins: {
       awesome: {
-        options: { charts: presets.lockedQuad({ renderers: { durations: "highcharts" } }) },
+        options: {
+          charts: [
+            panels.qualityGate({ id: "allureQualityGate" }),
+            panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
+            ...presets.fromOverview({ renderers: { durations: "highcharts" } }),
+          ],
+        },
       },
     },
   });
 
   assert.deepEqual(
     awesomeManifest(config).tiles.map((tile) => tile.renderer.id),
-    ["stock", "stock", "svg", "highcharts"],
+    ["dom", "dom", "stock", "stock", "svg", "highcharts"],
   );
 });
 
@@ -80,7 +96,9 @@ test("custom panels without the soft-fork raise a warning", () => {
       awesome: {
         options: {
           charts: [
-            ...presets.lockedQuad(),
+            panels.qualityGate({ id: "allureQualityGate" }),
+            panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
+            ...presets.fromOverview(),
             panels.custom({ id: "services", title: "Сервисы", renderer: "highcharts" }),
           ],
         },
@@ -97,7 +115,11 @@ test("softFork rewrites the plugin import but keeps an explicit one", () => {
   const withRewrite = withKit({
     name: "T",
     softFork: true,
-    plugins: { awesome: { options: { charts: presets.lockedQuad() } } },
+    plugins: { awesome: { options: { charts: [
+      panels.qualityGate({ id: "allureQualityGate" }),
+      panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
+      ...presets.fromOverview(),
+    ] } } },
   });
   assert.equal(withRewrite.plugins.awesome.import, "@qa-guru/allure-report-kit-awesome");
 
@@ -105,13 +127,17 @@ test("softFork rewrites the plugin import but keeps an explicit one", () => {
     name: "T",
     softFork: true,
     plugins: {
-      awesome: { import: "./my-plugin.js", options: { charts: presets.lockedQuad() } },
+      awesome: { import: "./my-plugin.js", options: { charts: [
+        panels.qualityGate({ id: "allureQualityGate" }),
+        panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
+        ...presets.fromOverview(),
+      ] } },
     },
   });
   assert.equal(withExplicit.plugins.awesome.import, "./my-plugin.js");
 });
 
-test("breaking the locked quad is reported", () => {
+test("breaking the lead layout is reported", () => {
   const config = withKit({
     name: "T",
     plugins: {

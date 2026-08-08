@@ -126,8 +126,8 @@ export default withKit({
         reportName: "allure-report-kit e2e",
         reportLanguage: "ru",
         charts: [
-          ...overviewTiles,
           ...leadQualityGates(),
+          ...overviewTiles,
 
           servicesPanel(),
 
@@ -151,8 +151,8 @@ export default withKit({
         reportName: "allure-report-kit e2e — Dashboard",
         reportLanguage: "ru",
         layout: [
-          ...overviewTiles,
           ...leadQualityGates(),
+          ...overviewTiles,
 
           servicesPanel(),
 

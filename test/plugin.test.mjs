@@ -24,6 +24,12 @@ const { kitDisabledReason, rekeyChartSection, seriesFromHistory, seriesFromRun, 
 );
 const { withKit, charts, panels, presets, theme } = await import("../dist/index.js");
 
+const leadCharts = () => [
+  panels.qualityGate({ id: "allureQualityGate" }),
+  panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
+  ...presets.fromOverview(),
+];
+
 const manifestOf = (config, plugin = "awesome") => config.plugins[plugin].options.kit;
 
 test("the kit says why it fell back to stock Allure", () => {
@@ -38,7 +44,7 @@ test("singleFile is reported at config time, before anything is generated", () =
     name: "T",
     softFork: true,
     plugins: {
-      awesome: { options: { singleFile: true, charts: presets.lockedQuad() } },
+      awesome: { options: { singleFile: true, charts: leadCharts() } },
     },
   });
 
@@ -54,7 +60,7 @@ test("chart tiles get a stable chartId, panels do not", () => {
     plugins: {
       awesome: {
         options: {
-          charts: [...presets.lockedQuad(), panels.custom({ id: "services" })],
+          charts: [...leadCharts(), panels.custom({ id: "services" })],
         },
       },
     },
@@ -62,7 +68,7 @@ test("chart tiles get a stable chartId, panels do not", () => {
 
   assert.deepEqual(
     manifestOf(config).tiles.map((tile) => tile.chartId),
-    ["ark-charts-0", "ark-charts-1", "ark-charts-2", "ark-charts-3", undefined],
+    [undefined, undefined, "ark-charts-2", "ark-charts-3", "ark-charts-4", "ark-charts-5", undefined],
   );
   assert.deepEqual(
     [...new Set(manifestOf(config).tiles.map((tile) => tile.list))],
@@ -260,7 +266,7 @@ test("theme.header without the soft-fork is reported", () => {
   const config = withKit({
     name: "T",
     theme: theme.qaGuru({ header: theme.header({ productName: "Reference App" }) }),
-    plugins: { awesome: { options: { charts: presets.lockedQuad() } } },
+    plugins: { awesome: { options: { charts: leadCharts() } } },
   });
 
   assert.ok(
@@ -275,7 +281,7 @@ test("a run panel without the soft-fork is reported", () => {
       awesome: {
         options: {
           charts: [
-            ...presets.lockedQuad(),
+            ...leadCharts(),
             panels.fromRun({ id: "byLayer", groupBy: "layer", kind: "bar" }),
           ],
         },

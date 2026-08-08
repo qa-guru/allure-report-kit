@@ -22,6 +22,12 @@ const { pairTiles, tilesForList, readManifest, isKitOwned, withReportLayout, res
   await import("../dist/allure/report.js");
 const { withKit, charts, panels, presets } = await import("../dist/index.js");
 
+const leadCharts = () => [
+  panels.qualityGate({ id: "allureQualityGate" }),
+  panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
+  ...presets.fromOverview(),
+];
+
 const tilesOf = (config, plugin = "awesome") => config.plugins[plugin].options.kit.tiles;
 
 const awesome = (charts_) =>
@@ -104,7 +110,7 @@ test("an entry no tile claims is left to Allure", () => {
 
 test("without stable ids the positional walk still runs", () => {
   // A report generated before the re-keying, or by a plugin that is not the kit's.
-  const legacy = tilesOf(awesome(presets.lockedQuad())).map(({ chartId, ...tile }) => tile);
+  const legacy = tilesOf(awesome(presets.fromOverview())).map(({ chartId, ...tile }) => tile);
 
   const paired = pairTiles(
     [
@@ -124,7 +130,7 @@ test("keys the plugin never got to rewrite fall back to the walk", () => {
   // `singleFile: true`: upstream keeps its data in memory, so the plugin never
   // sees `charts.json` and the uuids survive. Every tile has an id here — they
   // just match nothing, which is the case a plain lookup would silently lose.
-  const tiles = tilesOf(awesome(presets.lockedQuad()));
+  const tiles = tilesOf(awesome(presets.fromOverview()));
 
   const paired = pairTiles(
     [
