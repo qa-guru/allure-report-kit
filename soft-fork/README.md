@@ -191,6 +191,6 @@ Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in t
   writes it, and upstream's nivo widgets emit negative SVG dimensions on this
   grid (same page: all-kit → 0 errors, all-stock → 8).
 - Soft-fork npm packages (`-awesome`, `-dashboard`, `-web-*`, `-plugin-core`)
-  still link via `file:` for local `setup`. Main kit is on npm:
-  [`@qa-guru/allure-report-kit@0.1.0`](https://www.npmjs.com/package/@qa-guru/allure-report-kit).
+  still link via `file:` for local `setup`. Main kit publish is **blocked on
+  registry visibility** (CLI accepts versions, GET stays 404) — see PLAN §6.
   Publishing the fork set needs semver deps + `files` for `dist/`.
