@@ -15,10 +15,10 @@ failed/info. Переснять: `node scripts/capture-readme-gallery.mjs stock`
 
 ### Charts — stock vs kit
 
-Сравниваем только слоты locked 2×2, где e2e **меняет renderer** (ADR 006:
-`testingPyramid` → `svg`, `durations` → `highcharts`). Слоты
-`currentStatus` / `durationDynamics` остаются на **stock** — визуально те же,
-их нет в таблице.
+Сравниваем слоты **overview preset** (`presets/overview-preset.mjs`), где e2e
+**меняет renderer**: `testingPyramid` → `svg`, `durations` → `highcharts`.
+Слоты `currentStatus` / `durationDynamics` остаются на **stock** — визуально те
+же, см. таблицу ниже.
 
 <table>
 <thead>
@@ -190,7 +190,7 @@ export default withKit({
     awesome: {
       options: {
         charts: [
-          ...presets.lockedQuad({ renderers: { durations: "highcharts" } }),
+          ...presets.fromOverview({ renderers: { durations: "highcharts" } }),
           panels.qualityGate({
             id: "allureQualityGate",
             title: "Allure Quality Gate",
@@ -222,7 +222,8 @@ Full example: `examples/minimal/allurerc.mjs`. E2e with Allure **and** Sonar QG:
 | `panels.fromRun` / `panels.fromHistory` | Panel whose data the plugin computes from the run / history |
 | `theme.qaGuru / tokensOnly / header` | Token sets and the report header |
 | `renderers.stock / nivo / highcharts / amcharts / svg / dom` | Renderer specs (inert data) |
-| `presets.lockedQuad / isLockedQuad` | The ADR 006 first screen |
+| `presets.fromOverview / overview / matchesOverview` | Overview preset (`presets/overview-preset.mjs`) |
+| `presets.lockedQuad / isLockedQuad` | Deprecated aliases for `fromOverview` / `matchesOverview` |
 | `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, QG/Sonar render, `mountReportHeader` |
 
 ## Renderers
@@ -325,17 +326,28 @@ compute it with, and `withKit` says so.
 
 A panel can also point at a widget you write yourself with `dataUrl`.
 
-## Locked 2×2
+## Overview preset
 
-`presets.lockedQuad()` emits the first-screen invariant of the monorepo
-(ADR 006) and nothing else:
+`presets.fromOverview()` builds tiles from `presets/overview-preset.mjs` (or a
+custom `OverviewPreset`). Ethalon keeps its copy in `allure/overview-preset.mjs`
+next to `awesome-charts.mjs` / `dashboard-layout.mjs`.
+
+```js
+import { OVERVIEW_PRESET, buildOverviewTiles } from "./allure/overview-preset.mjs";
+
+export function buildAwesomeCharts() {
+  return [...buildOverviewTiles(), /* … */];
+}
+```
+
+Default tile order:
 
 ```
 [0] currentStatus (pie)   [1] durationDynamics
 [2] testingPyramid        [3] durations (groupBy: layer)
 ```
 
-Renderers are free, the order is not. Validation belongs to the monorepo:
+Renderers are per-preset / per-call overrides. Validation reads the same preset file:
 
 ```bash
 node generators/ethalon/tests-java/scripts/validate-allurerc.mjs \

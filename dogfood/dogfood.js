@@ -9,6 +9,7 @@
 import Highcharts from "highcharts";
 
 import { charts, panels, presets, theme, withKit } from "../dist/index.js";
+import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
 import { createKitRuntime, mountReportHeader } from "../dist/runtime/index.js";
 import {
   currentStatusModel,
@@ -40,8 +41,11 @@ const config = withKit({
     awesome: {
       options: {
         charts: [
-          // locked 2×2 — ADR 006, mixed renderers on purpose
-          ...presets.lockedQuad({ renderers: { durations: "highcharts" } }),
+          // overview preset — mixed renderers on purpose
+          ...presets.fromOverview({
+            preset: OVERVIEW_PRESET,
+            renderers: { durations: "highcharts" },
+          }),
           // custom panel + bar indicators from the series actually drawn
           panels.custom({
             id: "servicesCurrentStatus",

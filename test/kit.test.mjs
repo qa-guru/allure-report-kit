@@ -12,7 +12,7 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { charts, panels, presets, renderers, theme, withKit, isLockedQuad, themeToCss } =
+const { charts, panels, presets, renderers, theme, withKit, isLockedQuad, matchesOverview, themeToCss } =
   await import("../dist/index.js");
 const { resolveDots } = await import("../dist/runtime/indicators.js");
 const { familyForColor, orderFamilies } = await import("../dist/runtime/palette.js");
@@ -21,15 +21,15 @@ function awesomeManifest(config) {
   return config.plugins.awesome.options.kit;
 }
 
-test("lockedQuad reproduces the ADR 006 order", () => {
-  const quad = presets.lockedQuad();
+test("fromOverview matches overview-preset.mjs", () => {
+  const tiles = presets.fromOverview();
 
   assert.deepEqual(
-    quad.map((tile) => tile.type),
+    tiles.map((tile) => tile.type),
     ["currentStatus", "durationDynamics", "testingPyramid", "durations"],
   );
-  assert.equal(quad[3].groupBy, "layer");
-  assert.deepEqual(quad[2].layers, [
+  assert.equal(tiles[3].groupBy, "layer");
+  assert.deepEqual(tiles[2].layers, [
     "unit",
     "component",
     "integration",
@@ -37,8 +37,9 @@ test("lockedQuad reproduces the ADR 006 order", () => {
     "e2e",
     "manual",
   ]);
-  assert.ok(!quad[2].layers.includes("visual"));
-  assert.ok(isLockedQuad(quad));
+  assert.ok(!tiles[2].layers.includes("visual"));
+  assert.ok(matchesOverview(tiles));
+  assert.ok(isLockedQuad(tiles));
 });
 
 test("withKit resolves the page default renderer per tile", () => {
@@ -120,7 +121,7 @@ test("breaking the locked quad is reported", () => {
     },
   });
 
-  assert.ok(awesomeManifest(config).diagnostics.some((d) => d.code === "locked-quad"));
+  assert.ok(awesomeManifest(config).diagnostics.some((d) => d.code === "overview-preset"));
 });
 
 test("dots default to fromSeries and can be switched off", () => {
@@ -341,12 +342,12 @@ test("withKit records unknown renderers, layout and tier on the tile", () => {
   assert.ok(awesomeManifest(config).diagnostics.some((d) => d.code === "renderer-unknown"));
 });
 
-test("an empty charts list skips the locked-quad check", () => {
+test("an empty charts list skips the overview-preset check", () => {
   const config = withKit({
     name: "T",
     plugins: { awesome: { options: { charts: [] } } },
   });
-  // No tiles → no kit manifest attachment; the locked-quad warn must stay quiet.
+  // No tiles → no kit manifest attachment; the overview-preset warn must stay quiet.
   assert.equal(config.plugins.awesome.options.kit, undefined);
 });
 
@@ -380,7 +381,7 @@ test("diagnostics print when silence is off", () => {
       process.env.ALLURE_REPORT_KIT_SILENT = previous;
     }
   }
-  assert.ok(warnings.some((line) => String(line).includes("[locked-quad]")));
+  assert.ok(warnings.some((line) => String(line).includes("[overview-preset]")));
   assert.ok(infos.some((line) => String(line).includes("[single-file]")));
 });
 

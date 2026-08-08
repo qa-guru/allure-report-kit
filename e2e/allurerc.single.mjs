@@ -10,6 +10,13 @@
  */
 import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/allure-report-kit";
 
+import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
+
+const overviewTiles = presets.fromOverview({
+  preset: OVERVIEW_PRESET,
+  renderers: { durations: "highcharts" },
+});
+
 export default withKit({
   name: "allure-report-kit e2e — single file",
   output: "./allure-report-single",
@@ -33,7 +40,7 @@ export default withKit({
         reportName: "allure-report-kit e2e — single file",
         reportLanguage: "ru",
         charts: [
-          ...presets.lockedQuad({ renderers: { durations: "highcharts" } }),
+          ...overviewTiles,
 
           // No widget to fetch: the data has to reach the tile through the
           // manifest instead.

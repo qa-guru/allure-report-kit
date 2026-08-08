@@ -1,19 +1,14 @@
 /**
- * Presets — ready tile groups.
+ * Presets — ready tile groups from declarative preset configs.
  *
- * `lockedQuad()` reproduces the "first screen" invariant of ADR 006:
- *   [0] currentStatus  [1] durationDynamics
- *   [2] testingPyramid [3] durations (groupBy: layer)
- *
- * The invariant itself lives in the monorepo ethalon and is checked by
- * `generators/ethalon/tests-java/scripts/validate-allurerc.mjs`. The kit does
- * not own it and does not ship a second validator — it just never emits the
- * quad in another order.
+ * SSOT for the overview quad: `presets/overview-preset.mjs` (importable as
+ * `@qa-guru/allure-report-kit/presets/overview-preset`). Ethalon copies or
+ * re-exports it from `allure/overview-preset.mjs` next to awesome-charts.mjs.
  */
 import * as charts from "./charts.js";
 import type { KitChartTile, RendererRef } from "./types.js";
 
-/** Canon layer order, bottom to top. No `visual` layer — see ADR 006. */
+/** Canon layer order, bottom to top. */
 export const PYRAMID_LAYERS = [
   "unit",
   "component",
@@ -23,67 +18,172 @@ export const PYRAMID_LAYERS = [
   "manual",
 ] as const;
 
-export type LockedQuadSlot = "currentStatus" | "durationDynamics" | "testingPyramid" | "durations";
+export type OverviewChart =
+  | "currentStatus"
+  | "durationDynamics"
+  | "testingPyramid"
+  | "durations";
 
-export interface LockedQuadOptions {
+export interface OverviewTileSpec {
+  chart: OverviewChart;
+  limit?: number;
+  groupBy?: string;
+  layersKey?: string;
+}
+
+export interface OverviewPreset {
+  id: string;
+  tiles: OverviewTileSpec[];
+  renderers?: Partial<Record<OverviewChart, RendererRef>>;
+  titles?: Partial<Record<OverviewChart, string>>;
+  pyramidLayers?: readonly string[];
+}
+
+export interface FromOverviewOptions {
+  preset?: OverviewPreset;
   layers?: string[];
   limit?: number;
-  titles?: Partial<Record<LockedQuadSlot, string>>;
-  renderers?: Partial<Record<LockedQuadSlot, RendererRef>>;
+  titles?: Partial<Record<OverviewChart, string>>;
+  renderers?: Partial<Record<OverviewChart, RendererRef>>;
   filter?: (testResult: unknown) => boolean;
 }
 
-const DEFAULT_TITLES: Record<LockedQuadSlot, string> = {
+const DEFAULT_TITLES: Record<OverviewChart, string> = {
   currentStatus: "Текущий статус",
   durationDynamics: "Динамика длительности",
   testingPyramid: "Пирамида тестирования",
   durations: "Длительности по layer",
 };
 
-export function lockedQuad(options: LockedQuadOptions = {}): KitChartTile[] {
-  const { layers = [...PYRAMID_LAYERS], limit = 20, titles = {}, renderers = {}, filter } = options;
-  const title = (slot: LockedQuadSlot): string => titles[slot] ?? DEFAULT_TITLES[slot];
+/** Built-in overview preset — same content as `presets/overview-preset.mjs`. */
+export const DEFAULT_OVERVIEW_PRESET: OverviewPreset = {
+  id: "overview",
+  tiles: [
+    { chart: "currentStatus" },
+    { chart: "durationDynamics", limit: 20 },
+    { chart: "testingPyramid", layersKey: "pyramidLayers" },
+    { chart: "durations", groupBy: "layer" },
+  ],
+  renderers: {
+    currentStatus: "stock",
+    durationDynamics: "stock",
+    testingPyramid: "svg",
+    durations: "stock",
+  },
+  titles: { ...DEFAULT_TITLES },
+  pyramidLayers: [...PYRAMID_LAYERS],
+};
 
-  return [
-    charts.currentStatus({
-      title: title("currentStatus"),
-      renderer: renderers.currentStatus,
-      filter,
-    }),
-    charts.durationDynamics({
-      title: title("durationDynamics"),
-      limit,
-      renderer: renderers.durationDynamics,
-      filter,
-    }),
-    charts.testingPyramid({
-      title: title("testingPyramid"),
-      layers,
-      renderer: renderers.testingPyramid ?? "svg",
-      filter,
-    }),
-    charts.durations({
-      title: title("durations"),
-      groupBy: "layer",
-      renderer: renderers.durations,
-      filter,
-    }),
-  ];
+function buildTile(
+  spec: OverviewTileSpec,
+  ctx: {
+    layers: string[];
+    limit: number;
+    titles: Partial<Record<OverviewChart, string>>;
+    renderers: Partial<Record<OverviewChart, RendererRef>>;
+    filter?: (testResult: unknown) => boolean;
+  },
+): KitChartTile {
+  const title = (chart: OverviewChart): string => ctx.titles[chart] ?? DEFAULT_TITLES[chart];
+  const renderer = ctx.renderers[spec.chart];
+
+  switch (spec.chart) {
+    case "currentStatus":
+      return charts.currentStatus({
+        title: title("currentStatus"),
+        renderer,
+        filter: ctx.filter,
+      });
+    case "durationDynamics":
+      return charts.durationDynamics({
+        title: title("durationDynamics"),
+        limit: spec.limit ?? ctx.limit,
+        renderer,
+        filter: ctx.filter,
+      });
+    case "testingPyramid":
+      return charts.testingPyramid({
+        title: title("testingPyramid"),
+        layers: ctx.layers,
+        renderer: renderer ?? "svg",
+        filter: ctx.filter,
+      });
+    case "durations":
+      return charts.durations({
+        title: title("durations"),
+        groupBy: (spec.groupBy ?? "layer") as "layer",
+        renderer,
+        filter: ctx.filter,
+      });
+    default:
+      throw new Error(`Unknown overview chart: ${(spec as OverviewTileSpec).chart}`);
+  }
 }
 
-/** True when the first four tiles satisfy the ADR 006 invariant. */
-export function isLockedQuad(tiles: readonly unknown[]): boolean {
+/** Build chart tiles from a declarative overview preset. */
+export function fromOverview(options: FromOverviewOptions = {}): KitChartTile[] {
+  const preset = options.preset ?? DEFAULT_OVERVIEW_PRESET;
+  const layers = options.layers ?? [...(preset.pyramidLayers ?? PYRAMID_LAYERS)];
+  const limit = options.limit ?? 20;
+  const titles = { ...preset.titles, ...options.titles };
+  const renderers = { ...preset.renderers, ...options.renderers };
+
+  return preset.tiles.map((spec) =>
+    buildTile(spec, { layers, limit, titles, renderers, filter: options.filter }),
+  );
+}
+
+/** True when the leading tiles match the overview preset spec. */
+export function matchesOverview(
+  tiles: readonly unknown[],
+  preset: OverviewPreset = DEFAULT_OVERVIEW_PRESET,
+): boolean {
+  if (tiles.length < preset.tiles.length) {
+    return false;
+  }
+
   const type = (index: number): string | undefined =>
     (tiles[index] as { type?: string } | undefined)?.type;
   const groupBy = (index: number): string | undefined =>
     (tiles[index] as { groupBy?: string } | undefined)?.groupBy;
+  const layers = (index: number): string[] | undefined =>
+    (tiles[index] as { layers?: string[] } | undefined)?.layers;
 
-  return (
-    tiles.length >= 4 &&
-    type(0) === "currentStatus" &&
-    type(1) === "durationDynamics" &&
-    type(2) === "testingPyramid" &&
-    type(3) === "durations" &&
-    groupBy(3) === "layer"
-  );
+  for (let i = 0; i < preset.tiles.length; i++) {
+    const spec = preset.tiles[i]!;
+    if (type(i) !== spec.chart) {
+      return false;
+    }
+    if (spec.groupBy && groupBy(i) !== spec.groupBy) {
+      return false;
+    }
+    if (spec.chart === "testingPyramid") {
+      const expected = [...(preset.pyramidLayers ?? PYRAMID_LAYERS)];
+      const actual = layers(i) ?? [];
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        return false;
+      }
+      if (actual.includes("visual")) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
+
+/** @deprecated Use `fromOverview()`. */
+export type LockedQuadSlot = OverviewChart;
+
+/** @deprecated Use `FromOverviewOptions`. */
+export type LockedQuadOptions = FromOverviewOptions;
+
+/** @deprecated Use `fromOverview()`. */
+export const lockedQuad = fromOverview;
+
+/** @deprecated Use `matchesOverview()`. */
+export const isLockedQuad = (tiles: readonly unknown[]): boolean =>
+  matchesOverview(tiles, DEFAULT_OVERVIEW_PRESET);
+
+/** Shorthand for the built-in overview preset. */
+export const overview = fromOverview;

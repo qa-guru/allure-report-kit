@@ -39,10 +39,12 @@
     },
     "./theme.css": "./src/theme/kit.css",
     "./theme/*": "./src/theme/*",
+    "./presets/overview-preset": "./presets/overview-preset.mjs",
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
+    "presets",
     "src/theme",
     "README.md",
     "LICENSE"

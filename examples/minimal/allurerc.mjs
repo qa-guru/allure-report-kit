@@ -1,8 +1,8 @@
 /**
  * Minimal kit config — Awesome + Dashboard.
  *
- * Shows the whole v0.1 surface: locked 2×2 from ADR 006, a renderer mix on one
- * page, a custom panel with `fromSeries` indicators, and the DS report header.
+ * Shows the whole v0.1 surface: overview preset, a renderer mix on one page,
+ * a custom panel with `fromSeries` indicators, and the DS report header.
  *
  * Exported as a plain object, the runnable format ADR 006 fixes. `defineConfig`
  * from the `allure` package is optional sugar:
@@ -16,14 +16,11 @@
  */
 import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/allure-report-kit";
 
-/**
- * Locked 2×2, indices 0–3 — order is the invariant, renderers are not:
- *   [0] currentStatus   stock (nivo)
- *   [1] durationDynamics stock (nivo)
- *   [2] testingPyramid   svg (kit canon)
- *   [3] durations/layer  highcharts (showcase)
- */
-const lockedQuad = presets.lockedQuad({
+import { OVERVIEW_PRESET } from "../../presets/overview-preset.mjs";
+
+/** Overview preset — see `presets/overview-preset.mjs`. */
+const overviewTiles = presets.fromOverview({
+  preset: OVERVIEW_PRESET,
   renderers: { durations: "highcharts" },
 });
 
@@ -57,7 +54,7 @@ export default withKit({
         reportName: "Reference App",
         reportLanguage: "ru",
         charts: [
-          ...lockedQuad,
+          ...overviewTiles,
 
           // Kit panel: nine services, seven healthy. Dots resolve to the two
           // families really on the donut — orange + green. Data comes from a
@@ -90,7 +87,7 @@ export default withKit({
         reportName: "Reference App — Dashboard",
         reportLanguage: "ru",
         layout: [
-          ...lockedQuad,
+          ...overviewTiles,
           panels.fromRun({
             id: "layersTable",
             title: "Тесты по слоям",

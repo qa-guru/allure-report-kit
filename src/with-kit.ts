@@ -9,7 +9,7 @@
  * Nothing here imports a chart library or touches the DOM.
  */
 import { DEFAULT_RENDERER, normalizeRenderer } from "./renderers.js";
-import { isLockedQuad } from "./presets.js";
+import { matchesOverview, DEFAULT_OVERVIEW_PRESET } from "./presets.js";
 import { mergeTheme, qaGuru } from "./theme.js";
 import type {
   DotsSpec,
@@ -114,15 +114,15 @@ function resolveTiles(
   });
 }
 
-function checkLockedQuad(tiles: KitTile[], where: string, diagnostics: KitDiagnostic[]): void {
+function checkOverviewPreset(tiles: KitTile[], where: string, diagnostics: KitDiagnostic[]): void {
   if (tiles.length === 0) {
     return;
   }
-  if (!isLockedQuad(tiles)) {
+  if (!matchesOverview(tiles, DEFAULT_OVERVIEW_PRESET)) {
     diagnostics.push({
       level: "warn",
-      code: "locked-quad",
-      message: `${where}: indices 0–3 do not match the locked 2×2 of ADR 006 (currentStatus | durationDynamics / testingPyramid | durations groupBy:layer). Run validate-allurerc.mjs.`,
+      code: "overview-preset",
+      message: `${where}: leading tiles do not match the overview preset (see presets/overview-preset.mjs). Run validate-allurerc.mjs.`,
     });
   }
 }
@@ -177,7 +177,7 @@ function checkRunPanelsNeedFork(
  * export default defineConfig(withKit({
  *   renderer: renderers.stock(),
  *   theme: theme.qaGuru(),
- *   plugins: { awesome: { options: { charts: presets.lockedQuad() } } },
+ *   plugins: { awesome: { options: { charts: presets.overview() } } },
  * }));
  */
 export function withKit<T extends KitConfig>(config: T): Record<string, unknown> {
@@ -211,7 +211,7 @@ export function withKit<T extends KitConfig>(config: T): Record<string, unknown>
         continue;
       }
       const where = `plugins.${name}.options.${listKey}`;
-      checkLockedQuad(tiles, where, diagnostics);
+      checkOverviewPreset(tiles, where, diagnostics);
       checkPanelsNeedFork(tiles, where, softFork, diagnostics);
       checkRunPanelsNeedFork(tiles, where, softFork, diagnostics);
       resolvedTiles.push(...resolveTiles(tiles, listKey, where, pageRenderer, diagnostics));

@@ -6,6 +6,10 @@
  */
 import { panels, presets, renderers, theme, withKit } from "@qa-guru/allure-report-kit";
 
+import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
+
+const overviewTiles = presets.fromOverview({ preset: OVERVIEW_PRESET });
+
 export default withKit({
   name: "allure-report-kit watch smoke",
   output: "./allure-report-watch",
@@ -26,7 +30,7 @@ export default withKit({
         reportName: "allure-report-kit watch smoke",
         reportLanguage: "ru",
         charts: [
-          ...presets.lockedQuad(),
+          ...overviewTiles,
 
           panels.fromRun({
             id: "passRate",

@@ -1,13 +1,16 @@
 /**
  * e2e config — the kit inside a real Allure 3 report.
  *
- * After the locked 2×2: Allure QG + Sonar QG lead the custom panels, then the
+ * After the overview preset: Allure QG + Sonar QG lead the custom panels, then the
  * rest of the kit surface (fromRun / fromHistory / stock mix).
  */
 import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/allure-report-kit";
 import { sonarProjectStatusToQualityGateOptions } from "@qa-guru/allure-report-kit/runtime";
 
-const lockedQuad = presets.lockedQuad({
+import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
+
+const overviewTiles = presets.fromOverview({
+  preset: OVERVIEW_PRESET,
   renderers: { durations: "highcharts" },
 });
 
@@ -123,7 +126,7 @@ export default withKit({
         reportName: "allure-report-kit e2e",
         reportLanguage: "ru",
         charts: [
-          ...lockedQuad,
+          ...overviewTiles,
           ...leadQualityGates(),
 
           servicesPanel(),
@@ -148,7 +151,7 @@ export default withKit({
         reportName: "allure-report-kit e2e — Dashboard",
         reportLanguage: "ru",
         layout: [
-          ...lockedQuad,
+          ...overviewTiles,
           ...leadQualityGates(),
 
           servicesPanel(),
