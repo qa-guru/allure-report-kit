@@ -155,9 +155,11 @@ node generators/ethalon/tests-java/scripts/validate-allurerc.mjs \
 
 `theme.header` mounts the design-system header above the report — the shared
 primitive, not a copy of a consumer app's header. The report is pushed down by
-the band's *measured* height, so Allure's own section switcher stays reachable,
-and the theme is mirrored both ways (`html.theme-light` ↔ `html[data-theme]`):
-the toggle in the header drives the report and the kit tiles together.
+the band's *measured* height, so Allure's own section switcher stays reachable.
+
+The theme is mirrored **both ways** (`html.theme-light` ↔ `html[data-theme]`),
+so the two switches — the header's and Allure's own — never disagree, and the
+header's icon follows a change it did not initiate.
 
 Not supported with `singleFile: true` — the plugin falls back to stock Allure
 and says so.
@@ -183,14 +185,24 @@ Canvas backends read CSS custom properties once, at draw time, so
 
 ## Development
 
+Fresh clone:
+
+```bash
+npm run setup          # installs and builds every package in dependency order
+```
+
+The packages are linked with `file:` rather than an npm workspace root, because
+each forked bundle carries its own large upstream tree — so install order
+matters and `setup` owns it.
+
 ```bash
 npm run build          # tsc → dist/
 npm test               # node --test
 npm run sync:ds        # refresh vendored design-system primitives
 npm run verify         # build + unit tests + dogfood smoke
 
-npm run build:fork     # webpack → packages/web-awesome/dist
-npm run verify:report  # build + fork + real report + report smoke
+npm run build:fork     # webpack → packages/web-{awesome,dashboard}/dist
+npm run verify:report  # build + forks + real reports + report smoke
 ```
 
 Two levels of proof:

@@ -69,15 +69,82 @@ function trackHeaderHeight(mount: HTMLElement): () => void {
   return () => observer.disconnect();
 }
 
-/** DS writes `html.theme-light`; Allure reads `html[data-theme]`. */
-function syncReportTheme(): () => void {
+/**
+ * Keep the two theme switches in step.
+ *
+ * The design-system header writes `html.theme-light`; Allure reads
+ * `html[data-theme]` and has its own control. Mirroring one way left the other
+ * switch stale — the report would flip while the header kept the old icon and
+ * palette. So both directions are mirrored, with a guard against the echo of
+ * our own write.
+ */
+function syncReportTheme(themeIconsUrl: string): () => void {
   const html = document.documentElement;
-  const apply = (): void => {
-    html.dataset.theme = html.classList.contains("theme-light") ? "light" : "dark";
+  let mirroring = false;
+
+  /**
+   * The DS header only repaints its icon inside its own click handler, so a
+   * theme change coming from Allure's control would leave a stale glyph.
+   */
+  const refreshIcons = (): void => {
+    void import(/* webpackIgnore: true */ /* @vite-ignore */ themeIconsUrl)
+      .then((module: { syncThemeToggleIcon?: (button: HTMLElement) => void }) => {
+        const sync = module.syncThemeToggleIcon;
+        if (!sync) {
+          return;
+        }
+        document
+          .querySelectorAll<HTMLElement>(
+            '[data-testid="header-theme-toggle"], [data-testid="header-menu-theme-toggle"]',
+          )
+          .forEach(sync);
+      })
+      .catch(() => {
+        /* icon stays as is — not worth failing the report over */
+      });
   };
-  apply();
-  const observer = new MutationObserver(apply);
-  observer.observe(html, { attributes: true, attributeFilter: ["class"] });
+
+  const mirror = (write: () => void): void => {
+    if (mirroring) {
+      return;
+    }
+    mirroring = true;
+    write();
+    // Let the mutation record for our own write drain before listening again.
+    queueMicrotask(() => {
+      mirroring = false;
+    });
+  };
+
+  const fromDs = (): void => {
+    const next = html.classList.contains("theme-light") ? "light" : "dark";
+    if (html.dataset.theme !== next) {
+      mirror(() => {
+        html.dataset.theme = next;
+      });
+    }
+  };
+
+  const fromReport = (): void => {
+    const light = html.dataset.theme !== "dark";
+    if (html.classList.contains("theme-light") !== light) {
+      mirror(() => html.classList.toggle("theme-light", light));
+      refreshIcons();
+    }
+  };
+
+  fromDs();
+
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.attributeName === "class") {
+        fromDs();
+      } else if (record.attributeName === "data-theme") {
+        fromReport();
+      }
+    }
+  });
+  observer.observe(html, { attributes: true, attributeFilter: ["class", "data-theme"] });
   return () => observer.disconnect();
 }
 
@@ -159,7 +226,10 @@ export async function mountReportHeader(
   }
 
   const stopTracking = trackHeaderHeight(mount);
-  const stopThemeSync = options.syncReportTheme === false ? () => {} : syncReportTheme();
+  const stopThemeSync =
+    options.syncReportTheme === false
+      ? () => {}
+      : syncReportTheme(new URL("theme-icons.js", moduleUrl).href);
 
   return {
     mount,

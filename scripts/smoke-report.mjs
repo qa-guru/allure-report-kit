@@ -161,6 +161,23 @@ async function checkThemeToggle(page, label) {
     after.layerE2e === "#ff574f",
     `${label} theme toggle: palette did not switch to dark (--ark-layer-e2e = ${after.layerE2e})`,
   );
+
+  // The other direction: Allure's own control writes `data-theme`, and the DS
+  // header has to follow instead of keeping a stale palette and icon.
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "light";
+  });
+  await page.waitForTimeout(800);
+
+  const mirrored = await page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    dsLight: document.documentElement.classList.contains("theme-light"),
+  }));
+
+  check(
+    mirrored.theme === "light" && mirrored.dsLight,
+    `${label} theme mirror: report says "${mirrored.theme}" while the DS header light class is ${mirrored.dsLight}`,
+  );
 }
 
 // ---- Awesome ----------------------------------------------------------------
