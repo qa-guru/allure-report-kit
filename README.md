@@ -15,9 +15,10 @@ failed/info. Переснять: `node scripts/capture-readme-gallery.mjs stock`
 
 ### Charts — stock vs kit
 
-Все скрины — с одного e2e Dashboard. Слоты locked 2×2 с `renderer: stock`
-выглядят как upstream, но живут внутри kit-отчёта (шапка, тема, соседние
-kit-панели).
+Сравниваем только слоты locked 2×2, где e2e **меняет renderer** (ADR 006:
+`testingPyramid` → `svg`, `durations` → `highcharts`). Слоты
+`currentStatus` / `durationDynamics` остаются на **stock** — визуально те же,
+их нет в таблице.
 
 <table>
 <thead>
@@ -25,34 +26,42 @@ kit-панели).
 </thead>
 <tbody>
 <tr>
-<td><strong>Current status</strong> (<code>currentStatus</code>)</td>
-<td><img src="docs/readme/stock-current-status.png" alt="Stock current status" /></td>
-<td><img src="docs/readme/kit-current-status.png" alt="Current status in kit report" /></td>
-</tr>
-<tr>
-<td><strong>Duration dynamics</strong> (<code>durationDynamics</code>)</td>
-<td><img src="docs/readme/stock-duration-dynamics.png" alt="Stock duration dynamics" /></td>
-<td><img src="docs/readme/kit-duration-dynamics.png" alt="Duration dynamics in kit report" /></td>
-</tr>
-<tr>
-<td><strong>Testing pyramid</strong> (<code>testingPyramid</code>)</td>
+<td><strong>Testing pyramid</strong> (<code>testingPyramid</code> · stock → <code>svg</code>)</td>
 <td><img src="docs/readme/stock-testing-pyramid.png" alt="Stock testing pyramid" /></td>
 <td><img src="docs/readme/kit-testing-pyramid.png" alt="Kit testing pyramid (svg)" /></td>
 </tr>
 <tr>
-<td><strong>Durations by layer</strong> (<code>durations</code>)</td>
+<td><strong>Durations by layer</strong> (<code>durations</code> · stock → <code>highcharts</code>)</td>
 <td><img src="docs/readme/stock-durations-layer.png" alt="Stock durations by layer" /></td>
 <td><img src="docs/readme/kit-durations-layer.png" alt="Kit durations by layer (Highcharts)" /></td>
+</tr>
+</tbody>
+</table>
+
+### Upstream tiles (без смены renderer)
+
+На том же Dashboard — stock-виджеты Allure, kit их не перерисовывает:
+
+<table>
+<thead>
+<tr><th>Widget</th><th>Stock Allure</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Current status</strong> (<code>currentStatus</code>)</td>
+<td><img src="docs/readme/stock-current-status.png" alt="Stock current status" /></td>
+</tr>
+<tr>
+<td><strong>Duration dynamics</strong> (<code>durationDynamics</code>)</td>
+<td><img src="docs/readme/stock-duration-dynamics.png" alt="Stock duration dynamics" /></td>
 </tr>
 <tr>
 <td><strong>Status dynamics</strong></td>
 <td><img src="docs/readme/stock-status-dynamics.png" alt="Stock status dynamics" /></td>
-<td><img src="docs/readme/kit-status-dynamics.png" alt="Status dynamics in kit report" /></td>
 </tr>
 <tr>
 <td><strong>Severities</strong></td>
 <td><img src="docs/readme/stock-severity.png" alt="Stock severities" /></td>
-<td><img src="docs/readme/kit-severity.png" alt="Severities in kit report" /></td>
 </tr>
 </tbody>
 </table>
