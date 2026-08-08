@@ -123,9 +123,9 @@
   gap: var(--space-2);
   box-sizing: border-box;
   flex-shrink: 0;
-  height: var(--wt-bar-height, 28px);
-  min-height: var(--wt-bar-height, 28px);
-  padding: 0 var(--space-2);
+  /* Standalone / shell: roomier bar. Inside widget-tile — overridden to --wt-bar-height. */
+  min-height: 2.25rem;
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-soft);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
@@ -137,6 +137,8 @@
 .widget-tile--quality-gate > .widget-tile__body > .quality-gate > .quality-gate__bar {
   border-radius: 0;
   background: color-mix(in srgb, var(--color-text) 3%, transparent);
+  height: var(--wt-bar-height, 28px);
+  min-height: var(--wt-bar-height, 28px);
   padding: 0;
   padding-left: var(--wt-bar-inset);
   gap: 6px;
@@ -175,14 +177,15 @@
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info .qg-info__trigger {
-  width: var(--indicator-size);
-  height: var(--indicator-size);
-  min-width: var(--indicator-size);
-  min-height: var(--indicator-size);
+  /* Info glyph must read larger than the status dot beside the title. */
+  width: 1.375rem;
+  height: 1.375rem;
+  min-width: 1.375rem;
+  min-height: 1.375rem;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info .qg-info__trigger .icon {
-  --icon-size-md: var(--indicator-size);
+  --icon-size-md: 1.125rem;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar-title {

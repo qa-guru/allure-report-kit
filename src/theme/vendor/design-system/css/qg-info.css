@@ -11,13 +11,14 @@
 }
 
 .qg-info__trigger {
-  width: 1.5rem;
-  height: 1.5rem;
+  /* Hit target ≥ icon; do not size to --indicator-size (status dots). */
+  width: 1.375rem;
+  height: 1.375rem;
   color: var(--color-text-muted);
 }
 
 .qg-info__trigger .icon {
-  --icon-size-md: 0.9rem;
+  --icon-size-md: 1.125rem;
 }
 
 .qg-info__trigger:hover,
@@ -111,6 +112,15 @@
   font-family: inherit;
   font-size: inherit;
   word-break: break-all;
+  /* Canon: light mono text + underline (not blue URL chrome). */
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  text-underline-offset: 2px;
+}
+
+.qg-info__path-link:hover {
+  text-decoration-color: var(--color-text);
 }
 
 .qg-info__code.ch-code {
