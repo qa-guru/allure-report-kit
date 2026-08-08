@@ -1,10 +1,62 @@
 # @qa-guru/allure-report-kit
 
 DX kit for **Allure Report 3**: a theme, pluggable chart renderers, custom
-panels with bar indicators, and a real design-system header on top of the
-report.
+panels with bar indicators, DS quality-gate tiles, and a real design-system
+header on top of the report.
 
 > v0.2 — works inside a real generated Allure 3 report. See `soft-fork/README.md`.
+
+## Gallery
+
+Screens from the e2e Dashboard fixture (`npm run verify:report` → stand
+`ark-report` :3024).
+
+### Stock Allure vs kit
+
+Same locked 2×2 row: upstream nivo on the left pair, kit soft-fork on the right
+(SVG pyramid + Highcharts durations, DS `widget-tile` chrome and status dots).
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Stock Allure** — `currentStatus` + `durationDynamics` (nivo)
+
+<img src="docs/readme/stock-locked-top.png" alt="Stock Allure current status and duration dynamics" />
+
+</td>
+<td width="50%" valign="top">
+
+**With kit** — `testingPyramid` (svg) + `durations` (highcharts)
+
+<img src="docs/readme/kit-pyramid-durations.png" alt="Kit testing pyramid and durations by layer" />
+
+</td>
+</tr>
+</table>
+
+### Quality gates — Allure + Sonar
+
+`panels.qualityGate()` (verdict from the run) and a Sonar tile (`kind: "sonar"`,
+DS primitive, info popover). Same chrome as neighbouring widgets
+(`--wt-bar-inset` canon).
+
+<img src="docs/readme/kit-quality-gates.png" alt="Allure and Sonar quality gate panels" />
+
+Dark theme:
+
+<img src="docs/readme/kit-quality-gates-dark.png" alt="Quality gates in dark theme" />
+
+### Also on the same page
+
+| | |
+|---|---|
+| **DS header** | `theme.header` — product name, theme switch mirrored with the report |
+| **Custom + fromRun** | services donut (`dots: "fromSeries"`) and pass-rate gauge from the store |
+
+<img src="docs/readme/header.png" alt="Design-system header on the Allure report" />
+
+<img src="docs/readme/kit-services-gauge.png" alt="Kit services donut and pass-rate gauge" />
 
 ## Why
 
@@ -40,11 +92,19 @@ export default withKit({
     header: theme.header({ productName: "Reference App" }),
   }),
 
+  qualityGate: {
+    rules: [{ maxFailures: 10 }],
+  },
+
   plugins: {
     awesome: {
       options: {
         charts: [
           ...presets.lockedQuad({ renderers: { durations: "highcharts" } }),
+          panels.qualityGate({
+            id: "allureQualityGate",
+            title: "Allure Quality Gate",
+          }),
           panels.custom({
             id: "servicesCurrentStatus",
             title: "Текущий статус по сервисам",
@@ -59,7 +119,8 @@ export default withKit({
 });
 ```
 
-Full example: `examples/minimal/allurerc.mjs`.
+Full example: `examples/minimal/allurerc.mjs`. E2e with Allure **and** Sonar QG:
+`e2e/allurerc.mjs`.
 
 ## API
 
@@ -67,12 +128,12 @@ Full example: `examples/minimal/allurerc.mjs`.
 |--------|---------|
 | `withKit(config)` | Wraps an Allure 3 config: resolves renderers, writes the `options.kit` manifest, reports diagnostics |
 | `charts.*` | Typed builders for all 13 upstream chart types |
-| `panels.custom / donut / bar / line / pyramid / gauge / table` | Kit-owned widget types |
-| `panels.fromRun` | Panel whose data the plugin computes from the run |
+| `panels.custom / donut / bar / line / pyramid / gauge / table / qualityGate` | Kit-owned widget types |
+| `panels.fromRun` / `panels.fromHistory` | Panel whose data the plugin computes from the run / history |
 | `theme.qaGuru / tokensOnly / header` | Token sets and the report header |
 | `renderers.stock / nivo / highcharts / amcharts / svg / dom` | Renderer specs (inert data) |
 | `presets.lockedQuad / isLockedQuad` | The ADR 006 first screen |
-| `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, registry, `mountReportHeader` |
+| `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, QG/Sonar render, `mountReportHeader` |
 
 ## Renderers
 
@@ -80,9 +141,9 @@ Full example: `examples/minimal/allurerc.mjs`.
 |----|---------|-------|-------|
 | `stock` (alias `nivo`) | Allure's own widget | everything | **page default**, upstream draws it |
 | `highcharts` | Highcharts | pie, bar, line | commercial licence is yours to hold |
-| `amcharts` | amCharts 5 | pie | adapter + spike; needs bundling, draws a stub otherwise |
+| `amcharts` | amcharts 5 | pie | adapter + placeholder; needs bundling, draws a stub otherwise |
 | `svg` | none | pyramid, gauge | kit canon |
-| `dom` | none | table | kit canon; no chart library draws rows |
+| `dom` | none | table, qualityGate | kit canon; no chart library draws rows |
 
 Rules: a page may mix renderers freely, **one tile is drawn by exactly one
 renderer**, and a backend that cannot draw a given kind never claims the tile —
@@ -139,6 +200,14 @@ blue. These are **not** the three macOS traffic-lights of the design-system
 Stock Allure 3 skips unknown chart types (`generateChartData` ends in
 `default: break`), so a config with panels still loads without the fork — the
 panel simply does not appear, and `withKit` says so.
+
+### Quality gate panels
+
+`panels.qualityGate()` evaluates `qualityGate.rules` against the run (same path
+as Allure's gate widget, shaped for the DS primitive). Sonar uses the same tile
+shell with `kind: "sonar"` data (see `e2e/allurerc.mjs`). Inside a
+`widget-tile`, the gate is flush content — one chrome, bar inset matches
+neighbouring tiles (`--wt-bar-inset`).
 
 ### Panels from the run
 
