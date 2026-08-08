@@ -8,47 +8,134 @@ header on top of the report.
 
 ## Gallery
 
-Screens from the e2e fixture (`npm run verify:report` → `ark-report` :3024) and
-DS demos (`design-system-preview` :3000) for failed QG / info popovers.
+Скрины с e2e Dashboard (`ark-report` :3024) и DS preview (:3000) для QG
+failed/info. Переснять: `node scripts/capture-readme-gallery.mjs stock` (после
+временного `testingPyramid/durations: stock` в `e2e/allurerc.mjs`), затем
+`kit` + `qg` на обычном отчёте.
 
 ### Charts — stock vs kit
 
-| Widget | Stock Allure | With kit |
-|--------|--------------|----------|
-| **Current status** (`currentStatus`) | <img src="docs/readme/stock-current-status.png" alt="Stock current status" width="360" /> | <img src="docs/readme/kit-current-status.png" alt="Kit current status (Highcharts)" width="360" /> |
-| **Duration dynamics** (`durationDynamics`) | <img src="docs/readme/stock-duration-dynamics.png" alt="Stock duration dynamics" width="360" /> | — *(same stock tile; kit does not re-skin this slot)* |
-| **Testing pyramid** (`testingPyramid`) | <img src="docs/readme/stock-testing-pyramid.png" alt="Stock testing pyramid" width="360" /> | <img src="docs/readme/kit-testing-pyramid.png" alt="Kit testing pyramid (svg)" width="360" /> |
-| **Durations by layer** (`durations`) | <img src="docs/readme/stock-durations-layer.png" alt="Stock durations by layer" width="360" /> | <img src="docs/readme/kit-durations-layer.png" alt="Kit durations by layer (Highcharts)" width="360" /> |
-| **Status dynamics** | <img src="docs/readme/stock-status-dynamics.png" alt="Stock status dynamics" width="360" /> | — |
-| **Severities** | <img src="docs/readme/stock-severity.png" alt="Stock severities" width="360" /> | — |
-| **Services status** (custom panel) | — | <img src="docs/readme/kit-current-status-services.png" alt="Kit services status donut" width="360" /> |
-| **Pass rate gauge** (`panels.fromRun`) | — | <img src="docs/readme/kit-gauge.png" alt="Kit pass-rate gauge" width="360" /> |
-| **Tests by layer** (table, `fromRun`) | — | <img src="docs/readme/kit-layers-table.png" alt="Kit layers table" width="360" /> |
-| **Flaky by layer** (`fromRun` + Highcharts) | — | <img src="docs/readme/kit-flaky-bar.png" alt="Kit flaky by layer" width="360" /> |
-| **Pass rate trend** (`fromHistory`) | — | <img src="docs/readme/kit-pass-rate-trend.png" alt="Kit pass-rate trend" width="360" /> |
-| **amCharts adapter** (spike) | — | <img src="docs/readme/kit-amcharts-stub.png" alt="amCharts adapter stub" width="360" /> |
+<table>
+<thead>
+<tr><th>Widget</th><th>Stock Allure</th><th>With kit</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Current status</strong> (<code>currentStatus</code>)</td>
+<td><img src="docs/readme/stock-current-status.png" alt="Stock current status" /></td>
+<td>— <em>stock renderer в locked 2×2</em></td>
+</tr>
+<tr>
+<td><strong>Duration dynamics</strong> (<code>durationDynamics</code>)</td>
+<td><img src="docs/readme/stock-duration-dynamics.png" alt="Stock duration dynamics" /></td>
+<td>— <em>stock renderer в locked 2×2</em></td>
+</tr>
+<tr>
+<td><strong>Testing pyramid</strong> (<code>testingPyramid</code>)</td>
+<td><img src="docs/readme/stock-testing-pyramid.png" alt="Stock testing pyramid" /></td>
+<td><img src="docs/readme/kit-testing-pyramid.png" alt="Kit testing pyramid (svg)" /></td>
+</tr>
+<tr>
+<td><strong>Durations by layer</strong> (<code>durations</code>)</td>
+<td><img src="docs/readme/stock-durations-layer.png" alt="Stock durations by layer" /></td>
+<td><img src="docs/readme/kit-durations-layer.png" alt="Kit durations by layer (Highcharts)" /></td>
+</tr>
+<tr>
+<td><strong>Status dynamics</strong></td>
+<td><img src="docs/readme/stock-status-dynamics.png" alt="Stock status dynamics" /></td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Severities</strong></td>
+<td><img src="docs/readme/stock-severity.png" alt="Stock severities" /></td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Services status</strong> (custom panel)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-current-status-services.png" alt="Kit services donut" /></td>
+</tr>
+<tr>
+<td><strong>Pass rate gauge</strong> (<code>panels.fromRun</code>)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-gauge.png" alt="Kit pass-rate gauge" /></td>
+</tr>
+<tr>
+<td><strong>Tests by layer</strong> (table, <code>fromRun</code>)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-layers-table.png" alt="Kit layers table" /></td>
+</tr>
+<tr>
+<td><strong>Pass rate trend</strong> (<code>fromHistory</code>)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-pass-rate-trend.png" alt="Kit pass-rate trend" /></td>
+</tr>
+</tbody>
+</table>
 
 ### Quality gates — Allure + Sonar
 
-Stock Allure has **no chart widget** for the gate (CI / `qualityGate` config only).
-Kit ships DS tiles: passed / failed, `i` hover popover, file links into the modal.
+В stock Allure нет виджета QG на дашборде (только CI / конфиг). Kit — DS-тайлы в
+<code>widget-tile</code>: passed/failed, popover по <code>i</code>, ссылки на
+config/rules в GitHub.
 
-| | Stock Allure | With kit |
-|--|--------------|----------|
-| **Allure QG — passed** | — | <img src="docs/readme/kit-qg-allure-passed.png" alt="Allure QG passed" width="360" /> |
-| **Allure QG — failed** | — | <img src="docs/readme/kit-qg-allure-failed.png" alt="Allure QG failed" width="360" /> |
-| **Sonar QG — passed** | — | <img src="docs/readme/kit-qg-sonar-passed.png" alt="Sonar QG passed" width="360" /> |
-| **Sonar QG — failed** | — | <img src="docs/readme/kit-qg-sonar-failed.png" alt="Sonar QG failed" width="360" /> |
-| **`i` hover / open** (Allure, passed) | — | <img src="docs/readme/kit-qg-info-hover.png" alt="QG info hover popover" width="360" /> |
-| **Modal + links** (Allure, passed) | — | <img src="docs/readme/kit-qg-info-links.png" alt="QG info links and JSON" width="360" /> |
-| **Modal + links** (Allure, failed) | — | <img src="docs/readme/kit-qg-allure-failed-info.png" alt="Failed Allure QG with info modal" width="360" /> |
-| **Links detail** (Allure, failed popover) | — | <img src="docs/readme/kit-qg-allure-failed-links.png" alt="Failed Allure QG popover links and JSON" width="360" /> |
-| **Modal + links** (Sonar, failed) | — | <img src="docs/readme/kit-qg-sonar-failed-info.png" alt="Failed Sonar QG with info modal" width="360" /> |
-| **Modal + links** (Sonar, passed) | — | <img src="docs/readme/kit-qg-sonar-passed-info.png" alt="Passed Sonar QG with info modal" width="360" /> |
-
-Popover paths are real links (`hrefBase` → GitHub): e.g. `allurerc.mjs`,
-`allure/quality-gate.mjs`, `docs/sonar/quality-gate-profile.json`, profile /
-project key for Sonar.
+<table>
+<thead>
+<tr><th></th><th>Stock Allure</th><th>With kit</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Allure QG — passed</strong></td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-allure-passed.png" alt="Allure QG passed" /></td>
+</tr>
+<tr>
+<td><strong>Allure QG — failed</strong></td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-allure-failed.png" alt="Allure QG failed" /></td>
+</tr>
+<tr>
+<td><strong>Sonar QG — passed</strong></td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-sonar-passed.png" alt="Sonar QG passed" /></td>
+</tr>
+<tr>
+<td><strong>Sonar QG — failed</strong></td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-sonar-failed.png" alt="Sonar QG failed" /></td>
+</tr>
+<tr>
+<td><strong><code>i</code> hover</strong> (Allure, passed, live report)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-info-hover.png" alt="QG info hover" /></td>
+</tr>
+<tr>
+<td><strong>Popover + links + JSON</strong> (Allure, passed)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-info-links.png" alt="QG info links" /></td>
+</tr>
+<tr>
+<td><strong>Popover + links</strong> (Allure, failed)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-allure-failed-info.png" alt="Failed Allure QG info" /></td>
+</tr>
+<tr>
+<td><strong>Links detail</strong> (Allure, failed)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-allure-failed-links.png" alt="Failed Allure QG links" /></td>
+</tr>
+<tr>
+<td><strong>Popover + links</strong> (Sonar, failed)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-sonar-failed-info.png" alt="Failed Sonar QG info" /></td>
+</tr>
+<tr>
+<td><strong>Popover + links</strong> (Sonar, passed)</td>
+<td>—</td>
+<td><img src="docs/readme/kit-qg-sonar-passed-info.png" alt="Passed Sonar QG info" /></td>
+</tr>
+</tbody>
+</table>
 
 ## Why
 

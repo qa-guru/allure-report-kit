@@ -68,6 +68,7 @@
     "baseline": "node scripts/baseline.mjs",
     "verify": "npm run build && npm test && npm run smoke",
     "smoke:report": "node scripts/smoke-report.mjs",
+    "capture:readme": "node scripts/capture-readme-gallery.mjs all",
     "smoke:single": "node scripts/smoke-single.mjs",
     "smoke:watch": "node scripts/smoke-watch.mjs",
     "build:fork": "npm --prefix packages/web-awesome run build && npm --prefix packages/web-dashboard run build",
