@@ -388,13 +388,20 @@ function asQualityGateData(
   if (!payload || !("rules" in payload)) {
     return undefined;
   }
-  const labels = (panel.labels as KitQualityGateData["labels"]) ?? undefined;
-  const lang = (panel.lang as KitQualityGateData["lang"]) ?? undefined;
+  const qg = payload as KitQualityGateData;
+  const labels = (panel.labels as KitQualityGateData["labels"]) ?? qg.labels;
+  const lang = (panel.lang as KitQualityGateData["lang"]) ?? qg.lang;
+  const title = panel.title ?? qg.title;
+  const barTitle = qg.barTitle ?? title;
   return {
-    passed: Boolean((payload as KitQualityGateData).passed),
-    rules: (payload as KitQualityGateData).rules ?? [],
-    ...(panel.title ? { title: panel.title } : {}),
-    ...(payload && "config" in payload ? { config: (payload as KitQualityGateData).config } : {}),
+    passed: Boolean(qg.passed),
+    rules: qg.rules ?? [],
+    ...(qg.kind ? { kind: qg.kind } : {}),
+    ...(qg.testId ? { testId: qg.testId } : {}),
+    ...(title ? { title } : {}),
+    ...(barTitle ? { barTitle } : {}),
+    ...(qg.config ? { config: qg.config } : {}),
+    ...(qg.infoPayload ? { infoPayload: qg.infoPayload } : {}),
     ...(labels ? { labels } : {}),
     ...(lang ? { lang } : {}),
   };

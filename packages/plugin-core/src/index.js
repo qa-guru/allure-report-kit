@@ -775,8 +775,11 @@ export function createKitPlugin({
         if (source.from === "qualityGate") {
           const verdict = evaluateQualityGate(testResults, gateConfig);
           const data = {
+            kind: "allure",
+            testId: "quality-gate",
             passed: verdict.passed,
             rules: verdict.rules,
+            ...(panel.title ? { title: panel.title, barTitle: panel.title } : {}),
             config: {
               rules: gateConfig.rules ?? [],
               ...(gateConfig.knownIssuesPath

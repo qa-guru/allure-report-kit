@@ -96,7 +96,9 @@ async function readKitTiles(page) {
     tiles: [...document.querySelectorAll(".widget-tile[data-ark-rendered-by]")].map((node) => ({
       renderer: node.dataset.arkRenderer,
       renderedBy: node.dataset.arkRenderedBy,
-      title: node.querySelector(".widget-tile__title")?.textContent?.trim(),
+      title:
+        node.querySelector(".widget-tile__title")?.textContent?.trim() ||
+        node.querySelector(".quality-gate__bar-title")?.textContent?.trim(),
       dots: [...node.querySelectorAll(".widget-tile__bar .indicator-row .indicator")].map((dot) =>
         [...dot.classList]
           .find((name) => name.startsWith("indicator--status-"))
@@ -313,13 +315,16 @@ const awesomeTiles = await readKitTiles(awesome.page);
 checkKitTiles("awesome", awesomeTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
-  { title: "Quality gate", renderer: "dom" },
+  { title: "Allure Quality Gate", renderer: "dom" },
+  { title: "Sonar Quality Gate", renderer: "dom" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
 ]);
 
 const qualityGate = await awesome.page.$('[data-testid="quality-gate"]');
 check(Boolean(qualityGate), "awesome quality gate: DS primitive missing in report");
+const sonarQualityGate = await awesome.page.$('[data-testid="sonar-quality-gate"]');
+check(Boolean(sonarQualityGate), "awesome sonar quality gate: DS primitive missing in report");
 
 const gauge = await awesome.page.evaluate(() => {
   const tile = [...document.querySelectorAll(".widget-tile")].find(
@@ -346,7 +351,8 @@ const dashboardTiles = await readKitTiles(dashboard.page);
 checkKitTiles("dashboard", dashboardTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
-  { title: "Quality gate", renderer: "dom" },
+  { title: "Allure Quality Gate", renderer: "dom" },
+  { title: "Sonar Quality Gate", renderer: "dom" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
   {

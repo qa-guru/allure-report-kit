@@ -1,12 +1,11 @@
 /**
  * e2e config — the kit inside a real Allure 3 report.
  *
- * Same surface as examples/minimal, with `softFork: true` actually pointing at
- * the built plugin. Panels cover both data paths: inline data in the manifest,
- * and `fromRun`, which the plugin computes against the store and ships as a
- * widget.
+ * After the locked 2×2: Allure QG + Sonar QG lead the custom panels, then the
+ * rest of the kit surface (fromRun / fromHistory / stock mix).
  */
 import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/allure-report-kit";
+import { sonarProjectStatusToQualityGateOptions } from "@qa-guru/allure-report-kit/runtime";
 
 const lockedQuad = presets.lockedQuad({
   renderers: { durations: "highcharts" },
@@ -29,16 +28,70 @@ const servicesPanel = () =>
     },
   });
 
-const qualityGatePanel = () =>
+const allureQualityGatePanel = () =>
   panels.qualityGate({
-    id: "qualityGate",
-    title: "Quality gate",
+    id: "allureQualityGate",
+    title: "Allure Quality Gate",
     layout: "4x1",
     labels: {
-      passed: { ru: "Quality gate пройден", en: "Quality gate passed" },
-      failed: { ru: "Quality gate не пройден", en: "Quality gate failed" },
+      passed: { ru: "Allure Quality Gate пройден", en: "Allure Quality Gate passed" },
+      failed: { ru: "Allure Quality Gate не пройден", en: "Allure Quality Gate failed" },
     },
   });
+
+/** Sonar QG — fixture shaped like the DS components demo (passed). */
+const sonarQualityGatePanel = () => {
+  const data = sonarProjectStatusToQualityGateOptions(
+    {
+      status: "OK",
+      project_key: "reference-app-backend",
+      analysis_id: "AXdemoPassedAnalysis",
+      dashboard_url: "https://sonar.qa.guru/dashboard?id=reference-app-backend",
+      conditions: [
+        {
+          status: "OK",
+          metricKey: "coverage",
+          comparator: "LT",
+          errorThreshold: 80,
+          actualValue: 100,
+        },
+        {
+          status: "OK",
+          metricKey: "bugs",
+          comparator: "GT",
+          errorThreshold: 0,
+          actualValue: 0,
+        },
+      ],
+    },
+    {
+      lang: "ru",
+      profile: "qa-guru-canon",
+      profileConditions: [
+        { metric: "coverage", op: "LT", error: 80, label: "Coverage on Overall Code ≥ 80%" },
+        { metric: "bugs", op: "GT", error: 0, label: "Bugs on Overall Code = 0" },
+      ],
+      source: {
+        configFile: "docs/sonar/quality-gate-profile.json",
+        profile: "qa-guru-canon",
+        projectKey: "reference-app-backend",
+        hrefBase: "https://github.com/qa-guru/zero-design-system/blob/master/",
+      },
+    },
+  );
+
+  return panels.custom({
+    id: "sonarQualityGate",
+    title: "Sonar Quality Gate",
+    kind: "qualityGate",
+    layout: "4x1",
+    dots: false,
+    // KitQualityGateData — rules path, not series.
+    data,
+  });
+};
+
+const leadQualityGates = () => [allureQualityGatePanel(), sonarQualityGatePanel()];
 
 export default withKit({
   name: "allure-report-kit e2e",
@@ -59,6 +112,11 @@ export default withKit({
 
   qualityGate: {
     rules: [{ maxFailures: 10 }],
+    source: {
+      configFile: "allurerc.mjs",
+      rulesFile: "allure/quality-gate.mjs",
+      hrefBase: "https://github.com/qa-guru/zero-design-system/blob/master/stacks/java-spring/tests/",
+    },
   },
 
   plugins: {
@@ -68,8 +126,8 @@ export default withKit({
         reportLanguage: "ru",
         charts: [
           ...lockedQuad,
+          ...leadQualityGates(),
 
-          qualityGatePanel(),
           servicesPanel(),
 
           // Data computed from the run by the plugin, fetched as a widget.
@@ -93,8 +151,8 @@ export default withKit({
         reportLanguage: "ru",
         layout: [
           ...lockedQuad,
+          ...leadQualityGates(),
 
-          qualityGatePanel(),
           servicesPanel(),
 
           // Both run-derived panel kinds: a gauge on the SVG canon and a table on
