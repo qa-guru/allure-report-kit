@@ -17,6 +17,13 @@
   },
   "type": "module",
   "types": "./types.d.ts",
+  "files": [
+    "dist",
+    "types.d.ts"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "webpack --mode production",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""

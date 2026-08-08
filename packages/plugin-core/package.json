@@ -19,6 +19,9 @@
   "files": [
     "src"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@qa-guru/allure-report-kit": "file:../.."
   }

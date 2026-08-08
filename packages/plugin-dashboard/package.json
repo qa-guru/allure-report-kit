@@ -20,6 +20,9 @@
   "files": [
     "src"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@qa-guru/allure-report-kit-plugin-core": "file:../plugin-core",
     "@qa-guru/allure-report-kit-web-dashboard": "file:../web-dashboard"

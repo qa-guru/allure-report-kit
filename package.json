@@ -74,7 +74,9 @@
     "build:fork": "npm --prefix packages/web-awesome run build && npm --prefix packages/web-dashboard run build",
     "report": "npm --prefix e2e run report",
     "verify:report": "npm run build && npm run build:fork && npm run report && npm run smoke:report && npm run smoke:single",
-    "setup": "node scripts/setup.mjs"
+    "setup": "node scripts/setup.mjs",
+    "publish:forks": "node scripts/publish-forks.mjs",
+    "publish:forks:dry": "node scripts/publish-forks.mjs --dry-run"
   },
   "peerDependencies": {
     "@allurereport/charts-api": "~3.14.0",

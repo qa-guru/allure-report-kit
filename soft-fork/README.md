@@ -183,6 +183,22 @@ Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in t
 - **Dogfood compare baseline** — `scripts/baseline.mjs`, CI after smoke.
 - **Realtime (`allure watch`)** — `#ensureKitReady` on the first `update`, kit
   assets and panel widgets ship before SIGINT; `npm run smoke:watch`.
+- **npm** — full soft-fork set published under `@qa-guru/*`. Repo keeps `file:`
+  for local `setup`; `npm run publish:forks` rewrites to semver for publish.
+
+## Consumer install (soft-fork report)
+
+```bash
+npm i -D @qa-guru/allure-report-kit \
+  @qa-guru/allure-report-kit-awesome \
+  @qa-guru/allure-report-kit-dashboard \
+  echarts highcharts \
+  @allurereport/plugin-awesome@~3.14.0 \
+  @allurereport/plugin-dashboard@~3.14.0
+```
+
+`withKit({ softFork: true, … })` points plugins at the published `-awesome` /
+`-dashboard` packages (and their `-web-*` / `-plugin-core` deps).
 
 ## Not done yet
 
@@ -190,7 +206,3 @@ Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in t
   rather than assumed: the dashboard template links `favicon.ico` and never
   writes it, and upstream's nivo widgets emit negative SVG dimensions on this
   grid (same page: all-kit → 0 errors, all-stock → 8).
-- Soft-fork npm packages (`-awesome`, `-dashboard`, `-web-*`, `-plugin-core`)
-  still link via `file:` for local `setup`. Main kit is on npm:
-  [`@qa-guru/allure-report-kit@0.1.1`](https://www.npmjs.com/package/@qa-guru/allure-report-kit).
-  Publishing the fork set needs semver deps + `files` for `dist/`.
