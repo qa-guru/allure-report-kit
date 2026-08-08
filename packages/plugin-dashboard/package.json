@@ -24,7 +24,7 @@
     "@qa-guru/allure-report-kit-web-dashboard": "file:../web-dashboard"
   },
   "peerDependencies": {
-    "@allurereport/plugin-dashboard": ">=3.13"
+    "@allurereport/plugin-dashboard": "~3.13.0"
   },
   "devDependencies": {
     "@allurereport/plugin-dashboard": "3.13.0",

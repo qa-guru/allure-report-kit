@@ -9,7 +9,13 @@
  * Usage:
  *   npm run sync:ds
  *   ZDS_DESIGN_SYSTEM=/path/to/design-system npm run sync:ds
- *   npm run sync:ds -- --check      # fail when the copy is stale
+ *   npm run sync:ds -- --check              # fail when the copy is stale
+ *   npm run sync:ds -- --check --require-source
+ *
+ * `--check` needs the design-system to compare against. A standalone clone does
+ * not have it, and that is not a failure of the kit — the check reports the gap
+ * and passes. `--require-source` turns the gap itself into a failure, for a CI
+ * that does check out the monorepo.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -123,15 +129,18 @@ function withBanner(file, content) {
 
 function main() {
   const check = process.argv.includes("--check");
+  const requireSource = process.argv.includes("--require-source");
   const source = findSource();
 
   if (!source) {
     const message = `sync-ds: design-system not found. Tried:\n  ${DEFAULT_SOURCES.join("\n  ")}`;
-    if (check) {
+    if (requireSource) {
       console.error(message);
       process.exit(1);
     }
-    console.warn(`${message}\nsync-ds: skipped — vendored copy left untouched.`);
+    console.warn(
+      `${message}\nsync-ds: ${check ? "nothing to compare against" : "skipped"} — vendored copy left untouched.`,
+    );
     return;
   }
 

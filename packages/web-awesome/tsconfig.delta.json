@@ -1,0 +1,23 @@
+{
+  // Config the kit uses to type-check its own delta, alongside upstream's.
+  //
+  // Upstream's tsconfig.json carries a project reference to tsconfig.node.json,
+  // which turns it into a solution config: `tsc -p .` checks nothing and
+  // fork-ts-checker stays inert. It is kept as upstream ships it, and this file
+  // is the checkable variant — no reference, plus the `types` path alias upstream
+  // forgot here but does declare in web-dashboard.
+  //
+  // Checking it surfaces upstream's own pre-existing errors, which the fork does
+  // not own. `scripts/typecheck-fork.mjs` fails on the delta files only and
+  // reports the upstream count so the number stays visible.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "types": ["./types"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"],
+  "references": []
+}

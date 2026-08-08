@@ -52,9 +52,12 @@
     "build": "tsc --project tsconfig.json",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "typecheck": "tsc --project tsconfig.json --noEmit",
+    "typecheck:fork": "node scripts/typecheck-fork.mjs",
     "sync:ds": "node scripts/sync-ds.mjs",
+    "sync:ds:check": "node scripts/sync-ds.mjs --check",
     "test": "node --test test/*.test.mjs",
     "smoke": "node scripts/smoke-dogfood.mjs",
+    "smoke:ci": "node scripts/smoke-ci.mjs",
     "verify": "npm run build && npm test && npm run smoke",
     "smoke:report": "node scripts/smoke-report.mjs",
     "build:fork": "npm --prefix packages/web-awesome run build && npm --prefix packages/web-dashboard run build",
@@ -63,7 +66,7 @@
     "setup": "node scripts/setup.mjs"
   },
   "peerDependencies": {
-    "@allurereport/charts-api": ">=3.13",
+    "@allurereport/charts-api": "~3.13.0",
     "echarts": ">=5",
     "highcharts": ">=11"
   },
@@ -84,6 +87,7 @@
   "devDependencies": {
     "echarts": "^6.1.0",
     "highcharts": "^13.0.0",
+    "playwright": "^1.62.1",
     "typescript": "^5.7.0"
   }
 }

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast feedback: everything that needs neither the forked bundles nor a browser.
+  unit:
+    name: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm install
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+
+      # The vendored design-system copy must match its source. Without the
+      # monorepo checked out there is nothing to compare against, and the script
+      # says so and passes; run it in the monorepo to catch real drift.
+      - run: npm run sync:ds:check
+
+  # The soft-fork itself: build both bundles, generate real reports, smoke them.
+  report:
+    name: report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Install order is a dependency order — see scripts/setup.mjs.
+      - run: npm run setup
+
+      - name: typecheck the fork delta
+        run: npm run typecheck:fork
+
+      - name: install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Dogfood proves the manifest and the runtime; the reports prove the fork.
+      - run: npm run report
+      - run: npm run smoke:ci
+
+      - name: upload the generated reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-reports
+          path: e2e/allure-report
+          retention-days: 7
