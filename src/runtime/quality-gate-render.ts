@@ -180,9 +180,6 @@ export function renderQualityGate(
   const bar = document.createElement("div");
   bar.className = "quality-gate__bar";
 
-  const barStart = document.createElement("div");
-  barStart.className = "quality-gate__bar-start";
-
   const indicator = document.createElement("span");
   indicator.className = `indicator indicator--${passed ? "passed" : "failed"} indicator--solid`;
   indicator.setAttribute("aria-hidden", "true");
@@ -191,10 +188,10 @@ export function renderQualityGate(
   barTitleEl.className = "quality-gate__bar-title";
   barTitleEl.textContent = barTitle;
 
-  barStart.append(indicator, barTitleEl);
   const infoPayload =
     options.infoPayload ?? buildQualityGateInfoPayload({ ...options, rules, passed });
-  bar.append(barStart, createQgInfo(infoPayload, resolveQualityGateFileSource(options.config)));
+  // Same chrome order as widget-tile: status left, title flexes right, trailing action.
+  bar.append(indicator, barTitleEl, createQgInfo(infoPayload, resolveQualityGateFileSource(options.config)));
 
   const body = document.createElement("div");
   body.className = "quality-gate__body";
@@ -202,7 +199,8 @@ export function renderQualityGate(
   if (passed) {
     const verdict = document.createElement("p");
     verdict.className = "quality-gate__verdict quality-gate__verdict--ok";
-    verdict.textContent = passedLabel;
+    // Bar already names the gate — body stays a short status, not a repeated sentence.
+    verdict.textContent = lang === "en" ? "Passed" : "Пройден";
     body.append(verdict);
   } else {
     const failedRules = rules.filter((rule) => !rule.passed);

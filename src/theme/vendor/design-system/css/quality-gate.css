@@ -154,12 +154,24 @@
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar .indicator {
   --indicator-size: 8px;
+  flex-shrink: 0;
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__bar > .qg-info {
+  flex-shrink: 0;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar-title {
-  font-size: 0.75rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--wt-title-size, 0.75rem);
   font-weight: 600;
+  line-height: 1.2;
+  text-align: right;
   color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__body {
@@ -167,11 +179,16 @@
 }
 
 .quality-gate:has(.quality-gate__bar).quality-gate--passed .quality-gate__body {
-  padding: var(--space-2) var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 4.5rem;
+  padding: var(--space-3);
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__verdict {
   margin: 0;
+  font-size: var(--font-size-md, 1rem);
   font-weight: 600;
 }
 

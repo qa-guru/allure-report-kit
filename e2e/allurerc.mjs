@@ -32,7 +32,6 @@ const allureQualityGatePanel = () =>
   panels.qualityGate({
     id: "allureQualityGate",
     title: "Allure Quality Gate",
-    layout: "4x1",
     labels: {
       passed: { ru: "Allure Quality Gate пройден", en: "Allure Quality Gate passed" },
       failed: { ru: "Allure Quality Gate не пройден", en: "Allure Quality Gate failed" },
@@ -84,7 +83,6 @@ const sonarQualityGatePanel = () => {
     id: "sonarQualityGate",
     title: "Sonar Quality Gate",
     kind: "qualityGate",
-    layout: "4x1",
     dots: false,
     // KitQualityGateData — rules path, not series.
     data,
