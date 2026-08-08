@@ -375,6 +375,12 @@ export function createKitPlugin({
 
     #upstreamAssets = new Set();
 
+    /** Fork bundle and header CSS were copied into the report output. */
+    #assetsWritten = false;
+
+    /** Set on the first `update` — `allure generate` never calls it. */
+    #watchMode = false;
+
     /** Single-file only: the fork bundle and the stylesheets to inline. */
     #forkBundle;
 
@@ -665,23 +671,36 @@ export function createKitPlugin({
       }
     }
 
-    /** Raw context while the kit is off, proxied while it is on. */
-    #contextFor(context) {
-      return kitDisabledReason(this.#manifest, this.options) ? context : this.#wrapContext(context);
-    }
-
-    start = async (context, store, realtime) =>
-      this.#upstream.start?.(this.#contextFor(context), store, realtime);
-
-    update = async (context, store) => this.#upstream.update?.(this.#contextFor(context), store);
-
-    info = async (context, store) => this.#upstream.info?.(this.#contextFor(context), store);
-
-    done = async (context, store) => {
+    /** Why the kit stands down for this lifecycle, or `undefined` when it is on. */
+    #kitOffReason() {
       const disabled = kitDisabledReason(this.#manifest, this.options);
       if (disabled) {
-        log("warn", `fallback to stock Allure: ${disabled}`);
-        return this.#upstream.done(context, store);
+        return disabled;
+      }
+      if (this.#singleFile && this.#watchMode) {
+        return "singleFile with allure watch is unsupported";
+      }
+      return undefined;
+    }
+
+    #kitActive() {
+      return this.#kitOffReason() === undefined;
+    }
+
+    /** Raw context while the kit is off, proxied while it is on. */
+    #contextFor(context) {
+      return this.#kitActive() ? this.#wrapContext(context) : context;
+    }
+
+    /**
+     * Fork manifest, chart backends, upstream asset drop-list — once per report.
+     *
+     * In `allure watch` this must run on the first `update`, not only in `done`:
+     * without `#forkManifest` the HTML guard stays false and the report is stock.
+     */
+    async #ensureKitReady() {
+      if (this.#forkManifest) {
+        return;
       }
 
       this.#forkManifest = await readJson(join(this.#forkDistDir(), "manifest.json"));
@@ -692,8 +711,6 @@ export function createKitPlugin({
         log("warn", `renderer backend unavailable: ${item}`);
       }
 
-      const panelWidgets = await this.#resolveRunPanels(store);
-
       // Upstream writes no separate assets in single-file mode, so there is no
       // manifest of them to drop — the inlined tag is matched by shape instead.
       this.#upstreamAssets = this.#singleFile
@@ -703,6 +720,66 @@ export function createKitPlugin({
               await readJson(resolveFrom.resolve(`${upstreamPackage}/dist/multi/manifest.json`)),
             ),
           );
+    }
+
+    async #writePanelWidgets(context, panelWidgets) {
+      for (const widget of panelWidgets) {
+        await context.reportFiles.addFile(
+          widget.path,
+          Buffer.from(JSON.stringify(widget.data), "utf8"),
+        );
+      }
+    }
+
+    /**
+     * Kit assets and run-panel widgets after upstream wrote the report shell.
+     *
+     * Assets are written once (`#assetsWritten`); panel data is refreshed every
+     * `update` because the store keeps changing under `allure watch`.
+     */
+    async #shipKitOutputs(context, panelWidgets) {
+      if (this.#singleFile) {
+        return;
+      }
+      if (!this.#assetsWritten) {
+        await this.#writeKitAssets(context);
+        this.#assetsWritten = true;
+      }
+      await this.#writePanelWidgets(context, panelWidgets);
+    }
+
+    start = async (context, store, realtimeSubscriber) =>
+      this.#upstream.start?.(this.#contextFor(context), store, realtimeSubscriber);
+
+    update = async (context, store) => {
+      this.#watchMode = true;
+      if (this.#singleFile) {
+        log("warn", "singleFile with allure watch is unsupported — fallback to stock Allure");
+      }
+      if (!this.#kitActive()) {
+        return this.#upstream.update?.(context, store);
+      }
+
+      await this.#ensureKitReady();
+      await this.#upstream.update?.(this.#wrapContext(context), store);
+
+      const panelWidgets = await this.#resolveRunPanels(store);
+      await this.#shipKitOutputs(context, panelWidgets);
+    };
+
+    info = async (context, store) => this.#upstream.info?.(this.#contextFor(context), store);
+
+    done = async (context, store) => {
+      const off = this.#kitOffReason();
+      if (off) {
+        log("warn", `fallback to stock Allure: ${off}`);
+        return this.#upstream.done(context, store);
+      }
+
+      await this.#ensureKitReady();
+
+      const { resolved } = requiredLibs(this.#tiles(), resolveFrom);
+      const panelWidgets = await this.#resolveRunPanels(store);
 
       if (this.#singleFile) {
         // Everything has to be in hand before upstream renders `index.html`:
@@ -711,17 +788,7 @@ export function createKitPlugin({
       }
 
       await this.#upstream.done(this.#wrapContext(context), store);
-
-      if (!this.#singleFile) {
-        await this.#writeKitAssets(context);
-
-        for (const widget of panelWidgets) {
-          await context.reportFiles.addFile(
-            widget.path,
-            Buffer.from(JSON.stringify(widget.data), "utf8"),
-          );
-        }
-      }
+      await this.#shipKitOutputs(context, panelWidgets);
 
       log(
         "info",

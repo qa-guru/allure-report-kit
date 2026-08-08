@@ -181,11 +181,11 @@ Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in t
   `dist/theme/header.{bundle.js,inline.css}` + template fetch-shim.
 - **`observeCell`** — layout/tier re-measured on cell resize.
 - **Dogfood compare baseline** — `scripts/baseline.mjs`, CI after smoke.
+- **Realtime (`allure watch`)** — `#ensureKitReady` on the first `update`, kit
+  assets and panel widgets ship before SIGINT; `npm run smoke:watch`.
 
 ## Not done yet
 
-- **Realtime (`allure watch`)** — proxy from `start` is in place, but repeated
-  `update` cycles were not exercised; needs a dedicated watch e2e (deferred).
 - Two upstream console defects the smoke filters out explicitly, both measured
   rather than assumed: the dashboard template links `favicon.ico` and never
   writes it, and upstream's nivo widgets emit negative SVG dimensions on this
