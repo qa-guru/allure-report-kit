@@ -108,15 +108,6 @@ if (mode === "kit" || mode === "all") {
   ]) {
     await shotReportWidget(page, file, title, { kit: true });
   }
-  // Upstream renderers as they appear inside the kit report (locked 2×2 + extras)
-  for (const [file, title] of [
-    ["kit-current-status.png", "Текущий статус"],
-    ["kit-duration-dynamics.png", "Динамика длительности"],
-    ["kit-status-dynamics.png", "Динамика статусов"],
-    ["kit-severity.png", "Результаты по severity"],
-  ]) {
-    await shotReportWidget(page, file, title, { kit: false });
-  }
 }
 
 if (mode === "qg" || mode === "all") {
