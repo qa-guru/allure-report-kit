@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit-plugin-core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Shared machinery for allure-report-kit Allure 3 plugins",
   "license": "Apache-2.0",
   "author": "QA Guru",

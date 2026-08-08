@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit-web-dashboard",
-  "version": "3.14.4",
+  "version": "3.14.5",
   "allureUpstream": "3.14.3",
   "description": "Soft-fork of @allurereport/web-dashboard with the allure-report-kit renderer registry",
   "keywords": [

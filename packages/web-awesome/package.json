@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit-web-awesome",
-  "version": "3.14.4",
+  "version": "3.14.5",
   "allureUpstream": "3.14.3",
   "description": "Soft-fork of @allurereport/web-awesome with the allure-report-kit renderer registry",
   "keywords": [
@@ -44,7 +44,7 @@
     "minisearch": "^7.2.0",
     "preact": "^10.28.2",
     "prismjs": "^1.30.0",
-    "@qa-guru/allure-report-kit": "file:../.."
+    "@qa-guru/allure-report-kit": "0.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.27.4",
