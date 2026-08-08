@@ -54,7 +54,6 @@
   --ark-border: var(--color-border);
 
   /* Chart swatches — DS names ← kit tokens */
-  --color-status-passed-chart: var(--ark-status-passed, #49cb68);
   --color-status-failed: var(--ark-status-failed, #fd5a3e);
   --color-status-broken: var(--ark-status-broken, #ffd050);
   --color-status-skipped: var(--ark-status-skipped, #aaaaaa);
@@ -77,6 +76,14 @@
   --ark-series-3: var(--ark-status-unknown, #b46fd8);
   --ark-series-4: var(--ark-status-failed, #fd5a3e);
   --ark-series-5: var(--ark-layer-manual, #459bde);
+}
+
+/* The design-system green dot reads `--color-status-passed-chart`, a name
+ * Allure also uses for its own chart swatch. Declared on the indicator rather
+ * than on `:root`, so that switching `theme.hostPalette` off really does leave
+ * the report's charts alone. */
+.indicator {
+  --color-status-passed-chart: var(--ark-status-passed, #49cb68);
 }
 
 /* ---- Report grid ---- */

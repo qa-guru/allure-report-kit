@@ -386,6 +386,9 @@ function panelModel(panel: KitCustomPanel, data: KitPanelData | undefined): Char
     total: data?.total,
     unit: data?.unit,
     columns: data?.columns,
+    // Panels over runs carry points instead of a scalar, and a bar or line
+    // without categories has no axis to hang them on.
+    categories: data?.categories,
     series: data?.series ?? [],
   };
 }

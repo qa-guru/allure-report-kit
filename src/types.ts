@@ -102,6 +102,8 @@ export type PanelKind = "donut" | "bar" | "line" | "pyramid" | "gauge" | "table"
 
 export interface KitPanelData {
   series: KitSeries[];
+  /** X categories for panels whose series carry points rather than a value. */
+  categories?: string[];
   /** Denominator for the "из N" caption of donut and gauge panels. */
   total?: number;
   unit?: string;
@@ -112,8 +114,24 @@ export interface KitPanelData {
 /** What a panel is grouped by when its data comes from the run itself. */
 export type PanelGroupBy = "status" | "layer" | "severity" | `label:${string}`;
 
-/** Metric computed per group by `panels.fromRun`. */
-export type PanelMetric = "count" | "passRate" | "duration";
+/**
+ * Metric computed per group by `panels.fromRun`.
+ *
+ * `new` and `regressed` keep Allure's own transition vocabulary rather than
+ * inventing a parallel one: `new` is a test the report has not seen before,
+ * `regressed` one that used to pass and now does not.
+ */
+export type PanelMetric =
+  | "count"
+  | "passRate"
+  | "duration"
+  | "flakyRate"
+  | "retries"
+  | "new"
+  | "regressed";
+
+/** Metric read per run by `panels.fromHistory`. */
+export type HistoryMetric = "passRate" | "count" | "duration" | "failed";
 
 /**
  * Derive panel data from the test results of the run.
@@ -121,12 +139,30 @@ export type PanelMetric = "count" | "passRate" | "duration";
  * Resolved by the kit plugin at generation time — it has the store — and shipped
  * as a report widget, so nothing about it reaches the browser as inline config.
  */
-export interface KitPanelSource {
+export interface KitPanelRunSource {
+  from: "run";
   groupBy: PanelGroupBy;
   metric?: PanelMetric;
   /** Keep only the N largest groups; the rest is folded into `other`. */
   limit?: number;
 }
+
+/**
+ * Derive panel data from the history of previous runs.
+ *
+ * A run panel answers "how does this run break down"; this one answers "where
+ * is it going", which needs the points Allure already keeps in `historyPath`.
+ */
+export interface KitPanelHistorySource {
+  from: "history";
+  metric?: HistoryMetric;
+  /** Keep the N most recent runs. */
+  limit?: number;
+  /** One series per status instead of a single line of the metric. */
+  splitBy?: "status";
+}
+
+export type KitPanelSource = KitPanelRunSource | KitPanelHistorySource;
 
 export interface KitCustomPanel extends KitTileExtras {
   type: "custom";
@@ -169,6 +205,13 @@ export interface KitThemeConfig {
   tokensDark?: KitTokens;
   /** Extra stylesheet urls appended after the kit theme. */
   css?: string[];
+  /**
+   * Repaint the host report's own chart swatches with the kit canon.
+   *
+   * On by default: a page mixing kit tiles and stock Allure widgets otherwise
+   * shows two greens for `passed`. Turn it off to leave Allure's palette alone.
+   */
+  hostPalette?: boolean;
   tile?: {
     bar?: boolean;
     indicators?: boolean;
@@ -244,10 +287,23 @@ export interface ResolvedTile {
   chartId?: string;
 }
 
+/**
+ * Assets the plugin had to put inside the document.
+ *
+ * Only filled for `singleFile: true`, where the report is one HTML file and the
+ * design-system header has nothing to fetch: the module arrives as a `data:`
+ * URL and its markup as a string.
+ */
+export interface KitInlineAssets {
+  headerModule?: string;
+  headerTemplate?: string;
+}
+
 export interface KitRuntimeManifest {
   version: 1;
   renderer: RendererSpec;
   theme: KitThemeConfig;
   tiles: ResolvedTile[];
   diagnostics: KitDiagnostic[];
+  inline?: KitInlineAssets;
 }

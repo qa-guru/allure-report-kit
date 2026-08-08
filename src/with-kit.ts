@@ -147,8 +147,9 @@ function checkPanelsNeedFork(
 }
 
 /**
- * `panels.fromRun` needs the plugin: its data is computed against the store at
- * generation time, and an upstream plugin knows nothing about it.
+ * `panels.fromRun` and `panels.fromHistory` need the plugin: their data is
+ * computed against the store at generation time, and an upstream plugin knows
+ * nothing about it.
  */
 function checkRunPanelsNeedFork(
   tiles: KitTile[],
@@ -159,12 +160,12 @@ function checkRunPanelsNeedFork(
   if (softFork) {
     return;
   }
-  const fromRun = tiles.filter((tile) => isCustomPanel(tile) && tile.source);
-  if (fromRun.length > 0) {
+  const derived = tiles.filter((tile) => isCustomPanel(tile) && tile.source);
+  if (derived.length > 0) {
     diagnostics.push({
       level: "warn",
       code: "run-panels-need-soft-fork",
-      message: `${where}: ${fromRun.length} panel(s) derive their data from the run, which only the kit plugin computes. Set softFork: true, or give the panel inline data / a dataUrl.`,
+      message: `${where}: ${derived.length} panel(s) derive their data from the run or its history, which only the kit plugin computes. Set softFork: true, or give the panel inline data / a dataUrl.`,
     });
   }
 }
@@ -218,9 +219,9 @@ export function withKit<T extends KitConfig>(config: T): Record<string, unknown>
 
     if (options.singleFile) {
       diagnostics.push({
-        level: "warn",
+        level: "info",
         code: "single-file",
-        message: `plugins.${name}.options.singleFile is on — the kit plugin falls back to stock Allure for this report. Kit assets are separate files (fork bundle, chart backends, DS header tree); inlining them is a PLAN-0.1 item.`,
+        message: `plugins.${name}.options.singleFile is on — the kit inlines its assets (fork bundle, chart backends, design-system header) into the document, and panel data travels in the manifest instead of a widget. Expect a large HTML file.`,
       });
     }
 

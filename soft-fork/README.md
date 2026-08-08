@@ -144,8 +144,8 @@ npm run typecheck:fork      # the delta must stay clean
 
 ## Upstream sync
 
-Pinned at `@allurereport/* 3.13.x` (shipped by `allure@3.14.3`) — exact versions
-in the fork `dependencies`, `~3.13.0` in the plugin `peerDependencies`.
+Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in the fork
+`dependencies`, `~3.14.0` in the kit `peerDependencies`.
 
 1. Diff the four delta files above against the new upstream `src`; everything
    else can be replaced wholesale.
@@ -168,13 +168,27 @@ in the fork `dependencies`, `~3.13.0` in the plugin `peerDependencies`.
 
 7. `npm run typecheck:fork`, `npm run verify` (unit + dogfood) and
    `npm run verify:report` (real reports).
+8. `npm run baseline` — structural compare grid on dogfood; refresh fixture with
+   `npm run baseline -- --update` only after an intentional renderer change.
+
+## Done in v0.1 (recent)
+
+- **`hostPalette`** — stock nivo widgets pick up `--ark-status-*` via
+  `--color-status-*-chart` overrides (`themeToCss`).
+- **`panels.fromHistory`** + extra **`fromRun` metrics** (`flakyRate`, `retries`,
+  `new`, `regressed`) — resolved in `plugin-core`, shipped as widgets.
+- **`singleFile: true`** — kit assets inlined; header via
+  `dist/theme/header.{bundle.js,inline.css}` + template fetch-shim.
+- **`observeCell`** — layout/tier re-measured on cell resize.
+- **Dogfood compare baseline** — `scripts/baseline.mjs`, CI after smoke.
 
 ## Not done yet
 
-- `singleFile: true` — the plugins fall back to stock Allure and say so, and
-  `withKit` reports it at config time, before anything is generated.
+- **Realtime (`allure watch`)** — proxy from `start` is in place, but repeated
+  `update` cycles were not exercised; needs a dedicated watch e2e (deferred).
 - Two upstream console defects the smoke filters out explicitly, both measured
   rather than assumed: the dashboard template links `favicon.ico` and never
   writes it, and upstream's nivo widgets emit negative SVG dimensions on this
   grid (same page: all-kit → 0 errors, all-stock → 8).
-- Publishing: the packages resolve through `file:` links, nothing is on npm.
+- **npm publish** — `publishConfig.access=public`, `npm-pack-check.mjs` and
+  `release.yml` on tag `v*` verify the tarball; packages still link via `file:`.

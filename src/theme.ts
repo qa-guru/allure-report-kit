@@ -55,6 +55,31 @@ const BAND_INK_DARK: KitTokens = {
   "--ark-band-ink": "rgba(28, 25, 23, 0.82)",
 };
 
+/**
+ * Allure's own chart swatches, mapped onto the kit canon.
+ *
+ * The stock widgets do not read a colour in JavaScript — `getChartColor` hands
+ * nivo the string `var(--color-status-<status>-chart[-fill])` and the browser
+ * resolves it at paint time. So redefining those ten properties repaints the
+ * upstream tiles too, with no DOM patching and no re-render, which is the whole
+ * reason a mixed page can hold one palette.
+ *
+ * The kit token is theme-scoped already, so one block covers light and dark.
+ * `-chart` and `-chart-fill` collapse to the same value: upstream separates a
+ * fill from its darker companion, but the canon is one hex per status, and
+ * keeping the pair apart is exactly the difference that shows up next to a kit
+ * tile.
+ */
+const HOST_PALETTE_SELECTOR = ':root:not([data-theme="dark"]), :root[data-theme="dark"]';
+
+const HOST_STATUS_TOKENS: Record<string, string> = {
+  passed: "--ark-status-passed",
+  failed: "--ark-status-failed",
+  broken: "--ark-status-broken",
+  skipped: "--ark-status-skipped",
+  unknown: "--ark-status-unknown",
+};
+
 export const DEFAULT_HEADER: KitThemeHeaderConfig = {
   enabled: false,
   source: "design-system",
@@ -70,6 +95,7 @@ export function qaGuru(overrides: Partial<KitThemeConfig> = {}): KitThemeConfig 
     tokens: { ...STATUS_TOKENS },
     tokensLight: { ...LAYER_TOKENS_LIGHT, ...BAND_INK_LIGHT },
     tokensDark: { ...LAYER_TOKENS_DARK, ...BAND_INK_DARK },
+    hostPalette: true,
     tile: { bar: true, indicators: true, indicatorMix: 100 },
     header: { ...DEFAULT_HEADER },
   };
@@ -129,6 +155,20 @@ export function themeToCss(theme: KitThemeConfig): string {
   emit(":root", theme.tokens);
   emit(':root, [data-theme="light"]', theme.tokensLight);
   emit('[data-theme="dark"]', theme.tokensDark);
+
+  if (theme.hostPalette !== false) {
+    const host: KitTokens = {};
+    for (const [status, token] of Object.entries(HOST_STATUS_TOKENS)) {
+      host[`--color-status-${status}-chart`] = `var(${token})`;
+      host[`--color-status-${status}-chart-fill`] = `var(${token})`;
+    }
+    // Upstream declares these on `:root:not([data-theme=dark])` and
+    // `:root[data-theme=dark]`, so a plain `:root` here loses on specificity and
+    // half the palette silently stays Allure's. Mirroring both selectors puts
+    // the override at the same weight, where source order decides — and source
+    // order is ours, since the theme style is appended to `head`.
+    emit(HOST_PALETTE_SELECTOR, host);
+  }
 
   if (theme.tile?.indicatorMix !== undefined) {
     blocks.push(`.widget-tile {\n  --indicator-mix: ${theme.tile.indicatorMix}%;\n}`);

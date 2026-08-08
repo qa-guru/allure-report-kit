@@ -164,6 +164,49 @@ export function withReportLayout(tile: ResolvedTile, host?: HTMLElement): Resolv
   };
 }
 
+/**
+ * Re-measure the cell and report only a change the tile would actually see.
+ *
+ * The first measurement happens on mount, when the grid may still be laying
+ * out, and it stays wrong until something redraws — a sidebar toggle, a window
+ * resize, a breakpoint. Quantisation is what makes an observer affordable here:
+ * a continuous ratio would fire on every pixel, while the bucketed layout
+ * changes a handful of times across the whole width of a screen.
+ *
+ * Height is deliberately ignored — the cell's width is grid-driven, its height
+ * follows the content the callback is about to redraw, and reacting to that
+ * would feed back into itself.
+ */
+export function observeCell(
+  host: HTMLElement,
+  onChange: (geometry: { layout: TileLayout; tier: TileTier }) => void,
+): () => void {
+  if (typeof ResizeObserver === "undefined") {
+    return () => {};
+  }
+  let last = cellGeometry(host);
+  let frame = 0;
+
+  const observer = new ResizeObserver(() => {
+    cancelAnimationFrame(frame);
+    // One callback per frame: a resize drag delivers a record per pixel.
+    frame = requestAnimationFrame(() => {
+      const next = cellGeometry(host);
+      if (!next || (last && next.layout === last.layout && next.tier === last.tier)) {
+        return;
+      }
+      last = next;
+      onChange(next);
+    });
+  });
+  observer.observe(host);
+
+  return () => {
+    cancelAnimationFrame(frame);
+    observer.disconnect();
+  };
+}
+
 export interface PairedTile<T> {
   chartId: string;
   chartData?: T;
@@ -199,6 +242,7 @@ function pairByChartId<T extends { type?: string }>(
 ): PairedTile<T>[] {
   const available = new Map(chartEntries);
   const paired: PairedTile<T>[] = [];
+  let matched = 0;
 
   for (const tile of tiles) {
     if (tile.panel) {
@@ -211,7 +255,18 @@ function pairByChartId<T extends { type?: string }>(
       continue; // Allure generated nothing for this tile.
     }
     available.delete(chartId);
+    matched += 1;
     paired.push({ chartId, chartData, tile });
+  }
+
+  // Not one tile found its data, yet the report has charts: these keys are not
+  // ours. That is what `singleFile: true` looks like — upstream keeps its data
+  // in memory and never routes `charts.json` through `reportFiles`, so the
+  // plugin has nothing to re-key. Falling back is better than handing every
+  // tile back to Allure, and the positional walk makes the same assumption the
+  // re-keying does.
+  if (matched === 0 && chartEntries.length > 0) {
+    return pairPositionally(chartEntries, tiles);
   }
 
   // Entries no tile claimed — a chart added outside the kit config. Left to Allure.

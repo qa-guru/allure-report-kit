@@ -58,14 +58,15 @@ page.on("requestfailed", (request) =>
 );
 
 await page.goto(URL_UNDER_TEST, { waitUntil: "networkidle" });
-await page.waitForSelector(".widget-tile[data-ark-rendered-by]");
+await page.waitForSelector("#dogfood-grid .widget-tile[data-ark-rendered-by]");
 await page.waitForFunction(
-  (expected) => document.querySelectorAll(".widget-tile[data-ark-rendered-by]").length >= expected,
+  (expected) =>
+    document.querySelectorAll("#dogfood-grid .widget-tile[data-ark-rendered-by]").length >= expected,
   EXPECTED_TILES.length,
   { timeout: 10_000 },
 );
 
-const tiles = await page.$$eval(".widget-tile", (nodes) =>
+const tiles = await page.$$eval("#dogfood-grid .widget-tile", (nodes) =>
   nodes.map((node) => ({
     key: node.dataset.arkTile,
     renderer: node.dataset.arkRenderer,
@@ -177,6 +178,43 @@ const header = await page.$eval("#app-header", (node) => ({
 
 check(header.hasHeader, "theme.header: DS .header did not mount into #app-header");
 check(header.product === "Reference App", `theme.header: product name is "${header.product}"`);
+
+// Compare grid — same models, different backends (structural baseline source).
+const COMPARE_KEYS = [
+  "pie:echarts",
+  "pie:highcharts",
+  "bar:echarts",
+  "bar:highcharts",
+  "gauge:echarts",
+  "gauge:svg",
+];
+
+await page.waitForSelector("[data-ark-compare][data-ark-rendered-by]", { timeout: 10_000 });
+
+const compareTiles = await page.$$eval("[data-ark-compare]", (nodes) =>
+  nodes.map((node) => ({
+    key: node.dataset.arkCompare,
+    renderedBy: node.dataset.arkRenderedBy,
+    bodyChildren: node.querySelector(".widget-tile__body")?.childElementCount ?? 0,
+  })),
+);
+
+check(
+  compareTiles.length === COMPARE_KEYS.length,
+  `compare: expected ${COMPARE_KEYS.length} tiles, got ${compareTiles.length}`,
+);
+
+for (const key of COMPARE_KEYS) {
+  const tile = compareTiles.find((entry) => entry.key === key);
+  check(Boolean(tile), `compare: missing ${key}`);
+  check(tile?.bodyChildren > 0, `compare ${key}: empty body`);
+  check(tile?.renderedBy !== "none", `compare ${key}: renderer did not mount`);
+}
+
+check(
+  compareTiles.find((entry) => entry.key === "gauge:svg")?.renderedBy === "svg",
+  "compare gauge:svg: expected svg renderer",
+);
 
 check(consoleErrors.length === 0, `console errors:\n  ${consoleErrors.join("\n  ")}`);
 check(pageErrors.length === 0, `page errors:\n  ${pageErrors.join("\n  ")}`);

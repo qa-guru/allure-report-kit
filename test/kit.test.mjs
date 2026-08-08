@@ -186,6 +186,22 @@ test("the theme owns the chart palette, not the host chrome", () => {
   assert.match(css, /--ark-band-ink:/);
 });
 
+test("the host report's own chart swatches follow the canon", () => {
+  const css = themeToCss(theme.qaGuru());
+
+  // Upstream hands nivo the string `var(--color-status-<s>-chart[-fill])`, so
+  // redefining the property is what puts a stock tile and a kit tile on one
+  // green. Both halves of the pair, or the mixed page still shows two.
+  assert.match(css, /--color-status-passed-chart: var\(--ark-status-passed\);/);
+  assert.match(css, /--color-status-passed-chart-fill: var\(--ark-status-passed\);/);
+  assert.match(css, /--color-status-unknown-chart: var\(--ark-status-unknown\);/);
+
+  const off = themeToCss(theme.qaGuru({ hostPalette: false }));
+  assert.doesNotMatch(off, /--color-status-/);
+  // The kit's own palette is untouched by the opt-out.
+  assert.match(off, /--ark-status-failed: #fd5a3e;/);
+});
+
 test("theme.header is the DS primitive and stays under theme", () => {
   const configured = theme.qaGuru({ header: theme.header({ productName: "Reference App" }) });
 

@@ -27,13 +27,27 @@ interface Candidate {
   color?: string;
 }
 
+/**
+ * Does this series put anything on the chart?
+ *
+ * A group measured at zero — an empty layer, a rate of 0% — still declares its
+ * colour, and a backend will happily emit a zero-height bar complete with a
+ * fill. The dot has to follow the data, not the declaration.
+ */
+function drawsSomething(series: { value?: number; points?: { y: number }[] }): boolean {
+  if (series.points?.length) {
+    return series.points.some((point) => point.y !== 0);
+  }
+  return series.value !== 0;
+}
+
 function candidates(context: RenderContext, colors: string[]): Candidate[] {
   const found: Candidate[] = [];
 
   context.model.series.forEach((series, index) => {
     const color = series.color ?? colors[index];
     const family = series.family ?? familyForColor(color);
-    if (family) {
+    if (family && drawsSomething(series)) {
       found.push({ family, color });
     }
     // A point may overrule its series — `stabilityDistribution` colours each

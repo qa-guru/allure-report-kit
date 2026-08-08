@@ -45,6 +45,13 @@ const TARGETS = [
     path: "",
     requires: join(ROOT, "e2e/allure-report/awesome/index.html"),
   },
+  {
+    // No server on purpose: a single-file report is opened over `file://`,
+    // which is the strictest way to prove nothing is left to fetch.
+    id: "single",
+    smoke: "scripts/smoke-single.mjs",
+    requires: join(ROOT, "e2e/allure-report-single/index.html"),
+  },
 ];
 
 let failed = false;
@@ -56,6 +63,11 @@ for (const target of TARGETS) {
   if (target.requires && !existsSync(target.requires)) {
     console.error(`smoke-ci: ${target.id} — nothing to serve, run \`npm run report\` first`);
     failed = true;
+    continue;
+  }
+
+  if (!target.port) {
+    failed = (await run("node", [target.smoke])) !== 0 || failed;
     continue;
   }
 

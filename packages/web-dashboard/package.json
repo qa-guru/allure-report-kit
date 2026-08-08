@@ -1,6 +1,7 @@
 {
   "name": "@qa-guru/allure-report-kit-web-dashboard",
-  "version": "0.1.0",
+  "version": "3.14.3",
+  "allureUpstream": "3.14.3",
   "description": "Soft-fork of @allurereport/web-dashboard with the allure-report-kit renderer registry",
   "keywords": [
     "allure",
@@ -21,10 +22,10 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@allurereport/charts-api": "3.13.0",
-    "@allurereport/core-api": "3.13.0",
-    "@allurereport/web-commons": "3.13.0",
-    "@allurereport/web-components": "3.13.0",
+    "@allurereport/charts-api": "3.14.3",
+    "@allurereport/core-api": "3.14.3",
+    "@allurereport/web-commons": "3.14.3",
+    "@allurereport/web-components": "3.14.3",
     "@preact/signals": "^2.6.1",
     "clsx": "^2.1.1",
     "i18next": "^24.0.2",
@@ -47,7 +48,7 @@
     "allure-js-commons": "^3",
     "allure-vitest": "^3",
     "autoprefixer": "^10.4.20",
-    "babel-loader": "^9.2.1",
+    "babel-loader": "^10.1.1",
     "babel-plugin-prismjs": "^2.1.0",
     "css-loader": "^7.1.4",
     "fork-ts-checker-webpack-plugin": "^9.0.2",

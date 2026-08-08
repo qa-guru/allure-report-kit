@@ -13,22 +13,22 @@
   "durationDynamics": {
     "data": [
       {
-        "id": "cc266425-59b9-4f86-a3fd-c965a288e695",
-        "timestamp": 1786152303902,
+        "id": "cedc29e9-54e1-494f-a6f4-6321da46e5df",
+        "timestamp": 1786160009791,
         "duration": 146560,
         "sequentialDuration": 146560,
         "speedup": 1
       },
       {
-        "id": "15ce177b-3cc1-4e35-be56-a7cea9d2d89c",
-        "timestamp": 1786152304899,
+        "id": "a6a65095-e922-492b-9e34-d96056d7b3c1",
+        "timestamp": 1786160010869,
         "duration": 141079,
         "sequentialDuration": 141079,
         "speedup": 1
       },
       {
         "id": "current",
-        "timestamp": 1786152444303,
+        "timestamp": 1786160150439,
         "duration": 138279,
         "sequentialDuration": 138279,
         "speedup": 1
@@ -84,36 +84,36 @@
       {
         "from": 264,
         "to": 6371,
-        "ds8oHSe2g8Zz3Ws3qBu6h": 4,
-        "ssirOX82C8g4EiCLCtTp2": 8,
-        "-ExWR7UonYsfc7_cZGXuK": 5,
-        "C0uY4Vh7VPnb6ciq_alld": 12
+        "xeHvWK6BQQ9_T36n1qIUb": 4,
+        "rXfQoGCjyoIbAKYX_v01z": 8,
+        "Ogx_-XHdGAuXxjKAEgI36": 5,
+        "I0JNp37knaT4x5_bQ3qOW": 12
       },
       {
         "from": 6372,
         "to": 12479,
-        "qrUaZAfLZrHaDjP--x4m0": 1
+        "KzzDayOq79yfiYMBmvl0T": 1
       },
       {
         "from": 12480,
         "to": 18587,
-        "qrUaZAfLZrHaDjP--x4m0": 2
+        "KzzDayOq79yfiYMBmvl0T": 2
       },
       {
         "from": 24696,
         "to": 30800,
-        "CgXDlE1vUOsjHfHXZAecU": 2
+        "7kssVBqP3xSinp_ebX2Jh": 2
       }
     ],
     "type": "durations",
     "title": "Длительности по layer",
     "keys": {
-      "ds8oHSe2g8Zz3Ws3qBu6h": "api",
-      "ssirOX82C8g4EiCLCtTp2": "component",
-      "qrUaZAfLZrHaDjP--x4m0": "e2e",
-      "-ExWR7UonYsfc7_cZGXuK": "integration",
-      "CgXDlE1vUOsjHfHXZAecU": "manual",
-      "C0uY4Vh7VPnb6ciq_alld": "unit"
+      "xeHvWK6BQQ9_T36n1qIUb": "api",
+      "rXfQoGCjyoIbAKYX_v01z": "component",
+      "KzzDayOq79yfiYMBmvl0T": "e2e",
+      "Ogx_-XHdGAuXxjKAEgI36": "integration",
+      "7kssVBqP3xSinp_ebX2Jh": "manual",
+      "I0JNp37knaT4x5_bQ3qOW": "unit"
     },
     "groupBy": "layer"
   },
@@ -130,8 +130,8 @@
           "passed": 29,
           "skipped": 1
         },
-        "id": "cc266425-59b9-4f86-a3fd-c965a288e695",
-        "timestamp": 1786152303902
+        "id": "cedc29e9-54e1-494f-a6f4-6321da46e5df",
+        "timestamp": 1786160009791
       },
       {
         "name": "allure-report-kit e2e",
@@ -142,8 +142,8 @@
           "passed": 29,
           "skipped": 1
         },
-        "id": "15ce177b-3cc1-4e35-be56-a7cea9d2d89c",
-        "timestamp": 1786152304899
+        "id": "a6a65095-e922-492b-9e34-d96056d7b3c1",
+        "timestamp": 1786160010869
       },
       {
         "statistic": {
@@ -154,7 +154,7 @@
           "skipped": 1
         },
         "id": "current",
-        "timestamp": 1786152444303,
+        "timestamp": 1786160150439,
         "name": "current"
       }
     ]
@@ -164,17 +164,17 @@
     "title": "Переходы статусов",
     "data": [
       {
-        "id": "15ce177b-3cc1-4e35-be56-a7cea9d2d89c",
-        "timestamp": 1786152304899,
-        "prevItemTimestamp": 1786152303902,
+        "id": "a6a65095-e922-492b-9e34-d96056d7b3c1",
+        "timestamp": 1786160010869,
+        "prevItemTimestamp": 1786160009791,
         "fixed": 0,
         "regressed": 1,
         "malfunctioned": 0
       },
       {
         "id": "current",
-        "timestamp": 1786152444303,
-        "prevItemTimestamp": 1786152304899,
+        "timestamp": 1786160150439,
+        "prevItemTimestamp": 1786160010869,
         "fixed": 1,
         "regressed": 0,
         "malfunctioned": 0
@@ -196,8 +196,8 @@
         "removed:skipped": 0,
         "new:unknown": 0,
         "removed:unknown": 0,
-        "id": "15ce177b-3cc1-4e35-be56-a7cea9d2d89c",
-        "timestamp": 1786152304899
+        "id": "a6a65095-e922-492b-9e34-d96056d7b3c1",
+        "timestamp": 1786160010869
       },
       {
         "new:failed": 0,
@@ -211,7 +211,7 @@
         "new:unknown": 0,
         "removed:unknown": 0,
         "id": "current",
-        "timestamp": 1786152444303
+        "timestamp": 1786160150439
       }
     ],
     "statuses": [
@@ -227,16 +227,16 @@
     "title": "Возраст статусов",
     "data": [
       {
-        "id": "cc266425-59b9-4f86-a3fd-c965a288e695",
-        "timestamp": 1786152303902,
+        "id": "cedc29e9-54e1-494f-a6f4-6321da46e5df",
+        "timestamp": 1786160009791,
         "failed": 2,
         "broken": 1,
         "skipped": 1,
         "unknown": 0
       },
       {
-        "id": "15ce177b-3cc1-4e35-be56-a7cea9d2d89c",
-        "timestamp": 1786152304899,
+        "id": "a6a65095-e922-492b-9e34-d96056d7b3c1",
+        "timestamp": 1786160010869,
         "failed": 3,
         "broken": 1,
         "skipped": 1,
@@ -244,7 +244,7 @@
       },
       {
         "id": "current",
-        "timestamp": 1786152444303,
+        "timestamp": 1786160150439,
         "failed": 2,
         "broken": 1,
         "skipped": 1,
@@ -330,17 +330,17 @@
   "stabilityDistribution": {
     "data": [
       {
-        "id": "aN0NOdiGWzX5kmDbMaNq2",
+        "id": "o07BcMw83FN8OeHVlPtsw",
         "stabilityRate": 100
       },
       {
-        "id": "mR2Xmhslc28l8c4H-axxu",
+        "id": "iRbfr7kcaW9N73QYz3kG_",
         "stabilityRate": 100
       }
     ],
     "keys": {
-      "aN0NOdiGWzX5kmDbMaNq2": "app",
-      "mR2Xmhslc28l8c4H-axxu": "docs"
+      "o07BcMw83FN8OeHVlPtsw": "app",
+      "iRbfr7kcaW9N73QYz3kG_": "docs"
     },
     "type": "stabilityDistribution",
     "title": "Стабильность по компонентам",

@@ -103,6 +103,28 @@ export default withKit({
             limit: 5,
           }),
 
+          // A rate, not a count: folding the tail into `other` has to re-measure
+          // the groups rather than add their percentages up.
+          panels.fromRun({
+            id: "flakyByLayer",
+            title: "Flaky по слоям",
+            groupBy: "layer",
+            metric: "flakyRate",
+            kind: "bar",
+            limit: 4,
+            unit: "%",
+          }),
+
+          // Trend rather than snapshot: the data is the history Allure appends
+          // to historyPath, which no chart in the config can reach.
+          panels.fromHistory({
+            id: "passRateTrend",
+            title: "Pass rate по прогонам",
+            metric: "passRate",
+            limit: 10,
+            renderer: "highcharts",
+          }),
+
           // Coverage surface: every remaining upstream chart type, kit-rendered.
           charts.statusDynamics({ title: "Динамика статусов", limit: 20 }),
           charts.statusTransitions({ title: "Переходы статусов", limit: 20 }),

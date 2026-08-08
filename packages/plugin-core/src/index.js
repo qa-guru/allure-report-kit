@@ -26,6 +26,20 @@ const CHART_LIBS = {
 const scriptTag = (src) => `<script src="${src}"></script>`;
 const styleTag = (href) => `<link rel="stylesheet" href="${href}" />`;
 
+/**
+ * Inline forms of the same two tags.
+ *
+ * Scripts go in as `data:` URLs rather than as element text: this is upstream's
+ * own single-file recipe, and it keeps a bundle full of `</script>` in string
+ * literals from ending the tag early.
+ */
+const dataUrl = (buffer) => `data:text/javascript;base64,${buffer.toString("base64")}`;
+const inlineScriptTag = (buffer) => scriptTag(dataUrl(buffer));
+const inlineStyleTag = (css) => `<style>${css}</style>`;
+
+/** Upstream's own inlined bundle, dropped in favour of the fork's. */
+const INLINE_SCRIPT_PATTERN = /\s*<script[^>]*src="data:text\/javascript;base64,[^"]*"[^>]*><\/script>/g;
+
 /** Widget that upstream keys by `randomUUID()` and the kit re-keys. */
 const CHARTS_WIDGET = "widgets/charts.json";
 
@@ -46,9 +60,6 @@ async function readJson(path) {
 export function kitDisabledReason(manifest, options = {}) {
   if (!manifest) {
     return "no kit manifest in plugin options — did you wrap the config with withKit()?";
-  }
-  if (options.singleFile) {
-    return "singleFile mode is not supported yet — kit assets are separate files (fork bundle, chart backends, DS header tree). See PLAN-0.1";
   }
   return undefined;
 }
@@ -121,16 +132,40 @@ function groupKey(testResult, groupBy) {
   return labelOf(testResult, groupBy) ?? "other";
 }
 
+const rate = (part, whole) => (whole === 0 ? 0 : Math.round((part / whole) * 100));
+
+const countWhere = (results, predicate) => results.filter(predicate).length;
+
+/**
+ * One group → one number.
+ *
+ * `retries` counts attempts, not tests, so it only ever sees anything when the
+ * caller asked the store for retries as well — see `RETRY_METRICS`.
+ */
 function measure(metric, results) {
-  if (metric === "passRate") {
-    const passed = results.filter((result) => result.status === "passed").length;
-    return results.length === 0 ? 0 : Math.round((passed / results.length) * 100);
+  switch (metric) {
+    case "passRate":
+      return rate(countWhere(results, (result) => result.status === "passed"), results.length);
+    case "duration":
+      return Math.round(results.reduce((total, result) => total + (result.duration ?? 0), 0) / 1000);
+    case "flakyRate":
+      return rate(countWhere(results, (result) => result.flaky), results.length);
+    case "retries":
+      return countWhere(results, (result) => result.isRetry);
+    // Allure's own transition vocabulary: `new` has no history, `regressed` used
+    // to pass. Inventing kit names for these would only make them harder to
+    // match against the report's own filters.
+    case "new":
+      return countWhere(results, (result) => result.transition === "new");
+    case "regressed":
+      return countWhere(results, (result) => result.transition === "regressed");
+    default:
+      return results.length;
   }
-  if (metric === "duration") {
-    return Math.round(results.reduce((total, result) => total + (result.duration ?? 0), 0) / 1000);
-  }
-  return results.length;
 }
+
+/** Metrics that need the retry attempts, which the store hides by default. */
+export const RETRY_METRICS = new Set(["retries"]);
 
 /**
  * Group the run into panel series.
@@ -167,9 +202,14 @@ export function seriesFromRun(testResults, source) {
   if (limit !== undefined && entries.length > limit) {
     const tail = entries.slice(limit);
     entries = entries.slice(0, limit);
+    // Measured over the folded groups, not summed from their values: adding up
+    // percentages would give `other` a pass rate of 180%.
     entries.push({
       id: "other",
-      value: tail.reduce((total, entry) => total + entry.value, 0),
+      value: measure(
+        metric,
+        tail.flatMap((entry) => groups.get(entry.id) ?? []),
+      ),
     });
   }
 
@@ -189,6 +229,75 @@ export function seriesFromRun(testResults, source) {
       ...(family ? { family } : {}),
     };
   });
+}
+
+const HISTORY_LIMIT = 10;
+
+/** One history point → one number, mirroring `measure` over a run. */
+function measureRun(metric, results) {
+  if (metric === "failed") {
+    return countWhere(results, (result) => result.status === "failed");
+  }
+  if (metric === "passRate") {
+    return rate(countWhere(results, (result) => result.status === "passed"), results.length);
+  }
+  if (metric === "duration") {
+    return Math.round(results.reduce((total, result) => total + (result.duration ?? 0), 0) / 1000);
+  }
+  return results.length;
+}
+
+/**
+ * Series over the runs Allure keeps in `historyPath`.
+ *
+ * Points are labelled `#1..#N` inside the window rather than by timestamp: runs
+ * of one suite land seconds apart in CI, so a time axis collapses into a
+ * single tick, and the question a trend answers is "which run", not "when".
+ *
+ * The window is the newest `limit` points, ordered oldest first — history is
+ * appended, but nothing promises the file arrives sorted.
+ */
+export function seriesFromHistory(historyPoints, source) {
+  const { metric = "passRate", limit = HISTORY_LIMIT, splitBy } = source;
+
+  const runs = [...historyPoints]
+    .sort((left, right) => (left.timestamp ?? 0) - (right.timestamp ?? 0))
+    .slice(-limit)
+    .map((point, index) => ({
+      label: `#${index + 1}`,
+      results: Object.values(point.testResults ?? {}),
+    }));
+
+  const categories = runs.map((run) => run.label);
+
+  if (splitBy === "status") {
+    const series = STATUS_ORDER.filter((status) =>
+      runs.some((run) => run.results.some((result) => result.status === status)),
+    ).map((status) => ({
+      id: status,
+      label: status,
+      color: `var(--ark-status-${status})`,
+      family: STATUS_FAMILY[status],
+      points: runs.map((run) => ({
+        x: run.label,
+        y: countWhere(run.results, (result) => result.status === status),
+      })),
+    }));
+    return { categories, series };
+  }
+
+  return {
+    categories,
+    series: [
+      {
+        id: metric,
+        label: metric,
+        color: "var(--ark-layer-manual)",
+        family: "blue",
+        points: runs.map((run) => ({ x: run.label, y: measureRun(metric, run.results) })),
+      },
+    ],
+  };
 }
 
 /**
@@ -266,14 +375,31 @@ export function createKitPlugin({
 
     #upstreamAssets = new Set();
 
+    /** Single-file only: the fork bundle and the stylesheets to inline. */
+    #forkBundle;
+
+    #inlineCss = [];
+
     constructor(options = {}) {
       this.options = options;
       this.#manifest = options.kit;
       this.#upstream = new UpstreamPlugin(options);
     }
 
+    /** One HTML document, nothing on disk beside it. */
+    get #singleFile() {
+      return Boolean(this.options.singleFile);
+    }
+
     #forkDistDir() {
-      return join(dirname(resolveFrom.resolve(`${forkPackage}/package.json`)), "dist/multi");
+      return join(
+        dirname(resolveFrom.resolve(`${forkPackage}/package.json`)),
+        this.#singleFile ? "dist/single" : "dist/multi",
+      );
+    }
+
+    #kitDir() {
+      return dirname(require.resolve("@qa-guru/allure-report-kit/package.json"));
     }
 
     #headerEnabled() {
@@ -282,28 +408,74 @@ export function createKitPlugin({
     }
 
     #transformHtml(html) {
-      // Drop the tags upstream just emitted for its own bundle.
-      let output = html;
+      // Drop the tags upstream just emitted for its own bundle. In single-file
+      // mode there is no file name to match on — upstream inlines the bundle as
+      // a data URL — so the tag shape is what identifies it.
+      let output = this.#singleFile ? html.replace(INLINE_SCRIPT_PATTERN, "") : html;
       for (const asset of this.#upstreamAssets) {
         output = output
           .replace(new RegExp(`\\s*<script[^>]*src="[^"]*${asset}"[^>]*></script>`, "g"), "")
           .replace(new RegExp(`\\s*<link[^>]*href="[^"]*${asset}"[^>]*/?>`, "g"), "");
       }
 
-      const head = [
-        styleTag(this.#forkManifest["main.css"]),
-        ...(this.#headerEnabled() ? [styleTag("kit/theme/header.css")] : []),
-      ].join("\n    ");
+      // The single-file fork bundle carries its own CSS (style-loader), so only
+      // the header stylesheet is left to place.
+      const head = this.#singleFile
+        ? this.#inlineCss.map(inlineStyleTag)
+        : [
+            styleTag(this.#forkManifest["main.css"]),
+            ...(this.#headerEnabled() ? [styleTag("kit/theme/header.css")] : []),
+          ];
 
       const body = [
-        ...this.#libs.map((lib) => scriptTag(`kit/${lib.id}.js`)),
+        ...this.#libs.map((lib) =>
+          this.#singleFile ? inlineScriptTag(lib.content) : scriptTag(`kit/${lib.id}.js`),
+        ),
         `<script>window.allureReportKit = ${JSON.stringify(this.#manifest)}</script>`,
-        scriptTag(this.#forkManifest["main.js"]),
-      ].join("\n    ");
+        this.#singleFile
+          ? inlineScriptTag(this.#forkBundle)
+          : scriptTag(this.#forkManifest["main.js"]),
+      ];
 
       return output
-        .replace("</head>", `    ${head}\n</head>`)
-        .replace("</body>", `    ${body}\n</body>`);
+        .replace("</head>", `    ${head.join("\n    ")}\n</head>`)
+        .replace("</body>", `    ${body.join("\n    ")}\n</body>`);
+    }
+
+    /**
+     * Read everything the document has to carry instead of fetching.
+     *
+     * Panel data moves into the manifest here too. Widgets exist so run-derived
+     * series stay out of every page of the report — with one page that were the
+     * only page, and there is nowhere to fetch from anyway.
+     */
+    async #loadInlineAssets(panelWidgets) {
+      this.#forkBundle = await readFile(join(this.#forkDistDir(), this.#forkManifest["main.js"]));
+
+      for (const lib of this.#libs) {
+        lib.content = await readFile(lib.path);
+      }
+
+      for (const widget of panelWidgets) {
+        widget.tile.panel.data = widget.data;
+        delete widget.tile.panel.dataUrl;
+      }
+
+      if (!this.#headerEnabled()) {
+        return;
+      }
+
+      // Built by `scripts/build-inline.mjs`: the DS header tree as one module,
+      // its stylesheet with the `@import`s flattened.
+      const kitDir = this.#kitDir();
+      this.#inlineCss.push(await readFile(join(kitDir, "dist/theme/header.inline.css"), "utf8"));
+      this.#manifest.inline = {
+        headerModule: dataUrl(await readFile(join(kitDir, "dist/theme/header.bundle.js"))),
+        headerTemplate: await readFile(
+          join(kitDir, "src/theme/vendor/design-system/templates/header.html"),
+          "utf8",
+        ),
+      };
     }
 
     /**
@@ -390,7 +562,8 @@ export function createKitPlugin({
      * fetched once, cacheable, absent from the HTML.
      *
      * Runs before the upstream `done`, so the `dataUrl` it sets is already in the
-     * manifest by the time the HTML is written.
+     * manifest by the time the HTML is written. `singleFile` undoes that and puts
+     * the data back on the tile — see `#loadInlineAssets`.
      */
     async #resolveRunPanels(store) {
       const panels = this.#tiles().filter((tile) => tile.panel?.source);
@@ -399,20 +572,46 @@ export function createKitPlugin({
       }
 
       const testResults = await store.allTestResults();
+      // Retry attempts are a separate read: counting them needs the results the
+      // store hides by default, and including them everywhere would inflate
+      // every other metric.
+      const needsRetries = panels.some((tile) => RETRY_METRICS.has(tile.panel.source.metric));
+      const withRetries = needsRetries ? await store.allTestResults({ includeRetries: true }) : [];
+      const history = panels.some((tile) => tile.panel.source.from === "history")
+        ? await store.allHistoryDataPoints()
+        : [];
+
       return panels.map((tile) => {
         const panel = tile.panel;
+        const source = panel.source;
+
+        const computed =
+          source.from === "history"
+            ? seriesFromHistory(history, source)
+            : {
+                series: seriesFromRun(
+                  RETRY_METRICS.has(source.metric) ? withRetries : testResults,
+                  source,
+                ),
+              };
+
         const data = {
-          series: seriesFromRun(testResults, panel.source),
+          series: computed.series,
+          ...(computed.categories === undefined ? {} : { categories: computed.categories }),
           ...(panel.data?.total === undefined ? {} : { total: panel.data.total }),
           ...(panel.data?.unit === undefined ? {} : { unit: panel.data.unit }),
           ...(panel.data?.columns === undefined ? {} : { columns: panel.data.columns }),
         };
-        if (data.total === undefined && (panel.kind === "gauge" || panel.kind === "donut")) {
+        if (
+          data.total === undefined &&
+          source.from !== "history" &&
+          (panel.kind === "gauge" || panel.kind === "donut")
+        ) {
           // A caption needs a denominator, and the run is the only honest one.
           data.total = testResults.length;
         }
         panel.dataUrl = `${PANEL_WIDGET_DIR}/${panel.id}.json`;
-        return { path: panel.dataUrl, data };
+        return { path: panel.dataUrl, data, tile };
       });
     }
 
@@ -495,23 +694,38 @@ export function createKitPlugin({
 
       const panelWidgets = await this.#resolveRunPanels(store);
 
-      this.#upstreamAssets = new Set(
-        Object.values(await readJson(resolveFrom.resolve(`${upstreamPackage}/dist/multi/manifest.json`))),
-      );
+      // Upstream writes no separate assets in single-file mode, so there is no
+      // manifest of them to drop — the inlined tag is matched by shape instead.
+      this.#upstreamAssets = this.#singleFile
+        ? new Set()
+        : new Set(
+            Object.values(
+              await readJson(resolveFrom.resolve(`${upstreamPackage}/dist/multi/manifest.json`)),
+            ),
+          );
+
+      if (this.#singleFile) {
+        // Everything has to be in hand before upstream renders `index.html`:
+        // that is the only file it will write.
+        await this.#loadInlineAssets(panelWidgets);
+      }
 
       await this.#upstream.done(this.#wrapContext(context), store);
-      await this.#writeKitAssets(context);
 
-      for (const widget of panelWidgets) {
-        await context.reportFiles.addFile(
-          widget.path,
-          Buffer.from(JSON.stringify(widget.data), "utf8"),
-        );
+      if (!this.#singleFile) {
+        await this.#writeKitAssets(context);
+
+        for (const widget of panelWidgets) {
+          await context.reportFiles.addFile(
+            widget.path,
+            Buffer.from(JSON.stringify(widget.data), "utf8"),
+          );
+        }
       }
 
       log(
         "info",
-        `kit bundle active — ${this.#tiles().length} tiles${
+        `kit bundle active${this.#singleFile ? " (single file)" : ""} — ${this.#tiles().length} tiles${
           panelWidgets.length > 0 ? ` (${panelWidgets.length} from the run)` : ""
         }, backends: ${resolved.map((lib) => lib.id).join(", ") || "none"}`,
       );

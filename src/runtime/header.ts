@@ -16,6 +16,13 @@ export interface MountHeaderOptions extends KitThemeHeaderConfig {
   container?: HTMLElement;
   /** URL of the vendored DS `header.js`. */
   moduleUrl?: string | URL;
+  /**
+   * Header markup, for a report that cannot fetch it.
+   *
+   * `singleFile: true` leaves nothing on disk to request, so the template
+   * travels inside the document and is served to the DS module from memory.
+   */
+  templateHtml?: string;
   /** Element that must be pushed below the fixed header. */
   contentRoot?: HTMLElement;
 }
@@ -28,6 +35,45 @@ export interface HeaderHandle {
 
 interface HeaderWindow {
   headerConfig?: Record<string, unknown>;
+  /**
+   * What `import.meta.url` becomes inside the inlined header bundle.
+   *
+   * The bundle is imported from a `data:` URL, which cannot be the base of a
+   * relative resolution, so `scripts/build-inline.mjs` redirects the reference
+   * here and the document URL takes its place.
+   */
+  __arkHeaderBaseUrl?: string;
+}
+
+type IconSync = (button: HTMLElement) => void;
+
+/** Path the DS header asks for; matched by suffix, not by full URL. */
+const TEMPLATE_PATH = "templates/header.html";
+
+/**
+ * Answer the DS header's own template request out of memory.
+ *
+ * `fetchTemplateText` calls `fetch` directly and takes no override, and the
+ * module is vendored, not forked — so the request is intercepted rather than
+ * the source edited. Scoped as tightly as it can be: one path, and the original
+ * `fetch` is restored as soon as the header is up.
+ */
+function serveTemplate(html: string): () => void {
+  const original = globalThis.fetch;
+  if (typeof original !== "function") {
+    return () => {};
+  }
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (url.endsWith(TEMPLATE_PATH)) {
+      return Promise.resolve(new Response(html, { headers: { "content-type": "text/html" } }));
+    }
+    return original(input, init);
+  }) as typeof fetch;
+
+  return () => {
+    globalThis.fetch = original;
+  };
 }
 
 function ensureMount(container: HTMLElement): HTMLElement {
@@ -78,7 +124,7 @@ function trackHeaderHeight(mount: HTMLElement): () => void {
  * palette. So both directions are mirrored, with a guard against the echo of
  * our own write.
  */
-function syncReportTheme(themeIconsUrl: string): () => void {
+function syncReportTheme(loadIconSync: () => Promise<IconSync | undefined>): () => void {
   const html = document.documentElement;
   let mirroring = false;
 
@@ -87,9 +133,8 @@ function syncReportTheme(themeIconsUrl: string): () => void {
    * theme change coming from Allure's control would leave a stale glyph.
    */
   const refreshIcons = (): void => {
-    void import(/* webpackIgnore: true */ /* @vite-ignore */ themeIconsUrl)
-      .then((module: { syncThemeToggleIcon?: (button: HTMLElement) => void }) => {
-        const sync = module.syncThemeToggleIcon;
+    void loadIconSync()
+      .then((sync) => {
         if (!sync) {
           return;
         }
@@ -212,11 +257,29 @@ export async function mountReportHeader(
   const moduleUrl =
     options.moduleUrl ??
     new URL("../../src/theme/vendor/design-system/js/header.js", import.meta.url);
-  // The URL is resolved at runtime against the report; bundlers must not try to
-  // follow it, or the import turns into a missing chunk.
-  await import(/* webpackIgnore: true */ /* @vite-ignore */ String(moduleUrl));
 
-  const slot = await waitForSlot(mount);
+  // Read by the inlined bundle in place of `import.meta.url`; the module copied
+  // as a tree has a real one and ignores this.
+  scope.__arkHeaderBaseUrl = document.baseURI;
+
+  const restoreFetch = options.templateHtml ? serveTemplate(options.templateHtml) : () => {};
+  let module: Record<string, unknown> = {};
+  let slot: HTMLElement | undefined;
+  try {
+    // The URL is resolved at runtime against the report; bundlers must not try
+    // to follow it, or the import turns into a missing chunk.
+    module = (await import(/* webpackIgnore: true */ /* @vite-ignore */ String(moduleUrl))) as Record<
+      string,
+      unknown
+    >;
+
+    // The module mounts itself without awaiting, so the template request lands
+    // after `import()` settles — the shim has to outlive it, and can only go
+    // once the markup is in the DOM.
+    slot = await waitForSlot(mount);
+  } finally {
+    restoreFetch();
+  }
   if (slot && options.productName) {
     applyProductName(slot, options.productName);
   }
@@ -225,11 +288,21 @@ export async function mountReportHeader(
     options.contentRoot.classList.add("ark-report--with-header");
   }
 
+  // The inlined bundle re-exports the icon sync; the tree-copied module keeps it
+  // in a sibling file, and only then is there a URL to resolve against.
+  const loadIconSync = async (): Promise<IconSync | undefined> => {
+    if (typeof module.syncThemeToggleIcon === "function") {
+      return module.syncThemeToggleIcon as IconSync;
+    }
+    const sibling = (await import(
+      /* webpackIgnore: true */ /* @vite-ignore */ new URL("theme-icons.js", moduleUrl).href
+    )) as { syncThemeToggleIcon?: IconSync };
+    return sibling.syncThemeToggleIcon;
+  };
+
   const stopTracking = trackHeaderHeight(mount);
   const stopThemeSync =
-    options.syncReportTheme === false
-      ? () => {}
-      : syncReportTheme(new URL("theme-icons.js", moduleUrl).href);
+    options.syncReportTheme === false ? () => {} : syncReportTheme(loadIconSync);
 
   return {
     mount,

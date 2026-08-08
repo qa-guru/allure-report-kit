@@ -12,6 +12,7 @@ export {
   cellGeometry,
   getKitRuntime,
   isKitOwned,
+  observeCell,
   pairTiles,
   readManifest,
   resolveTileModel,

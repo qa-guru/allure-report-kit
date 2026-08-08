@@ -138,6 +138,42 @@ function legendRow(tile, result) {
   return row;
 }
 
+/**
+ * The same model handed to more than one backend.
+ *
+ * A model is meant to be backend-agnostic, and the only way to see whether it
+ * really is, is to draw it twice side by side. `scripts/baseline.mjs` reads
+ * these tiles too, so a backend that quietly stops colouring from the canon or
+ * drops a slice fails a check rather than waiting to be noticed.
+ */
+const COMPARISONS = [
+  { id: "pie", model: currentStatusModel, renderers: ["echarts", "highcharts"] },
+  { id: "bar", model: durationsModel, renderers: ["echarts", "highcharts"] },
+  { id: "gauge", model: passRateModel, renderers: ["echarts", "svg"] },
+];
+
+async function mountComparisons(container) {
+  for (const { id, model, renderers: backends } of COMPARISONS) {
+    for (const backend of backends) {
+      const tile = {
+        key: `compare:${id}:${backend}`,
+        list: "charts",
+        type: "custom",
+        renderer: { id: backend },
+        dots: "fromSeries",
+        layout: "2x2",
+      };
+      const { elements } = await runtime.mountTile({
+        tile,
+        model,
+        title: `${id} — ${backend}`,
+        container,
+      });
+      elements.root.dataset.arkCompare = `${id}:${backend}`;
+    }
+  }
+}
+
 async function main() {
   runtime.injectTheme();
 
@@ -150,6 +186,8 @@ async function main() {
     const mounted = await runtime.mountTile({ tile, model, title, container: grid });
     legend.append(legendRow(tile, mounted.result));
   }
+
+  await mountComparisons(document.getElementById("dogfood-compare-grid"));
 
   await mountReportHeader({
     ...manifest.theme.header,

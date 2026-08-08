@@ -8,6 +8,7 @@
  */
 import type {
   DotsSpec,
+  HistoryMetric,
   KitCustomPanel,
   KitPanelData,
   KitPanelSource,
@@ -113,6 +114,17 @@ export interface FromRunOptions extends Omit<CustomPanelOptions, "data" | "dataU
   unit?: string;
 }
 
+export interface FromHistoryOptions
+  extends Omit<CustomPanelOptions, "data" | "dataUrl" | "source"> {
+  metric?: HistoryMetric;
+  /** Keep the N most recent runs; defaults to 10. */
+  limit?: number;
+  /** One series per status instead of a single line of the metric. */
+  splitBy?: "status";
+  columns?: string[];
+  unit?: string;
+}
+
 /**
  * Panel computed from the test results of the run.
  *
@@ -138,7 +150,37 @@ export function fromRun(options: FromRunOptions): KitCustomPanel {
   return custom({
     ...rest,
     ...(data ? { data } : {}),
-    source: { groupBy, metric, ...(limit === undefined ? {} : { limit }) },
+    source: { from: "run", groupBy, metric, ...(limit === undefined ? {} : { limit }) },
+  });
+}
+
+/**
+ * Panel over the history of previous runs.
+ *
+ * Where `fromRun` slices the current run, this reads the points Allure already
+ * appends to `historyPath`, so the panel shows a trend rather than a snapshot.
+ * Same delivery: the plugin resolves it and ships a widget.
+ *
+ * Defaults to `line`, because the x axis is runs and a bar chart of ten runs
+ * reads as ten categories rather than as a direction.
+ */
+export function fromHistory(options: FromHistoryOptions): KitCustomPanel {
+  const { metric = "passRate", limit, splitBy, columns, unit, kind = "line", ...rest } = options;
+  const data: KitPanelData | undefined =
+    columns || unit !== undefined
+      ? { series: [], ...(columns ? { columns } : {}), ...(unit === undefined ? {} : { unit }) }
+      : undefined;
+
+  return custom({
+    ...rest,
+    kind,
+    ...(data ? { data } : {}),
+    source: {
+      from: "history",
+      metric,
+      ...(limit === undefined ? {} : { limit }),
+      ...(splitBy === undefined ? {} : { splitBy }),
+    },
   });
 }
 

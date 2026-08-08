@@ -26,13 +26,33 @@ export interface CreateTileOptions {
   bar?: boolean;
 }
 
-function applyModifiers(root: HTMLElement, options: CreateTileOptions): void {
+/**
+ * Set the layout/tier modifiers, replacing whatever was there.
+ *
+ * Separate from tile creation because the geometry is measured off the grid
+ * cell and can change after mount — a sidebar toggle, a breakpoint, a resize.
+ * Adding the new class without dropping the old one would leave two layouts on
+ * the element and let the stylesheet's order decide which wins.
+ */
+export function applyTileGeometry(
+  root: HTMLElement,
+  options: { layout?: TileLayout; tier?: TileTier },
+): void {
+  for (const name of [...root.classList]) {
+    if (name.startsWith("widget-tile--layout-") || name.startsWith("widget-tile--tier-")) {
+      root.classList.remove(name);
+    }
+  }
   if (options.layout) {
     root.classList.add(`widget-tile--layout-${options.layout}`);
   }
   if (options.tier) {
     root.classList.add(`widget-tile--tier-${options.tier}`);
   }
+}
+
+function applyModifiers(root: HTMLElement, options: CreateTileOptions): void {
+  applyTileGeometry(root, options);
   if (options.bleed) {
     root.classList.add("widget-tile--bleed");
   }

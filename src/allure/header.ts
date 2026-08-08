@@ -16,16 +16,22 @@ const HEADER_MODULE = "kit/theme/vendor/design-system/js/header.js";
 let mounted = false;
 
 export function mountKitHeader(): void {
-  const header = readManifest()?.theme?.header;
+  const manifest = readManifest();
+  const header = manifest?.theme?.header;
 
   if (mounted || !header?.enabled || header.source === "none") {
     return;
   }
   mounted = true;
 
+  // In a single-file report there is no tree to load from: the plugin puts the
+  // bundled module and its markup in the manifest instead.
+  const inline = manifest?.inline;
+
   void mountReportHeader({
     ...header,
-    moduleUrl: new URL(HEADER_MODULE, document.baseURI).href,
+    moduleUrl: inline?.headerModule ?? new URL(HEADER_MODULE, document.baseURI).href,
+    ...(inline?.headerTemplate ? { templateHtml: inline.headerTemplate } : {}),
     contentRoot: document.getElementById("app") ?? document.body,
   });
 }

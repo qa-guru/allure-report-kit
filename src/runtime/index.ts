@@ -16,7 +16,7 @@ import { echartsRenderer } from "./renderers/echarts.js";
 import { highchartsRenderer } from "./renderers/highcharts.js";
 import { stockRenderer } from "./renderers/stock.js";
 import { svgRenderer } from "./renderers/svg.js";
-import { adoptTile, createTile, type TileElements } from "./tile.js";
+import { adoptTile, applyTileGeometry, createTile, type TileElements } from "./tile.js";
 
 export interface KitRuntimeOptions {
   theme?: KitThemeConfig;
@@ -152,6 +152,10 @@ export class KitRuntime {
       options.container.append(elements.root);
     }
 
+    // Re-applied rather than set at creation: an adopted tile is being redrawn
+    // because its cell changed size, and the geometry is the reason.
+    applyTileGeometry(elements.root, { layout: tile.layout, tier: tile.tier });
+
     elements.root.dataset.arkTile = tile.key;
     elements.root.dataset.arkRenderer = tile.renderer.id;
 
@@ -231,7 +235,7 @@ export function createKitRuntime(options: KitRuntimeOptions = {}): KitRuntime {
 
 export { RendererRegistry, createLibResolver } from "./registry.js";
 export { resolveDots, syncIndicatorRow } from "./indicators.js";
-export { createTile, adoptTile } from "./tile.js";
+export { createTile, adoptTile, applyTileGeometry } from "./tile.js";
 export { mountReportHeader } from "./header.js";
 export { stockRenderer, createStockRenderer } from "./renderers/stock.js";
 export { svgRenderer } from "./renderers/svg.js";

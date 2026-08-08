@@ -19,7 +19,7 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { kitDisabledReason, rekeyChartSection, seriesFromRun } = await import(
+const { kitDisabledReason, rekeyChartSection, seriesFromHistory, seriesFromRun } = await import(
   "../packages/plugin-core/src/index.js"
 );
 const { withKit, charts, panels, presets, theme } = await import("../dist/index.js");
@@ -28,7 +28,8 @@ const manifestOf = (config, plugin = "awesome") => config.plugins[plugin].option
 
 test("the kit says why it fell back to stock Allure", () => {
   assert.match(kitDisabledReason(undefined, {}), /withKit\(\)/);
-  assert.match(kitDisabledReason({ tiles: [] }, { singleFile: true }), /singleFile/);
+  // singleFile is a supported mode, not a reason to stand down.
+  assert.equal(kitDisabledReason({ tiles: [] }, { singleFile: true }), undefined);
   assert.equal(kitDisabledReason({ tiles: [] }, {}), undefined);
 });
 
@@ -41,7 +42,9 @@ test("singleFile is reported at config time, before anything is generated", () =
     },
   });
 
-  assert.ok(manifestOf(config).diagnostics.some((entry) => entry.code === "single-file"));
+  const single = manifestOf(config).diagnostics.find((entry) => entry.code === "single-file");
+  assert.equal(single?.level, "info");
+  assert.match(single.message, /inlines its assets/);
 });
 
 test("chart tiles get a stable chartId, panels do not", () => {
@@ -118,10 +121,32 @@ test("a widget that does not line up keeps its own key and stays with Allure", (
 
 const RUN = [
   { status: "passed", duration: 1000, labels: [{ name: "layer", value: "unit" }] },
-  { status: "passed", duration: 3000, labels: [{ name: "layer", value: "unit" }] },
-  { status: "failed", duration: 2000, labels: [{ name: "layer", value: "e2e" }] },
-  { status: "broken", duration: 4000, labels: [{ name: "layer", value: "api" }] },
+  { status: "passed", duration: 3000, flaky: true, labels: [{ name: "layer", value: "unit" }] },
+  {
+    status: "failed",
+    duration: 2000,
+    transition: "regressed",
+    labels: [{ name: "layer", value: "e2e" }],
+  },
+  {
+    status: "broken",
+    duration: 4000,
+    transition: "new",
+    labels: [{ name: "layer", value: "api" }],
+  },
   { status: "passed", duration: 1000, labels: [] },
+];
+
+/**
+ * The same run as the store hands it over with `includeRetries`.
+ *
+ * A separate list on purpose: every other metric is measured without retries,
+ * and folding the attempt into `RUN` would quietly change what "one failed e2e
+ * test" means for all of them.
+ */
+const RUN_WITH_RETRIES = [
+  ...RUN,
+  { status: "failed", duration: 900, isRetry: true, labels: [{ name: "layer", value: "e2e" }] },
 ];
 
 test("a run panel groups by status in the canonical order", () => {
@@ -160,6 +185,60 @@ test("pass rate and duration are measured, not counted", () => {
 
   const duration = seriesFromRun(RUN, { groupBy: "layer", metric: "duration" });
   assert.equal(duration.find((one) => one.id === "unit").value, 4);
+});
+
+test("flakiness, retries and transitions read the fields Allure already sets", () => {
+  const flaky = seriesFromRun(RUN, { groupBy: "layer", metric: "flakyRate" });
+  assert.equal(flaky.find((one) => one.id === "unit").value, 50);
+  assert.equal(flaky.find((one) => one.id === "api").value, 0);
+
+  // Attempts, not tests — the caller has to ask the store for retries as well.
+  const retries = seriesFromRun(RUN_WITH_RETRIES, { groupBy: "layer", metric: "retries" });
+  assert.equal(retries.find((one) => one.id === "e2e").value, 1);
+  assert.equal(retries.find((one) => one.id === "unit").value, 0);
+
+  const regressed = seriesFromRun(RUN, { groupBy: "layer", metric: "regressed" });
+  assert.equal(regressed.find((one) => one.id === "e2e").value, 1);
+  assert.equal(seriesFromRun(RUN, { groupBy: "layer", metric: "new" })
+    .find((one) => one.id === "api").value, 1);
+});
+
+test("a folded tail is re-measured, not summed", () => {
+  // Adding percentages would make `other` 100 + 0 = 100; measuring the two
+  // folded groups together gives the one passing test out of three.
+  const folded = seriesFromRun(RUN, { groupBy: "layer", metric: "passRate", limit: 1 }).find(
+    (one) => one.id === "other",
+  );
+
+  assert.equal(folded.value, 33);
+});
+
+test("a history panel walks the runs oldest first, inside the window", () => {
+  const points = [
+    { timestamp: 30, testResults: { a: { status: "passed" }, b: { status: "failed" } } },
+    { timestamp: 10, testResults: { a: { status: "passed" }, b: { status: "passed" } } },
+    { timestamp: 20, testResults: { a: { status: "failed" }, b: { status: "failed" } } },
+  ];
+
+  const single = seriesFromHistory(points, { from: "history", metric: "passRate" });
+  assert.deepEqual(single.categories, ["#1", "#2", "#3"]);
+  assert.deepEqual(
+    single.series[0].points.map((point) => point.y),
+    [100, 0, 50],
+  );
+
+  // The window keeps the newest runs, and the labels renumber inside it.
+  const windowed = seriesFromHistory(points, { from: "history", metric: "count", limit: 2 });
+  assert.deepEqual(windowed.categories, ["#1", "#2"]);
+
+  const split = seriesFromHistory(points, { from: "history", splitBy: "status" });
+  assert.deepEqual(
+    split.series.map((one) => [one.id, one.points.map((point) => point.y)]),
+    [
+      ["passed", [2, 0, 1]],
+      ["failed", [0, 2, 1]],
+    ],
+  );
 });
 
 test("theme.header without the soft-fork is reported", () => {

@@ -48,8 +48,11 @@
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json && node scripts/build-inline.mjs",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "typecheck:fork": "node scripts/typecheck-fork.mjs",
@@ -62,11 +65,13 @@
     "smoke": "node scripts/smoke-dogfood.mjs",
     "smoke:ci": "node scripts/smoke-ci.mjs",
     "smoke:allure": "node scripts/run-smoke-allure.mjs",
+    "baseline": "node scripts/baseline.mjs",
     "verify": "npm run build && npm test && npm run smoke",
     "smoke:report": "node scripts/smoke-report.mjs",
+    "smoke:single": "node scripts/smoke-single.mjs",
     "build:fork": "npm --prefix packages/web-awesome run build && npm --prefix packages/web-dashboard run build",
     "report": "npm --prefix e2e run report",
-    "verify:report": "npm run build && npm run build:fork && npm run report && npm run smoke:report",
+    "verify:report": "npm run build && npm run build:fork && npm run report && npm run smoke:report && npm run smoke:single",
     "setup": "node scripts/setup.mjs"
   },
   "peerDependencies": {
@@ -93,6 +98,7 @@
     "allure-js-commons": "3.10.2",
     "allure-node-test": "3.10.2",
     "echarts": "^6.1.0",
+    "esbuild": "^0.28.1",
     "highcharts": "^13.0.0",
     "playwright": "^1.62.1",
     "typescript": "^5.7.0"

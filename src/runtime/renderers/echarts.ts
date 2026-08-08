@@ -23,11 +23,18 @@ interface EChartsApi {
 const instances = new WeakMap<HTMLElement, EChartsInstance>();
 const observers = new WeakMap<HTMLElement, ResizeObserver>();
 
-function observeResize(host: HTMLElement, instance: EChartsInstance): void {
+/**
+ * One observer per host, resolving the instance at call time.
+ *
+ * Capturing the instance would outlive it: a redraw disposes the old chart and
+ * puts a new one in the same host, and the observer would keep resizing the
+ * disposed one.
+ */
+function observeResize(host: HTMLElement): void {
   if (observers.has(host) || typeof ResizeObserver === "undefined") {
     return;
   }
-  const observer = new ResizeObserver(() => instance.resize());
+  const observer = new ResizeObserver(() => instances.get(host)?.resize());
   observer.observe(host);
   observers.set(host, observer);
 }
@@ -383,7 +390,7 @@ export const echartsRenderer: ChartRenderer = {
         ...built.option,
         ...(context.options.option as Record<string, unknown> | undefined),
       });
-      observeResize(context.host, instance);
+      observeResize(context.host);
       return { families: familiesForScores(built.scores), renderedBy: "echarts" };
     }
 
@@ -393,7 +400,7 @@ export const echartsRenderer: ChartRenderer = {
       ...(context.options.option as Record<string, unknown> | undefined),
     });
 
-    observeResize(context.host, instance);
+    observeResize(context.host);
     return {
       families: familiesOf(context, colors, { marks: MARKS }),
       renderedBy: "echarts",

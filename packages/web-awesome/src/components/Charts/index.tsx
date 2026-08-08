@@ -20,6 +20,7 @@ import {
   canKitRender,
   getKitRuntime,
   isKitOwned,
+  observeCell,
   pairTiles,
   readManifest,
   resolveTileModel,
@@ -51,25 +52,37 @@ const KitTile = ({ tile, chartData }: { tile: ResolvedTile; chartData?: AllureCh
     }
     container.replaceChildren();
     let cancelled = false;
+    let mounted: HTMLElement | undefined;
 
     // Async because a panel may keep its data in a widget instead of the
     // manifest; the layout is measured off the real grid cell, which only exists
     // once the effect runs.
-    void (async () => {
+    const draw = async () => {
       const model = await resolveTileModel(tile, chartData);
       if (cancelled || !model) {
         return;
       }
-      await kit.mountTile({
+      const { elements } = await kit.mountTile({
         tile: withReportLayout(tile, container),
         model,
         title: model.title,
         container,
+        // Redraws reuse the markup, or the cell would collect a tile per resize.
+        ...(mounted ? { element: mounted } : {}),
       });
-    })();
+      mounted = elements.root;
+    };
+
+    void draw();
+    // The first measurement lands before the grid settles, and the cell keeps
+    // moving afterwards — sidebar, breakpoint, window.
+    const stopObserving = observeCell(container, () => {
+      void draw();
+    });
 
     return () => {
       cancelled = true;
+      stopObserving();
     };
   }, [tile, chartData]);
 

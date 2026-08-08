@@ -1,6 +1,7 @@
 {
   "name": "@qa-guru/allure-report-kit-dashboard",
-  "version": "0.1.0",
+  "version": "3.14.3",
+  "allureUpstream": "3.14.3",
   "description": "Allure 3 Dashboard plugin wired to the allure-report-kit renderer registry",
   "license": "Apache-2.0",
   "author": "QA Guru",
@@ -24,10 +25,10 @@
     "@qa-guru/allure-report-kit-web-dashboard": "file:../web-dashboard"
   },
   "peerDependencies": {
-    "@allurereport/plugin-dashboard": "~3.13.0"
+    "@allurereport/plugin-dashboard": "~3.14.0"
   },
   "devDependencies": {
-    "@allurereport/plugin-dashboard": "3.13.0",
-    "@allurereport/web-dashboard": "3.13.0"
+    "@allurereport/plugin-dashboard": "3.14.3",
+    "@allurereport/web-dashboard": "3.14.3"
   }
 }

@@ -93,6 +93,9 @@ jobs:
           ALLURE_RESULTS_CLEAN: "1"
         run: npm run smoke:allure
 
+      - name: Dogfood compare baseline
+        run: npm run baseline
+
       - name: Allure generate (e2e)
         run: npx allure generate ./allure-results-e2e -o allure-report-e2e
 

@@ -56,6 +56,20 @@ function churn(layer, index, run) {
   return {};
 }
 
+/**
+ * Tests marked flaky, and the one that is actually retried.
+ *
+ * The flaky flag is a claim in the result file, so `component case 2` — the test
+ * that really does flip between runs — carries it, and `e2e case 1` joins it to
+ * give the rate more than one layer to compare.
+ *
+ * The retry is a second result under the same `historyId`: a failed attempt
+ * before a passing one, which leaves the test count and every status total
+ * exactly where they were and only adds an attempt.
+ */
+const FLAKY = new Set(["component:1", "e2e:0"]);
+const RETRIED = new Set(["e2e:1"]);
+
 /** `run` shifts durations so a repeated generate produces a visible trend. */
 export async function makeFixture({ run = 0, seed = 1 } = {}) {
   await rm(RESULTS_DIR, { recursive: true, force: true });
@@ -79,6 +93,7 @@ export async function makeFixture({ run = 0, seed = 1 } = {}) {
       const start = now + offset;
       offset += duration + 25;
 
+      const key = `${layer}:${index}`;
       const result = {
         uuid: `${layer}-${index}-${run}`,
         historyId: `${layer}-${index}`,
@@ -97,9 +112,12 @@ export async function makeFixture({ run = 0, seed = 1 } = {}) {
           { name: "component", value: layer === "manual" ? "docs" : "app" },
           { name: "severity", value: status === "failed" ? "critical" : "normal" },
         ],
-        ...(status === "failed" || status === "broken"
-          ? { statusDetails: { message: `${name} did not pass`, trace: "at tests.Runner" } }
-          : {}),
+        statusDetails: {
+          ...(FLAKY.has(key) ? { flaky: true } : {}),
+          ...(status === "failed" || status === "broken"
+            ? { message: `${name} did not pass`, trace: "at tests.Runner" }
+            : {}),
+        },
       };
 
       await writeFile(
@@ -107,6 +125,22 @@ export async function makeFixture({ run = 0, seed = 1 } = {}) {
         JSON.stringify(result, null, 2),
         "utf8",
       );
+
+      if (RETRIED.has(key)) {
+        const attempt = {
+          ...result,
+          uuid: `${layer}-${index}-${run}-retry`,
+          status: "failed",
+          start: start - duration - 25,
+          stop: start - 25,
+          statusDetails: { message: `${name} failed on the first attempt`, trace: "at tests.Runner" },
+        };
+        await writeFile(
+          join(RESULTS_DIR, `${attempt.uuid}-result.json`),
+          JSON.stringify(attempt, null, 2),
+          "utf8",
+        );
+      }
     }
   }
 

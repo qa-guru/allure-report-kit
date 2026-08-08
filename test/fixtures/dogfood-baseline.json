@@ -1,0 +1,124 @@
+{
+  "pie:echarts": {
+    "key": "pie:echarts",
+    "renderedBy": "echarts",
+    "dots": [
+      "red",
+      "yellow",
+      "gray",
+      "green"
+    ],
+    "markCount": 5,
+    "svgPaths": 5,
+    "texts": [
+      "88.24%",
+      "из 34"
+    ],
+    "bodyChildren": 2
+  },
+  "pie:highcharts": {
+    "key": "pie:highcharts",
+    "renderedBy": "highcharts",
+    "dots": [
+      "red",
+      "yellow",
+      "gray",
+      "green"
+    ],
+    "markCount": 5,
+    "svgPaths": 4,
+    "texts": [
+      "88.24%",
+      "из 34"
+    ],
+    "bodyChildren": 1
+  },
+  "bar:echarts": {
+    "key": "bar:echarts",
+    "renderedBy": "echarts",
+    "dots": [
+      "red",
+      "orange",
+      "yellow",
+      "purple",
+      "green",
+      "blue"
+    ],
+    "markCount": 36,
+    "svgPaths": 37,
+    "texts": [
+      "0",
+      "10",
+      "10–30s",
+      "12",
+      "1–2s",
+      "2",
+      "2–5s",
+      "4",
+      "5–10s",
+      "6",
+      "8",
+      "<1s",
+      ">30s"
+    ],
+    "bodyChildren": 2
+  },
+  "bar:highcharts": {
+    "key": "bar:highcharts",
+    "renderedBy": "highcharts",
+    "dots": [
+      "red",
+      "orange",
+      "yellow",
+      "purple",
+      "green",
+      "blue"
+    ],
+    "markCount": 37,
+    "svgPaths": 52,
+    "texts": [
+      "0",
+      "10",
+      "10–30s",
+      "12",
+      "1–2s",
+      "2",
+      "2–5s",
+      "4",
+      "5–10s",
+      "6",
+      "8",
+      "<1s",
+      ">30s"
+    ],
+    "bodyChildren": 1
+  },
+  "gauge:echarts": {
+    "key": "gauge:echarts",
+    "renderedBy": "echarts",
+    "dots": [
+      "green"
+    ],
+    "markCount": 3,
+    "svgPaths": 3,
+    "texts": [
+      "30",
+      "из 34"
+    ],
+    "bodyChildren": 1
+  },
+  "gauge:svg": {
+    "key": "gauge:svg",
+    "renderedBy": "svg",
+    "dots": [
+      "green"
+    ],
+    "markCount": 0,
+    "svgPaths": 2,
+    "texts": [
+      "30",
+      "из 34"
+    ],
+    "bodyChildren": 1
+  }
+}

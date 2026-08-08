@@ -170,7 +170,10 @@ export const highchartsRenderer: ChartRenderer = {
     instances.set(context.host, instance);
 
     if (!observers.has(context.host) && typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(() => instance.reflow());
+      // The instance is resolved at call time, not captured: a redraw destroys
+      // this chart and puts another one in the same host, and reflowing the
+      // destroyed one throws — its container no longer has a parent.
+      const observer = new ResizeObserver(() => instances.get(context.host)?.reflow());
       observer.observe(context.host);
       observers.set(context.host, observer);
     }

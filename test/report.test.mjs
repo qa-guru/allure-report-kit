@@ -119,6 +119,26 @@ test("without stable ids the positional walk still runs", () => {
   );
 });
 
+test("keys the plugin never got to rewrite fall back to the walk", () => {
+  // `singleFile: true`: upstream keeps its data in memory, so the plugin never
+  // sees `charts.json` and the uuids survive. Every tile has an id here — they
+  // just match nothing, which is the case a plain lookup would silently lose.
+  const tiles = tilesOf(awesome(presets.lockedQuad()));
+
+  const paired = pairTiles(
+    [
+      ["7f1c-uuid", { type: "currentStatus" }],
+      ["9b2d-uuid", { type: "durationDynamics" }],
+    ],
+    tiles,
+  );
+
+  assert.deepEqual(
+    paired.map((entry) => entry.tile?.type),
+    ["currentStatus", "durationDynamics"],
+  );
+});
+
 test("each plugin only sees the list it renders", () => {
   const config = withKit({
     name: "T",

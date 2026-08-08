@@ -144,6 +144,86 @@ function checkTiles(label, actual, expected) {
   check(actual.stockWidgets >= 1, `${label}: no stock widget left — the fork took over every tile`);
 }
 
+/**
+ * One palette on a mixed page.
+ *
+ * `theme.hostPalette` redefines Allure's own `--color-status-*-chart` pair, and
+ * the stock widgets pick that up because upstream hands nivo the `var()` string
+ * rather than a resolved colour. Checked on the paint, not on the declaration:
+ * the point is that the tile Allure draws and the tile the kit draws end up the
+ * same green.
+ */
+async function checkPalette(page, label) {
+  const palette = await page.evaluate(() => {
+    const root = getComputedStyle(document.documentElement);
+    const read = (name) => root.getPropertyValue(name).trim();
+    const stockFills = [
+      ...document.querySelectorAll('[class*="styles_widget"] svg [fill^="var(--color-status"]'),
+    ].map((node) => node.getAttribute("fill"));
+    return {
+      canon: read("--ark-status-passed"),
+      chart: read("--color-status-passed-chart"),
+      fill: read("--color-status-passed-chart-fill"),
+      failed: read("--color-status-failed-chart"),
+      canonFailed: read("--ark-status-failed"),
+      stockFills: [...new Set(stockFills)],
+    };
+  });
+
+  check(
+    palette.chart === palette.canon && palette.fill === palette.canon,
+    `${label} palette: passed is ${palette.chart} / ${palette.fill} while the canon is ${palette.canon}`,
+  );
+  check(
+    palette.failed === palette.canonFailed,
+    `${label} palette: failed is ${palette.failed} while the canon is ${palette.canonFailed}`,
+  );
+  // The whole mechanism rests on upstream keeping the colour unresolved in the
+  // markup; a stock tile that paints a literal would silently stop following.
+  check(
+    palette.stockFills.length > 0,
+    `${label} palette: no stock mark paints through a status token — upstream may have stopped emitting var()`,
+  );
+  return palette;
+}
+
+/**
+ * The tile follows its grid cell, not the config.
+ *
+ * `layout` drives the body aspect ratio and the SVG viewBox, and it is measured
+ * off the real cell — which keeps moving after the first paint. Narrowing the
+ * window has to re-bucket it, and the old modifier has to go with it, or the
+ * element would carry two layouts and the stylesheet would pick.
+ */
+async function checkResize(page, label) {
+  const layoutOf = () =>
+    page.evaluate(() => {
+      const tile = document.querySelector(".widget-tile");
+      return [...tile.classList].filter((name) => name.startsWith("widget-tile--layout-"));
+    });
+
+  const wide = await layoutOf();
+  await page.setViewportSize({ width: 620, height: 1400 });
+  await page.waitForTimeout(1200);
+  const narrow = await layoutOf();
+  await page.setViewportSize({ width: 1400, height: 1400 });
+  await page.waitForTimeout(1200);
+  const back = await layoutOf();
+
+  check(
+    wide.length === 1 && narrow.length === 1 && back.length === 1,
+    `${label} resize: tile carries ${JSON.stringify([wide, narrow, back])} — one layout modifier at a time`,
+  );
+  check(
+    narrow[0] !== wide[0],
+    `${label} resize: layout stayed ${wide[0]} after the cell narrowed`,
+  );
+  check(
+    back[0] === wide[0],
+    `${label} resize: layout came back as ${back[0]}, not ${wide[0]}`,
+  );
+}
+
 /** The DS header toggle drives the whole report; canvas tiles must redraw. */
 async function checkThemeToggle(page, label) {
   await page.click('[data-testid="header-theme-toggle"]');
@@ -225,6 +305,7 @@ const percentage = await awesome.page.evaluate(
 );
 check(percentage === "88.24%", `awesome: current status percentage "${percentage}"`);
 
+await checkPalette(awesome.page, "awesome");
 await checkThemeToggle(awesome.page, "awesome");
 
 // ---- Dashboard --------------------------------------------------------------
@@ -249,6 +330,11 @@ checkTiles("dashboard", dashboardTiles, [
     renderer: "dom",
     dots: ["red", "orange", "yellow", "purple", "gray", "green"],
   },
+  // A rate per layer: only the two layers with flaky tests are painted, so the
+  // zero-valued groups earn no dot — including the folded `other`.
+  { title: "Flaky по слоям", renderer: "echarts", dots: ["red", "orange"] },
+  // Trend over the runs in history, which no chart in the config can reach.
+  { title: "Pass rate по прогонам", renderer: "highcharts", dots: ["blue"] },
   { title: "Динамика статусов", renderer: "echarts" },
   { title: "Переходы статусов", renderer: "echarts" },
   { title: "Рост тестовой базы", renderer: "echarts" },
@@ -286,6 +372,24 @@ check(
   `dashboard: layout covers ${covered} chart types, expected all ${MODELLED_TYPES}`,
 );
 
+// The trend has a point per run in history, so it only exists because the
+// generator ran more than once — a single-run report would draw a flat line.
+const trend = await dashboard.page.evaluate(() => {
+  const tile = [...document.querySelectorAll(".widget-tile")].find(
+    (node) =>
+      node.querySelector(".widget-tile__title")?.textContent?.trim() === "Pass rate по прогонам",
+  );
+  return [...(tile?.querySelectorAll(".highcharts-xaxis-labels text") ?? [])].map((node) =>
+    node.textContent.trim(),
+  );
+});
+check(
+  trend.length >= 2 && trend[0] === "#1",
+  `dashboard trend: run axis is ${JSON.stringify(trend)}, expected at least two runs starting at #1`,
+);
+
+await checkPalette(dashboard.page, "dashboard");
+await checkResize(dashboard.page, "dashboard");
 await checkThemeToggle(dashboard.page, "dashboard");
 
 const consoleErrors = [...awesome.consoleErrors, ...dashboard.consoleErrors];
