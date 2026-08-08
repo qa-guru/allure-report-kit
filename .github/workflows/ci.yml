@@ -16,11 +16,14 @@ jobs:
     name: unit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      # Action majors and the Node pin follow the monorepo SSOT
+      # (generators/ethalon/tests-java/.github/_ethalon/gha-actions.yaml): bump
+      # there and propagate, never ad-hoc in one repository.
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 26
           cache: npm
 
       - run: npm install
@@ -38,11 +41,11 @@ jobs:
     name: report
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 26
           cache: npm
 
       # Install order is a dependency order — see scripts/setup.mjs.
@@ -60,7 +63,7 @@ jobs:
 
       - name: upload the generated reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: allure-reports
           path: e2e/allure-report
