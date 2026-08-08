@@ -190,5 +190,6 @@ Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in t
   rather than assumed: the dashboard template links `favicon.ico` and never
   writes it, and upstream's nivo widgets emit negative SVG dimensions on this
   grid (same page: all-kit → 0 errors, all-stock → 8).
-- **npm publish** — `publishConfig.access=public`, `npm-pack-check.mjs` and
-  `release.yml` on tag `v*` verify the tarball; packages still link via `file:`.
+- Soft-fork npm packages (`-awesome`, `-dashboard`, `-web-*`, `-plugin-core`)
+  still link via `file:` for local `setup`; only `@qa-guru/allure-report-kit`
+  is published. Publishing the fork set needs semver deps + `files` for `dist/`.

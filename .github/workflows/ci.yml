@@ -111,9 +111,8 @@ jobs:
       - name: Dogfood compare baseline
         run: npm run baseline
 
-      - name: Watch smoke (informational)
-        continue-on-error: true
-        run: node scripts/smoke-watch.mjs
+      - name: Watch smoke
+        run: npm run smoke:watch
 
       - name: Allure generate (e2e)
         run: npx allure generate ./allure-results-e2e -o allure-report-e2e
