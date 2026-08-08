@@ -18,9 +18,18 @@ const EXPECTED_TILES = [
   { type: "testingPyramid", renderer: "svg", renderedBy: "svg" },
   { type: "durations", renderer: "highcharts", renderedBy: "highcharts" },
   { type: "custom", renderer: "highcharts", renderedBy: "highcharts" },
+  { type: "stabilityDistribution", renderer: "echarts", renderedBy: "echarts" },
+  { type: "custom", renderer: "svg", renderedBy: "svg" },
+  { type: "custom", renderer: "dom", renderedBy: "dom" },
   { type: "custom", renderer: "amcharts", renderedBy: "amcharts-stub" },
   { type: "currentStatus", renderer: "stock", renderedBy: "stock-placeholder" },
 ];
+
+const PANEL_INDEX = 4;
+const STABILITY_INDEX = 5;
+const GAUGE_INDEX = 6;
+const TABLE_INDEX = 7;
+const STOCK_INDEX = 9;
 
 const failures = [];
 
@@ -103,7 +112,7 @@ EXPECTED_TILES.forEach((expected, index) => {
 });
 
 // Custom panel: dots come from the two families really on the donut.
-const panel = tiles[4];
+const panel = tiles[PANEL_INDEX];
 check(
   JSON.stringify(panel?.dots) === JSON.stringify(["orange", "green"]),
   `custom panel dots: expected ["orange","green"], got ${JSON.stringify(panel?.dots)}`,
@@ -113,12 +122,49 @@ check(
   `custom panel title: got "${panel?.title}"`,
 );
 
+// Per-point colours: both families sit on points of a single series, and a bar at
+// exactly the threshold counts as stable.
+check(
+  JSON.stringify(tiles[STABILITY_INDEX]?.dots) === JSON.stringify(["red", "green"]),
+  `stability dots: expected ["red","green"], got ${JSON.stringify(tiles[STABILITY_INDEX]?.dots)}`,
+);
+
 // dots: false → no indicator row at all (never three traffic-lights).
-check(tiles[6]?.dots.length === 0, `stock tile: expected no dots, got ${JSON.stringify(tiles[6]?.dots)}`);
+check(
+  tiles[STOCK_INDEX]?.dots.length === 0,
+  `stock tile: expected no dots, got ${JSON.stringify(tiles[STOCK_INDEX]?.dots)}`,
+);
+
+// Gauge — SVG canon: a track arc, a progress arc, and the reading.
+const gauge = await page.$eval(
+  `.widget-tile[data-ark-tile$=":${GAUGE_INDEX}:passRate"] .widget-tile__body svg`,
+  (svg) => ({
+    arcs: svg.querySelectorAll("path").length,
+    reading: svg.querySelector("text")?.textContent?.trim(),
+  }),
+).catch(() => ({ arcs: 0, reading: undefined }));
+check(gauge.arcs === 2, `gauge: expected 2 arcs, got ${gauge.arcs}`);
+check(gauge.reading === "30", `gauge: reading is "${gauge.reading}"`);
+
+// Table — one row per layer, each with its own indicator.
+const table = await page.$eval(
+  `.widget-tile[data-ark-tile$=":${TABLE_INDEX}:layersTable"] .widget-tile__body`,
+  (body) => ({
+    rows: body.querySelectorAll("tbody tr").length,
+    dots: body.querySelectorAll("tbody .indicator").length,
+    header: [...body.querySelectorAll("thead th")].map((cell) => cell.textContent.trim()),
+  }),
+).catch(() => ({ rows: 0, dots: 0, header: [] }));
+check(table.rows === 6, `table: expected 6 rows, got ${table.rows}`);
+check(table.dots === 6, `table: expected an indicator per row, got ${table.dots}`);
+check(
+  JSON.stringify(table.header) === JSON.stringify(["Слой", "Тестов"]),
+  `table header: got ${JSON.stringify(table.header)}`,
+);
 
 // Pyramid keeps the six canon tiers as rounded rects.
 const pyramidTiers = await page.$$eval(
-  '.widget-tile[data-ark-renderer="svg"] .widget-tile__body svg rect',
+  '.widget-tile[data-ark-tile$=":2:testingPyramid"] .widget-tile__body svg rect',
   (nodes) => nodes.length,
 );
 check(pyramidTiers === 6, `pyramid: expected 6 tiers, got ${pyramidTiers}`);

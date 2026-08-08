@@ -191,7 +191,7 @@ await awesome.page.getByText("Графики", { exact: true }).first().click();
 await awesome.page.waitForSelector(".widget-tile[data-ark-rendered-by]");
 await awesome.page.waitForFunction(
   (count) => document.querySelectorAll(".widget-tile[data-ark-rendered-by]").length >= count,
-  6,
+  7,
   { timeout: 15_000 },
 );
 
@@ -202,8 +202,22 @@ checkTiles("awesome", awesomeTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
+  // Data computed from the run and fetched as a widget — only the passed arc is
+  // drawn, so only green earns a dot.
+  { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
   { title: "Динамика статусов", renderer: "echarts" },
 ]);
+
+// The gauge proves the widget round-trip: nothing about it is in the manifest.
+const gauge = await awesome.page.evaluate(() => {
+  const tile = [...document.querySelectorAll(".widget-tile")].find(
+    (node) => node.querySelector(".widget-tile__title")?.textContent?.trim() === "Прошло тестов",
+  );
+  const texts = [...(tile?.querySelectorAll("svg text") ?? [])].map((node) => node.textContent.trim());
+  return { reading: texts[0], caption: texts[1] };
+});
+check(gauge.reading === "30", `awesome gauge: reading "${gauge.reading}", expected 30 passed`);
+check(gauge.caption === "из 34", `awesome gauge: caption "${gauge.caption}", expected "из 34"`);
 
 // Statistic carries `total` next to the statuses; a wrong sum halves this.
 const percentage = await awesome.page.evaluate(
@@ -228,6 +242,13 @@ checkTiles("dashboard", dashboardTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
+  { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
+  // Table rows come from the run, one indicator per layer.
+  {
+    title: "Тесты по слоям",
+    renderer: "dom",
+    dots: ["red", "orange", "yellow", "purple", "gray", "green"],
+  },
   { title: "Динамика статусов", renderer: "echarts" },
   { title: "Переходы статусов", renderer: "echarts" },
   { title: "Рост тестовой базы", renderer: "echarts" },

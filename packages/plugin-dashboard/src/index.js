@@ -14,5 +14,6 @@ export default createKitPlugin({
   UpstreamPlugin: DashboardPlugin,
   forkPackage: "@qa-guru/allure-report-kit-web-dashboard",
   upstreamPackage: "@allurereport/web-dashboard",
+  tilesKey: "layout",
   resolveFrom: createRequire(import.meta.url),
 });

@@ -16,5 +16,6 @@ export default createKitPlugin({
   UpstreamPlugin: AwesomePlugin,
   forkPackage: "@qa-guru/allure-report-kit-web-awesome",
   upstreamPackage: "@allurereport/web-awesome",
+  tilesKey: "charts",
   resolveFrom: createRequire(import.meta.url),
 });

@@ -5,9 +5,8 @@
  * Highcharts code and no licence key. A missing install degrades to the
  * registry fallback.
  */
-import type { StatusFamily } from "../../types.js";
+import { familiesOf } from "../families.js";
 import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "../model.js";
-import { familyForColor, orderFamilies } from "../palette.js";
 
 interface HighchartsInstance {
   destroy: () => void;
@@ -21,21 +20,13 @@ interface HighchartsApi {
 const instances = new WeakMap<HTMLElement, HighchartsInstance>();
 const observers = new WeakMap<HTMLElement, ResizeObserver>();
 
+/** Data marks only — Highcharts groups its series under a stable class. */
+const MARKS = '.highcharts-series path[fill]:not([fill="none"]), .highcharts-series rect[fill]';
+
 function colorsOf(context: RenderContext): string[] {
   return context.model.series.map(
     (series, index) => series.color ?? context.cssVar(`--ark-series-${index}`, "#4b9bff"),
   );
-}
-
-function collectFamilies(context: RenderContext, colors: string[]): StatusFamily[] {
-  const families = new Set<StatusFamily>();
-  context.model.series.forEach((series, index) => {
-    const family = series.family ?? familyForColor(colors[index]);
-    if (family) {
-      families.add(family);
-    }
-  });
-  return orderFamilies(families);
 }
 
 function baseOptions(context: RenderContext): Record<string, unknown> {
@@ -142,7 +133,9 @@ function cartesianOptions(
       type,
       name: series.label ?? series.id,
       color: colors[index],
-      data: series.points?.map((point) => point.y) ?? [series.value ?? 0],
+      data:
+        series.points?.map((point) => (point.color ? { y: point.y, color: point.color } : point.y)) ??
+        [series.value ?? 0],
     })),
   };
 }
@@ -150,6 +143,8 @@ function cartesianOptions(
 export const highchartsRenderer: ChartRenderer = {
   id: "highcharts",
 
+  // No `gauge`: that one lives in `highcharts-more`, which the plugin does not
+  // ship. Declining keeps the tile with Allure instead of drawing an empty box.
   supports: (model: ChartModel) =>
     model.kind === "pie" || model.kind === "bar" || model.kind === "line",
 
@@ -180,7 +175,7 @@ export const highchartsRenderer: ChartRenderer = {
       observers.set(context.host, observer);
     }
 
-    return { families: collectFamilies(context, colors), renderedBy: "highcharts" };
+    return { families: familiesOf(context, colors, { marks: MARKS }), renderedBy: "highcharts" };
   },
 
   destroy: (host: HTMLElement) => {

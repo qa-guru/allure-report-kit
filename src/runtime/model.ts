@@ -7,7 +7,15 @@
  */
 import type { KitThemeConfig, ResolvedTile, StatusFamily, TileType } from "../types.js";
 
-export type ChartModelKind = "pie" | "bar" | "line" | "pyramid" | "treemap" | "heatmap";
+export type ChartModelKind =
+  | "pie"
+  | "bar"
+  | "line"
+  | "pyramid"
+  | "treemap"
+  | "heatmap"
+  | "gauge"
+  | "table";
 
 /**
  * Hierarchy for treemap charts. `colorValue` is a 0..1 quality score — the
@@ -23,6 +31,15 @@ export interface ChartTreeNode {
 export interface ChartPoint {
   x: string | number;
   y: number;
+  /**
+   * Colour of this point alone.
+   *
+   * Needed whenever the meaning lives in the value rather than in the series —
+   * `stabilityDistribution` colours each group by its own threshold, and one
+   * series with coloured points reads better than two half-empty ones.
+   */
+  color?: string;
+  family?: StatusFamily;
 }
 
 export interface ChartSeries {
@@ -46,9 +63,11 @@ export interface ChartModel {
   series: ChartSeries[];
   /** X categories for bar charts. */
   categories?: string[];
-  /** Denominator of the donut centre caption. */
+  /** Denominator of the donut centre caption; upper bound of a gauge. */
   total?: number;
   unit?: string;
+  /** Column headers of a `table` model. */
+  columns?: string[];
   /** Percentage shown in the middle of a donut; computed when omitted. */
   percentage?: number;
   /** Hierarchy for `treemap`; `series` stays empty for that kind. */
@@ -59,7 +78,12 @@ export interface ChartModel {
 }
 
 export interface RenderResult {
-  /** Status families actually drawn — the source of `dots: "fromSeries"`. */
+  /**
+   * Status families actually drawn — the source of `dots: "fromSeries"`.
+   *
+   * "Actually" is literal: renderers derive this through `familiesOf`, which
+   * drops a family whose colour never made it onto the canvas.
+   */
   families: StatusFamily[];
   /** Renderer that produced the tile; differs from the request on fallback. */
   renderedBy: string;

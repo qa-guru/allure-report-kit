@@ -124,6 +124,56 @@
   position: relative;
 }
 
+/* ---- Table panel (`dom` renderer) ---- */
+
+.ark-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--ark-text, currentColor);
+}
+
+.ark-table th {
+  padding: 0 var(--space-2, 8px) 6px;
+  font-size: var(--font-size-xs, 0.6875rem);
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ark-text-muted, rgba(127, 127, 127, 0.9));
+  border-bottom: 1px solid var(--ark-border, rgba(127, 127, 127, 0.22));
+}
+
+.ark-table td {
+  padding: 6px var(--space-2, 8px);
+  border-bottom: 1px solid var(--ark-border, rgba(127, 127, 127, 0.14));
+}
+
+.ark-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.ark-table__label {
+  display: flex;
+  align-items: center;
+  gap: var(--panel-dot-gap, 5px);
+}
+
+.ark-table__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Scrolls on the wrapper, not on the table: a scrolling table element turns
+ * thead and tbody into separate anonymous tables and the columns stop lining up. */
+.ark-table-scroll {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
 /* ---- Stub (renderer unavailable / spike) ---- */
 
 .ark-stub {

@@ -3,16 +3,19 @@
  * needs. Kept out of the config entry point: this is browser code that assumes
  * an Allure report around it.
  */
-export { toChartModel, toPanelModel } from "./model.js";
+export { loadPanelModel, toChartModel, toPanelModel } from "./model.js";
 export type { AllureChartData } from "./model.js";
 
 export {
   REPORT_TILE_LAYOUT,
   canKitRender,
+  cellGeometry,
   getKitRuntime,
   isKitOwned,
   pairTiles,
   readManifest,
+  resolveTileModel,
+  tilesForList,
   withReportLayout,
 } from "./report.js";
 export type { PairedTile } from "./report.js";

@@ -100,8 +100,22 @@ export function parseColor(value: string | undefined): Rgb | undefined {
   return parseHex(value) ?? parseRgbFunction(value);
 }
 
+export interface FamilyMatchOptions {
+  /**
+   * Reject colours further than this from every anchor (RGB distance, 0..441).
+   *
+   * Unbounded matching is right for a series colour, which is a palette token by
+   * construction. It is wrong for a colour scraped off the paint, where a muted
+   * axis grey would silently become a `gray` dot.
+   */
+  maxDistance?: number;
+}
+
 /** Nearest family anchor in RGB space; `undefined` for unparsable colours. */
-export function familyForColor(color: string | undefined): StatusFamily | undefined {
+export function familyForColor(
+  color: string | undefined,
+  options: FamilyMatchOptions = {},
+): StatusFamily | undefined {
   const rgb = parseColor(color);
   if (!rgb) {
     return undefined;
@@ -120,7 +134,37 @@ export function familyForColor(color: string | undefined): StatusFamily | undefi
       best = family;
     }
   }
+  if (options.maxDistance !== undefined && bestDistance > options.maxDistance ** 2) {
+    return undefined;
+  }
   return best;
+}
+
+/**
+ * Two colours are the same swatch.
+ *
+ * Not string equality: a library may re-serialise `#fd5a3e` as
+ * `rgb(253, 90, 62)`, flatten an alpha channel or round a component.
+ */
+export function sameColor(left: string | undefined, right: string | undefined): boolean {
+  const a = parseColor(left);
+  const b = parseColor(right);
+  if (!a || !b) {
+    return false;
+  }
+  return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2 <= 12 ** 2;
+}
+
+/** Colours of the data marks the renderer left in the DOM. */
+export function paintedColors(host: ParentNode, selector: string): string[] {
+  const colors: string[] = [];
+  for (const node of host.querySelectorAll(selector)) {
+    const fill = node.getAttribute("fill");
+    if (fill) {
+      colors.push(fill);
+    }
+  }
+  return colors;
 }
 
 /** Sort families into the canonical bar order and drop duplicates. */

@@ -15,12 +15,15 @@
 import { themeStore } from "@allurereport/web-commons";
 import { Grid, GridItem, Loadable, PageLoader, ThemeProvider } from "@allurereport/web-components";
 import type { ResolvedTile } from "@qa-guru/allure-report-kit";
+import type { AllureChartData } from "@qa-guru/allure-report-kit/allure";
 import {
   canKitRender,
   getKitRuntime,
   isKitOwned,
   pairTiles,
   readManifest,
+  resolveTileModel,
+  tilesForList,
   toChartModel,
   toPanelModel,
   withReportLayout,
@@ -37,22 +40,38 @@ import * as styles from "./styles.scss";
 
 const currentTheme = computed(() => themeStore.value.current);
 
-const KitTile = ({ tile, model }: { tile: ResolvedTile; model: ReturnType<typeof toChartModel> }) => {
+const KitTile = ({ tile, chartData }: { tile: ResolvedTile; chartData?: AllureChartData }) => {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const kit = getKitRuntime();
-    if (!kit || !host.current || !model) {
-      return;
+    const container = host.current;
+    if (!kit || !container) {
+      return undefined;
     }
-    host.current.replaceChildren();
-    void kit.mountTile({
-      tile: withReportLayout(tile),
-      model,
-      title: model.title,
-      container: host.current,
-    });
-  }, [tile, model]);
+    container.replaceChildren();
+    let cancelled = false;
+
+    // Async because a panel may keep its data in a widget instead of the
+    // manifest; the layout is measured off the real grid cell, which only exists
+    // once the effect runs.
+    void (async () => {
+      const model = await resolveTileModel(tile, chartData);
+      if (cancelled || !model) {
+        return;
+      }
+      await kit.mountTile({
+        tile: withReportLayout(tile, container),
+        model,
+        title: model.title,
+        container,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tile, chartData]);
 
   return <div ref={host} className={`ark-report-tile ${styles["overview-grid-item"]}`} />;
 };
@@ -78,13 +97,13 @@ export const Charts = () => {
             return null;
           }
 
-          const charts = pairTiles(Object.entries(currentChartsData), manifest?.tiles).map(
+          const charts = pairTiles(Object.entries(currentChartsData), tilesForList(manifest, "charts")).map(
             ({ chartId, chartData, tile }) => {
               if (isKitOwned(tile)) {
                 const model = tile.panel ? toPanelModel(tile.panel) : toChartModel(chartData as any);
                 // A backend that cannot draw this kind leaves the tile to Allure.
                 if (canKitRender(tile, model)) {
-                  return <KitTile key={chartId} tile={tile} model={model} />;
+                  return <KitTile key={chartId} tile={tile} chartData={chartData as any} />;
                 }
               }
 

@@ -5,6 +5,10 @@
  * from the durations histogram so the two tiles read as one family. Geometry is
  * the design-system canon (`widget-tile-mocks.js` → `pyramidSvg`); the same
  * shape the allure-notifications Telegram collage renders.
+ *
+ * Also draws the gauge, for the same reason: an arc with a number in it needs no
+ * library, and keeping it here means a gauge panel renders in a report that
+ * installed no chart backend at all.
  */
 import type { StatusFamily } from "../../types.js";
 import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "../model.js";
@@ -188,9 +192,95 @@ function fitLabels(svg: SVGSVGElement): void {
   }
 }
 
+/** Point on a circle, 0° at the top, clockwise — the arc convention here. */
+function polar(cx: number, cy: number, radius: number, degrees: number): [number, number] {
+  const radians = ((degrees - 90) * Math.PI) / 180;
+  return [cx + radius * Math.cos(radians), cy + radius * Math.sin(radians)];
+}
+
+function arcPath(cx: number, cy: number, radius: number, from: number, to: number): string {
+  const [x1, y1] = polar(cx, cy, radius, from);
+  const [x2, y2] = polar(cx, cy, radius, to);
+  const large = to - from > 180 ? 1 : 0;
+  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${radius} ${radius} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+
+/** Gauge — `series[0].value` against `model.total`, on a 240° arc. */
+function renderGauge(context: RenderContext): RenderResult {
+  const { host, model, tile } = context;
+  const box = viewBox(tile.layout);
+  const primary = model.series[0];
+  const value = primary?.value ?? 0;
+  const total = model.total ?? 100;
+  const fraction = total > 0 ? Math.min(Math.max(value / total, 0), 1) : 0;
+
+  const START = -120;
+  const SWEEP = 240;
+  const stroke = Math.max(10, Math.round(box.height * 0.07));
+  const cx = box.width / 2;
+  const cy = box.height * 0.62;
+  const radius = Math.min(cx, cy) - stroke;
+  const color = primary?.color ?? context.cssVar("--ark-status-passed", "#49cb68");
+
+  const svg = element("svg", {
+    viewBox: `0 0 ${box.width} ${box.height}`,
+    role: "img",
+    preserveAspectRatio: "xMidYMid meet",
+    "aria-label": `${model.title ?? "Gauge"}: ${value} / ${total}`,
+  });
+
+  const track = element("path", {
+    d: arcPath(cx, cy, radius, START, START + SWEEP),
+    fill: "none",
+    stroke: context.cssVar("--ark-border", "#e5e5e5"),
+    "stroke-width": stroke,
+    "stroke-linecap": "round",
+  });
+  svg.append(track);
+
+  if (fraction > 0) {
+    svg.append(
+      element("path", {
+        d: arcPath(cx, cy, radius, START, START + SWEEP * fraction),
+        fill: "none",
+        stroke: color,
+        "stroke-width": stroke,
+        "stroke-linecap": "round",
+      }),
+    );
+  }
+
+  const reading = element("text", {
+    x: cx,
+    y: cy,
+    "text-anchor": "middle",
+    "font-size": Math.round(box.height * 0.16),
+    "font-weight": 800,
+    fill: context.cssVar("--ark-text", "#1c1917"),
+  });
+  reading.textContent = model.formatValue?.(value) ?? String(value);
+  svg.append(reading);
+
+  const caption = element("text", {
+    x: cx,
+    y: cy + Math.round(box.height * 0.13),
+    "text-anchor": "middle",
+    "font-size": Math.round(box.height * 0.065),
+    fill: context.cssVar("--ark-text-muted", "#777"),
+  });
+  caption.textContent = model.unit ? `${model.unit} ${total}` : `из ${total}`;
+  svg.append(caption);
+
+  host.replaceChildren(svg);
+
+  const family = primary?.family ?? familyForColor(color);
+  return { families: family ? [family] : [], renderedBy: "svg" };
+}
+
 export const svgRenderer: ChartRenderer = {
   id: "svg",
-  supports: (model: ChartModel) => model.kind === "pyramid",
-  render: async (context) => renderPyramid(context),
+  supports: (model: ChartModel) => model.kind === "pyramid" || model.kind === "gauge",
+  render: async (context) =>
+    context.model.kind === "gauge" ? renderGauge(context) : renderPyramid(context),
   destroy: (host) => host.replaceChildren(),
 };

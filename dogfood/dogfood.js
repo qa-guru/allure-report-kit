@@ -15,7 +15,10 @@ import {
   currentStatusModel,
   durationDynamicsModel,
   durationsModel,
+  layersTableModel,
+  passRateModel,
   servicesStatusModel,
+  stabilityModel,
   testingPyramidModel,
 } from "./data.js";
 
@@ -48,6 +51,26 @@ const config = withKit({
             renderer: "highcharts",
             dots: "fromSeries",
           }),
+          // one bar per group, coloured per point: both dots come from points
+          charts.stabilityDistribution({
+            title: "Стабильность по компонентам",
+            groupBy: "label-name:component",
+            threshold: 90,
+          }),
+          // gauge and table — kit canon, no chart library
+          panels.gauge({
+            id: "passRate",
+            title: "Прошло тестов",
+            total: 34,
+            unit: "из",
+            layout: "2x1",
+          }),
+          panels.table({
+            id: "layersTable",
+            title: "Тесты по слоям",
+            columns: ["Слой", "Тестов"],
+            layout: "2x2",
+          }),
           // same panel on the amCharts adapter — spike, falls back to a stub
           panels.custom({
             id: "servicesAmcharts",
@@ -78,6 +101,9 @@ const MODELS = [
   testingPyramidModel,
   durationsModel,
   servicesStatusModel,
+  stabilityModel,
+  passRateModel,
+  layersTableModel,
   servicesStatusModel,
   currentStatusModel,
 ];

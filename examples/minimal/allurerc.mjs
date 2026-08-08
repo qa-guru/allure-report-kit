@@ -60,13 +60,22 @@ export default withKit({
           ...lockedQuad,
 
           // Kit panel: nine services, seven healthy. Dots resolve to the two
-          // families really on the donut — orange + green.
+          // families really on the donut — orange + green. Data comes from a
+          // widget you write yourself.
           panels.custom({
             id: "servicesCurrentStatus",
             title: "Текущий статус по сервисам",
             renderer: "highcharts",
             dots: "fromSeries",
-            dataUrl: "./widgets/services-status.json",
+            dataUrl: "widgets/services-status.json",
+          }),
+
+          // Panel data computed from the run by the plugin, no config data at all.
+          panels.fromRun({
+            id: "passRate",
+            title: "Прошло тестов",
+            groupBy: "status",
+            kind: "gauge",
           }),
 
           // Stock tiles stay stock — Allure renders them with nivo.
@@ -80,7 +89,18 @@ export default withKit({
       options: {
         reportName: "Reference App — Dashboard",
         reportLanguage: "ru",
-        layout: [...lockedQuad, charts.successRateDistribution({ renderer: "stock" })],
+        layout: [
+          ...lockedQuad,
+          panels.fromRun({
+            id: "layersTable",
+            title: "Тесты по слоям",
+            groupBy: "layer",
+            kind: "table",
+            columns: ["Слой", "Тестов"],
+            limit: 5,
+          }),
+          charts.successRateDistribution({ renderer: "stock" }),
+        ],
       },
     },
   },

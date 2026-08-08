@@ -5,8 +5,9 @@
  * install degrades to the registry fallback instead of throwing.
  */
 import type { StatusFamily } from "../../types.js";
+import { familiesOf } from "../families.js";
 import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "../model.js";
-import { familyForColor, orderFamilies } from "../palette.js";
+import { orderFamilies } from "../palette.js";
 
 interface EChartsInstance {
   setOption: (option: Record<string, unknown>) => void;
@@ -31,21 +32,19 @@ function observeResize(host: HTMLElement, instance: EChartsInstance): void {
   observers.set(host, observer);
 }
 
+/**
+ * Data marks of the ECharts SVG output.
+ *
+ * Axis lines, split lines and the line of a line chart all carry `fill="none"`,
+ * so filling is what separates a mark from the chart furniture; labels are
+ * `<text>` and never match.
+ */
+const MARKS = 'path[fill]:not([fill="none"]):not([fill="transparent"]), rect[fill]:not([fill="none"])';
+
 function seriesColors(context: RenderContext): string[] {
   return context.model.series.map(
     (series, index) => series.color ?? context.cssVar(`--ark-series-${index}`, "#4b9bff"),
   );
-}
-
-function collectFamilies(context: RenderContext, colors: string[]): StatusFamily[] {
-  const families = new Set<StatusFamily>();
-  context.model.series.forEach((series, index) => {
-    const family = series.family ?? familyForColor(colors[index]);
-    if (family) {
-      families.add(family);
-    }
-  });
-  return orderFamilies(families);
 }
 
 function textStyle(context: RenderContext): Record<string, unknown> {
@@ -112,8 +111,63 @@ function barOption(context: RenderContext, colors: string[]): Record<string, unk
       stack: "total",
       barMaxWidth: 26,
       itemStyle: { borderRadius: 2 },
-      data: series.points?.map((point) => point.y) ?? [series.value ?? 0],
+      data:
+        series.points?.map((point) =>
+          point.color ? { value: point.y, itemStyle: { color: point.color } } : point.y,
+        ) ?? [series.value ?? 0],
     })),
+  };
+}
+
+/**
+ * Progress gauge — `series[0].value` against `model.total`.
+ *
+ * Deliberately plain: the tile bar already carries the title and the dots, so
+ * the gauge only owns the arc and the number inside it.
+ */
+function gaugeOption(context: RenderContext, colors: string[]): Record<string, unknown> {
+  const { model } = context;
+  const primary = model.series[0];
+  const value = primary?.value ?? 0;
+  const total = model.total ?? 100;
+  const muted = context.cssVar("--ark-text-muted", "rgba(28, 25, 23, 0.55)");
+
+  return {
+    animation: false,
+    series: [
+      {
+        type: "gauge",
+        startAngle: 210,
+        endAngle: -30,
+        min: 0,
+        max: total,
+        radius: "94%",
+        center: ["50%", "62%"],
+        splitLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { show: false },
+        pointer: { show: false },
+        progress: {
+          show: true,
+          width: 16,
+          roundCap: true,
+          itemStyle: { color: colors[0] ?? context.cssVar("--ark-status-passed", "#49cb68") },
+        },
+        axisLine: {
+          roundCap: true,
+          lineStyle: { width: 16, color: [[1, context.cssVar("--ark-border", "#e5e5e5")]] },
+        },
+        detail: {
+          offsetCenter: [0, "-8%"],
+          formatter: model.formatValue ? (raw: number) => model.formatValue?.(raw) : "{value}",
+          color: context.cssVar("--ark-text", "#1c1917"),
+          fontSize: 26,
+          fontWeight: 800,
+        },
+        title: { offsetCenter: [0, "26%"], color: muted, fontSize: 12 },
+        data: [{ value, name: model.unit ? `${model.unit} ${total}` : `из ${total}` }],
+      },
+    ],
   };
 }
 
@@ -293,6 +347,8 @@ function buildOption(context: RenderContext, colors: string[]): Record<string, u
       return barOption(context, colors);
     case "line":
       return lineOption(context, colors);
+    case "gauge":
+      return gaugeOption(context, colors);
     default:
       return {};
   }
@@ -301,7 +357,7 @@ function buildOption(context: RenderContext, colors: string[]): Record<string, u
 export const echartsRenderer: ChartRenderer = {
   id: "echarts",
 
-  supports: (model: ChartModel) => model.kind !== "pyramid",
+  supports: (model: ChartModel) => model.kind !== "pyramid" && model.kind !== "table",
 
   render: async (context: RenderContext): Promise<RenderResult> => {
     const api = (await context.resolveLib("echarts")) as EChartsApi | undefined;
@@ -338,7 +394,10 @@ export const echartsRenderer: ChartRenderer = {
     });
 
     observeResize(context.host, instance);
-    return { families: collectFamilies(context, colors), renderedBy: "echarts" };
+    return {
+      families: familiesOf(context, colors, { marks: MARKS }),
+      renderedBy: "echarts",
+    };
   },
 
   destroy: (host: HTMLElement) => {

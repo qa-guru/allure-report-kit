@@ -10,8 +10,11 @@ import type {
   DotsSpec,
   KitCustomPanel,
   KitPanelData,
+  KitPanelSource,
   KitSeries,
+  PanelGroupBy,
   PanelKind,
+  PanelMetric,
   RendererRef,
   TileLayout,
   TileTier,
@@ -26,9 +29,23 @@ export interface CustomPanelOptions {
   dots?: DotsSpec;
   data?: KitPanelData;
   dataUrl?: string;
+  source?: KitPanelSource;
   layout?: TileLayout;
   tier?: TileTier;
 }
+
+/**
+ * Kinds only the kit canon can draw, and the renderer that draws them.
+ *
+ * Without this a `table` would inherit the page default and be dropped — no
+ * chart backend draws rows — and a gauge would silently depend on ECharts being
+ * installed. An explicit `renderer` in the config still wins.
+ */
+const CANON_RENDERER: Partial<Record<PanelKind, RendererRef>> = {
+  pyramid: "svg",
+  gauge: "svg",
+  table: "dom",
+};
 
 export function custom(options: CustomPanelOptions): KitCustomPanel {
   const { id, kind = "donut", dots = "fromSeries", ...rest } = options;
@@ -38,6 +55,10 @@ export function custom(options: CustomPanelOptions): KitCustomPanel {
       panel[key] = value;
     }
   }
+  panel.renderer = rest.renderer ?? CANON_RENDERER[kind];
+  if (panel.renderer === undefined) {
+    delete panel.renderer;
+  }
   return panel as KitCustomPanel;
 }
 
@@ -46,14 +67,7 @@ export function donut(
   options: Omit<CustomPanelOptions, "kind"> & { total?: number; unit?: string },
 ): KitCustomPanel {
   const { total, unit, data, ...rest } = options;
-  const merged: KitPanelData | undefined =
-    data ?? (total === undefined ? undefined : { series: [], total });
-  if (merged && total !== undefined) {
-    merged.total = total;
-  }
-  if (merged && unit !== undefined) {
-    merged.unit = unit;
-  }
+  const merged = withCaption(data, total, unit);
   return custom({ ...rest, kind: "donut", ...(merged ? { data: merged } : {}) });
 }
 
@@ -66,10 +80,88 @@ export function line(options: Omit<CustomPanelOptions, "kind">): KitCustomPanel 
 }
 
 export function pyramid(options: Omit<CustomPanelOptions, "kind">): KitCustomPanel {
-  return custom({ renderer: "svg", ...options, kind: "pyramid" });
+  return custom({ ...options, kind: "pyramid" });
+}
+
+/** Arc with a reading in the middle — `series[0].value` out of `total`. */
+export function gauge(
+  options: Omit<CustomPanelOptions, "kind"> & { total?: number; unit?: string },
+): KitCustomPanel {
+  const { total, unit, data, ...rest } = options;
+  const merged = withCaption(data, total, unit);
+  return custom({ ...rest, kind: "gauge", ...(merged ? { data: merged } : {}) });
+}
+
+/** Rows with an indicator per row — no chart library draws a table. */
+export function table(
+  options: Omit<CustomPanelOptions, "kind"> & { columns?: string[] },
+): KitCustomPanel {
+  const { columns, data, ...rest } = options;
+  const merged = columns ? { series: [], ...data, columns } : data;
+  return custom({ ...rest, kind: "table", ...(merged ? { data: merged } : {}) });
+}
+
+export interface FromRunOptions extends Omit<CustomPanelOptions, "data" | "dataUrl" | "source"> {
+  groupBy: PanelGroupBy;
+  metric?: PanelMetric;
+  /** Keep only the N largest groups; the rest folds into `other`. */
+  limit?: number;
+  /** Table headers; the rows themselves come from the run. */
+  columns?: string[];
+  /** Caption denominator; defaults to the number of tests in the run. */
+  total?: number;
+  unit?: string;
+}
+
+/**
+ * Panel computed from the test results of the run.
+ *
+ * No data in the config: the kit plugin resolves the grouping against the store
+ * at generation time and writes the result as a report widget, so the panel
+ * follows the run the same way a stock chart does.
+ *
+ * Requires the soft-fork — an upstream plugin has no idea what to compute.
+ */
+export function fromRun(options: FromRunOptions): KitCustomPanel {
+  const { groupBy, metric = "count", limit, columns, total, unit, ...rest } = options;
+  // Only the presentation travels in `data`; the series are the plugin's job.
+  const data: KitPanelData | undefined =
+    columns || total !== undefined || unit !== undefined
+      ? {
+          series: [],
+          ...(columns ? { columns } : {}),
+          ...(total === undefined ? {} : { total }),
+          ...(unit === undefined ? {} : { unit }),
+        }
+      : undefined;
+
+  return custom({
+    ...rest,
+    ...(data ? { data } : {}),
+    source: { groupBy, metric, ...(limit === undefined ? {} : { limit }) },
+  });
 }
 
 /** Series helper — keeps `family` explicit so `dots: "fromSeries"` is exact. */
 export function series(items: KitSeries[]): KitPanelData {
   return { series: items };
+}
+
+function withCaption(
+  data: KitPanelData | undefined,
+  total: number | undefined,
+  unit: string | undefined,
+): KitPanelData | undefined {
+  const merged: KitPanelData | undefined =
+    data ?? (total === undefined ? undefined : { series: [], total });
+  if (!merged) {
+    return undefined;
+  }
+  if (total !== undefined) {
+    merged.total = total;
+  }
+  if (unit !== undefined) {
+    merged.unit = unit;
+  }
+  return merged;
 }

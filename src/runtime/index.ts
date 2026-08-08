@@ -11,6 +11,7 @@ import { resolveDots, syncIndicatorRow } from "./indicators.js";
 import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "./model.js";
 import { RendererRegistry, createLibResolver } from "./registry.js";
 import { amchartsRenderer } from "./renderers/amcharts.js";
+import { domRenderer } from "./renderers/dom.js";
 import { echartsRenderer } from "./renderers/echarts.js";
 import { highchartsRenderer } from "./renderers/highcharts.js";
 import { stockRenderer } from "./renderers/stock.js";
@@ -53,7 +54,14 @@ interface MountRecord {
 const VAR_PATTERN = /^var\(\s*(--[\w-]+)\s*(?:,\s*(.+))?\)$/;
 
 function builtinRenderers(): ChartRenderer[] {
-  return [stockRenderer, svgRenderer, echartsRenderer, highchartsRenderer, amchartsRenderer];
+  return [
+    stockRenderer,
+    svgRenderer,
+    domRenderer,
+    echartsRenderer,
+    highchartsRenderer,
+    amchartsRenderer,
+  ];
 }
 
 export class KitRuntime {
@@ -109,7 +117,17 @@ export class KitRuntime {
       ...model,
       series: model.series.map((series) => {
         const color = resolve(series.color);
-        return color === undefined ? series : { ...series, color };
+        // Points carry colours too whenever the meaning is per value rather than
+        // per series, and a canvas backend needs the literal just the same.
+        const points = series.points?.map((point) => {
+          const pointColor = resolve(point.color);
+          return pointColor === undefined ? point : { ...point, color: pointColor };
+        });
+        return {
+          ...series,
+          ...(color === undefined ? {} : { color }),
+          ...(points === undefined ? {} : { points }),
+        };
       }),
     };
   }
@@ -217,9 +235,11 @@ export { createTile, adoptTile } from "./tile.js";
 export { mountReportHeader } from "./header.js";
 export { stockRenderer, createStockRenderer } from "./renderers/stock.js";
 export { svgRenderer } from "./renderers/svg.js";
+export { domRenderer } from "./renderers/dom.js";
 export { echartsRenderer } from "./renderers/echarts.js";
 export { highchartsRenderer } from "./renderers/highcharts.js";
 export { amchartsRenderer } from "./renderers/amcharts.js";
+export { familiesOf } from "./families.js";
 export {
   FAMILY_ANCHORS,
   LAYER_FAMILIES,
@@ -228,6 +248,8 @@ export {
   STATUS_TOKENS,
   familyForColor,
   orderFamilies,
+  paintedColors,
+  sameColor,
 } from "./palette.js";
 
 export type {

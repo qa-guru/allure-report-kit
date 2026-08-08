@@ -9,7 +9,7 @@
  * `@allurereport/web-commons`: the kit reads four fields and should not gain a
  * dependency on the report's internals for that.
  */
-import type { KitCustomPanel, StatusFamily } from "../types.js";
+import type { KitCustomPanel, KitPanelData, StatusFamily } from "../types.js";
 import type { ChartModel, ChartSeries, ChartTreeNode } from "../runtime/model.js";
 
 export interface AllureChartData {
@@ -270,38 +270,30 @@ export function toChartModel(chartData: AllureChartData): ChartModel | undefined
       const runs = chartData.data as ({ id: string } & Record<string, number>)[];
       const statuses = (chartData.statuses as string[]) ?? STATUS_ORDER;
       const categories = runs.map((run, index) => runLabel(run.id, index, runs.length));
-      const sum = (run: Record<string, number>, prefix: string) =>
-        statuses.reduce((total, status) => total + (run[`${prefix}:${status}`] ?? 0), 0);
 
-      // Aggregated rather than one series per status × direction: ten series of
-      // mostly zeroes say less about growth than added vs removed.
+      // One series per status × direction, added upwards and removed downwards,
+      // so the stack keeps the status breakdown upstream computed. Empty
+      // combinations are dropped rather than stacked as zeroes.
+      const direction = (prefix: "new" | "removed", sign: 1 | -1): ChartSeries[] =>
+        statuses
+          .filter((status) => runs.some((run) => (run[`${prefix}:${status}`] ?? 0) > 0))
+          .map((status) => ({
+            id: `${prefix}:${status}`,
+            label: `${sign > 0 ? "+" : "−"}${status}`,
+            color: `var(--ark-status-${status})`,
+            family: STATUS_FAMILIES[status],
+            points: runs.map((run, index) => ({
+              x: categories[index] as string,
+              y: sign * (run[`${prefix}:${status}`] ?? 0),
+            })),
+          }));
+
       return {
         kind: "bar",
         type: "testBaseGrowthDynamics",
         title: chartData.title,
         categories,
-        series: [
-          {
-            id: "new",
-            label: "new",
-            color: "var(--ark-status-passed)",
-            family: "green",
-            points: runs.map((run, index) => ({
-              x: categories[index] as string,
-              y: sum(run, "new"),
-            })),
-          },
-          {
-            id: "removed",
-            label: "removed",
-            color: "var(--ark-status-failed)",
-            family: "red",
-            points: runs.map((run, index) => ({
-              x: categories[index] as string,
-              y: -sum(run, "removed"),
-            })),
-          },
-        ],
+        series: [...direction("new", 1), ...direction("removed", -1)],
       };
     }
 
@@ -311,27 +303,29 @@ export function toChartModel(chartData: AllureChartData): ChartModel | undefined
       const threshold = (chartData.threshold as number) ?? 100;
       const categories = groups.map((group) => keys[group.id] ?? group.id);
 
-      // Two series instead of per-point colours: the model keeps colour at the
-      // series level, and "below threshold" is the only distinction that matters.
-      const split = (wantStable: boolean): ChartSeries => ({
-        id: wantStable ? "stable" : "unstable",
-        label: wantStable ? `≥ ${threshold}%` : `< ${threshold}%`,
-        color: wantStable ? "var(--ark-status-passed)" : "var(--ark-status-failed)",
-        family: wantStable ? "green" : "red",
-        points: groups.map((group, index) => ({
-          x: categories[index] as string,
-          y: group.stabilityRate >= threshold === wantStable ? group.stabilityRate : 0,
-        })),
-      });
-
+      // The threshold is a property of the group, not of a series: one bar per
+      // group, coloured per point. Splitting it in two series used to leave a
+      // gap in the axis for every group that belonged to the other half.
       return {
         kind: "bar",
         type: "stabilityDistribution",
         title: chartData.title,
         categories,
-        series: [split(true), split(false)].filter((series) =>
-          series.points?.some((point) => point.y > 0),
-        ),
+        series: [
+          {
+            id: "stabilityRate",
+            label: `stability, threshold ${threshold}%`,
+            points: groups.map((group, index) => {
+              const stable = group.stabilityRate >= threshold;
+              return {
+                x: categories[index] as string,
+                y: group.stabilityRate,
+                color: stable ? "var(--ark-status-passed)" : "var(--ark-status-failed)",
+                family: stable ? ("green" as const) : ("red" as const),
+              };
+            }),
+          },
+        ],
         formatValue: (value) => `${Math.round(value)}%`,
       };
     }
@@ -377,15 +371,55 @@ export function toChartModel(chartData: AllureChartData): ChartModel | undefined
   }
 }
 
-/** Custom panels are not in charts.json — their data rides in the manifest. */
-export function toPanelModel(panel: KitCustomPanel): ChartModel {
-  const kind = panel.kind === "donut" ? "pie" : (panel.kind ?? "pie");
+/** Panel kind → model kind. Only `donut` is renamed; the rest map through. */
+function panelModelKind(panel: KitCustomPanel): ChartModel["kind"] {
+  return panel.kind === "donut" || panel.kind === undefined
+    ? "pie"
+    : (panel.kind as ChartModel["kind"]);
+}
+
+function panelModel(panel: KitCustomPanel, data: KitPanelData | undefined): ChartModel {
   return {
-    kind: kind as ChartModel["kind"],
+    kind: panelModelKind(panel),
     type: "custom",
     title: panel.title,
-    total: panel.data?.total,
-    unit: panel.data?.unit,
-    series: panel.data?.series ?? [],
+    total: data?.total,
+    unit: data?.unit,
+    columns: data?.columns,
+    series: data?.series ?? [],
   };
+}
+
+/**
+ * Custom panels are absent from charts.json — Allure skips their type — so their
+ * data comes from the manifest.
+ */
+export function toPanelModel(panel: KitCustomPanel): ChartModel {
+  return panelModel(panel, panel.data);
+}
+
+/**
+ * Panel model including data the report fetches at runtime.
+ *
+ * `dataUrl` is how a panel avoids inlining its data into `index.html`: panels
+ * derived from the run are computed by the plugin and written as a widget, and
+ * the url is relative to the report root, like every other widget. A failed
+ * fetch falls back to the inline data rather than blanking the tile.
+ */
+export async function loadPanelModel(panel: KitCustomPanel): Promise<ChartModel> {
+  if (!panel.dataUrl) {
+    return toPanelModel(panel);
+  }
+  try {
+    const response = await fetch(panel.dataUrl);
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+    return panelModel(panel, (await response.json()) as KitPanelData);
+  } catch (error) {
+    console.warn(
+      `allure-report-kit: panel "${panel.id}" could not load ${panel.dataUrl} (${error}) — using inline data`,
+    );
+    return toPanelModel(panel);
+  }
 }

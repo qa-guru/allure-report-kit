@@ -38,9 +38,14 @@ export function amcharts(options?: Record<string, unknown>): RendererSpec {
   return spec("amcharts", options);
 }
 
-/** Kit-owned SVG canon — no chart library (testing pyramid). */
+/** Kit-owned SVG canon — no chart library (testing pyramid, gauge). */
 export function svg(options?: Record<string, unknown>): RendererSpec {
   return spec("svg", options);
+}
+
+/** Kit-owned HTML canon — no chart library (table panels). */
+export function dom(options?: Record<string, unknown>): RendererSpec {
+  return spec("dom", options);
 }
 
 export function normalizeRenderer(ref: RendererRef | undefined, fallback: RendererSpec): RendererSpec {

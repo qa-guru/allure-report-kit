@@ -2,13 +2,32 @@
  * e2e config — the kit inside a real Allure 3 report.
  *
  * Same surface as examples/minimal, with `softFork: true` actually pointing at
- * the built plugin, and panel data inline so the report needs no extra fetch.
+ * the built plugin. Panels cover both data paths: inline data in the manifest,
+ * and `fromRun`, which the plugin computes against the store and ships as a
+ * widget.
  */
 import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/allure-report-kit";
 
 const lockedQuad = presets.lockedQuad({
   renderers: { durations: "highcharts" },
 });
+
+/** Panel with no test data behind it — nine services, seven healthy. */
+const servicesPanel = () =>
+  panels.custom({
+    id: "servicesCurrentStatus",
+    title: "Текущий статус по сервисам",
+    renderer: "highcharts",
+    dots: "fromSeries",
+    data: {
+      total: 9,
+      unit: "из",
+      series: [
+        { id: "healthy", label: "healthy", value: 7, color: "var(--ark-status-passed)", family: "green" },
+        { id: "degraded", label: "degraded", value: 2, color: "var(--ark-status-orange)", family: "orange" },
+      ],
+    },
+  });
 
 export default withKit({
   name: "allure-report-kit e2e",
@@ -39,19 +58,15 @@ export default withKit({
         charts: [
           ...lockedQuad,
 
-          panels.custom({
-            id: "servicesCurrentStatus",
-            title: "Текущий статус по сервисам",
-            renderer: "highcharts",
-            dots: "fromSeries",
-            data: {
-              total: 9,
-              unit: "из",
-              series: [
-                { id: "healthy", label: "healthy", value: 7, color: "var(--ark-status-passed)", family: "green" },
-                { id: "degraded", label: "degraded", value: 2, color: "var(--ark-status-orange)", family: "orange" },
-              ],
-            },
+          servicesPanel(),
+
+          // Data computed from the run by the plugin, fetched as a widget.
+          panels.fromRun({
+            id: "passRate",
+            title: "Прошло тестов",
+            groupBy: "status",
+            metric: "count",
+            kind: "gauge",
           }),
 
           charts.statusDynamics({ title: "Динамика статусов", limit: 20, renderer: "echarts" }),
@@ -67,19 +82,25 @@ export default withKit({
         layout: [
           ...lockedQuad,
 
-          panels.custom({
-            id: "servicesCurrentStatus",
-            title: "Текущий статус по сервисам",
-            renderer: "highcharts",
-            dots: "fromSeries",
-            data: {
-              total: 9,
-              unit: "из",
-              series: [
-                { id: "healthy", label: "healthy", value: 7, color: "var(--ark-status-passed)", family: "green" },
-                { id: "degraded", label: "degraded", value: 2, color: "var(--ark-status-orange)", family: "orange" },
-              ],
-            },
+          servicesPanel(),
+
+          // Both run-derived panel kinds: a gauge on the SVG canon and a table on
+          // the DOM one, neither of which any chart backend draws.
+          panels.fromRun({
+            id: "passRate",
+            title: "Прошло тестов",
+            groupBy: "status",
+            metric: "count",
+            kind: "gauge",
+          }),
+          panels.fromRun({
+            id: "layersTable",
+            title: "Тесты по слоям",
+            groupBy: "layer",
+            metric: "count",
+            kind: "table",
+            columns: ["Слой", "Тестов"],
+            limit: 5,
           }),
 
           // Coverage surface: every remaining upstream chart type, kit-rendered.

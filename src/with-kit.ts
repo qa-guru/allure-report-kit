@@ -22,6 +22,7 @@ import type {
   KitTile,
   RendererSpec,
   ResolvedTile,
+  TileListKey,
 } from "./types.js";
 
 /** Soft-fork replacements for the upstream UI plugins. */
@@ -32,7 +33,28 @@ export const SOFT_FORK_IMPORTS: Record<string, string> = {
 
 const TILE_LIST_KEYS = ["charts", "layout"] as const;
 
-const KNOWN_RENDERERS = new Set(["stock", "nivo", "echarts", "highcharts", "amcharts", "svg"]);
+const KNOWN_RENDERERS = new Set([
+  "stock",
+  "nivo",
+  "echarts",
+  "highcharts",
+  "amcharts",
+  "svg",
+  "dom",
+]);
+
+/**
+ * Stable key a chart tile gets in `widgets/charts.json`.
+ *
+ * Upstream keys the widget by `randomUUID()`, regenerated for every environment
+ * section, which leaves the browser nothing to match on. The plugin re-keys the
+ * widget to these ids; the index is the tile's position inside the list the
+ * plugin consumes (`charts` for Awesome, `layout` for Dashboard), which is the
+ * order upstream iterates.
+ */
+export function chartIdFor(listKey: string, index: number): string {
+  return `ark-${listKey}-${index}`;
+}
 
 export interface WithKitResult {
   diagnostics: KitDiagnostic[];
@@ -56,7 +78,8 @@ function tileKey(tile: KitTile, index: number, listKey: string): string {
 
 function resolveTiles(
   tiles: KitTile[],
-  listKey: string,
+  listKey: TileListKey,
+  where: string,
   pageRenderer: RendererSpec,
   diagnostics: KitDiagnostic[],
 ): ResolvedTile[] {
@@ -66,11 +89,12 @@ function resolveTiles(
       diagnostics.push({
         level: "info",
         code: "renderer-unknown",
-        message: `${listKey}[${index}]: renderer "${renderer.id}" is not built in — the registry must be extended at runtime, otherwise the tile falls back to stock.`,
+        message: `${where}[${index}]: renderer "${renderer.id}" is not built in — the registry must be extended at runtime, otherwise the tile falls back to stock.`,
       });
     }
     const resolved: ResolvedTile = {
-      key: tileKey(tile, index, listKey),
+      key: tileKey(tile, index, where),
+      list: listKey,
       type: tile.type,
       renderer,
       dots: defaultDots(tile),
@@ -83,6 +107,8 @@ function resolveTiles(
     }
     if (isCustomPanel(tile)) {
       resolved.panel = tile;
+    } else {
+      resolved.chartId = chartIdFor(listKey, index);
     }
     return resolved;
   });
@@ -121,6 +147,29 @@ function checkPanelsNeedFork(
 }
 
 /**
+ * `panels.fromRun` needs the plugin: its data is computed against the store at
+ * generation time, and an upstream plugin knows nothing about it.
+ */
+function checkRunPanelsNeedFork(
+  tiles: KitTile[],
+  where: string,
+  softFork: boolean,
+  diagnostics: KitDiagnostic[],
+): void {
+  if (softFork) {
+    return;
+  }
+  const fromRun = tiles.filter((tile) => isCustomPanel(tile) && tile.source);
+  if (fromRun.length > 0) {
+    diagnostics.push({
+      level: "warn",
+      code: "run-panels-need-soft-fork",
+      message: `${where}: ${fromRun.length} panel(s) derive their data from the run, which only the kit plugin computes. Set softFork: true, or give the panel inline data / a dataUrl.`,
+    });
+  }
+}
+
+/**
  * Wrap an Allure 3 config with the kit.
  *
  * @example
@@ -137,12 +186,14 @@ export function withKit<T extends KitConfig>(config: T): Record<string, unknown>
   const pageRenderer = normalizeRenderer(renderer, DEFAULT_RENDERER);
   const theme: KitThemeConfig = themeInput ? mergeTheme(qaGuru(), themeInput) : qaGuru();
 
-  if (theme.header?.enabled && theme.header.source === "design-system") {
+  // The header is mounted by the forked bundle, so without the fork the option
+  // is silently inert — worth saying, unlike the fact that it is enabled.
+  if (theme.header?.enabled && theme.header.source === "design-system" && !softFork) {
     diagnostics.push({
-      level: "info",
-      code: "theme-header",
+      level: "warn",
+      code: "header-needs-soft-fork",
       message:
-        "theme.header uses the design-system primitive; with singleFile: true every header asset must be inlined (data URI).",
+        "theme.header is on but softFork is not: the design-system header is mounted by the kit web bundle, so the report will keep Allure's own top bar. Set softFork: true or declare plugins.*.import yourself.",
     });
   }
 
@@ -161,7 +212,16 @@ export function withKit<T extends KitConfig>(config: T): Record<string, unknown>
       const where = `plugins.${name}.options.${listKey}`;
       checkLockedQuad(tiles, where, diagnostics);
       checkPanelsNeedFork(tiles, where, softFork, diagnostics);
-      resolvedTiles.push(...resolveTiles(tiles, where, pageRenderer, diagnostics));
+      checkRunPanelsNeedFork(tiles, where, softFork, diagnostics);
+      resolvedTiles.push(...resolveTiles(tiles, listKey, where, pageRenderer, diagnostics));
+    }
+
+    if (options.singleFile) {
+      diagnostics.push({
+        level: "warn",
+        code: "single-file",
+        message: `plugins.${name}.options.singleFile is on — the kit plugin falls back to stock Allure for this report. Kit assets are separate files (fork bundle, chart backends, DS header tree); inlining them is a PLAN-0.1 item.`,
+      });
     }
 
     if (resolvedTiles.length > 0) {

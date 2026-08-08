@@ -91,6 +91,56 @@ export const durationsModel = {
 };
 
 /**
+ * Stability per component, one bar per group coloured by its own threshold.
+ *
+ * The interesting case for the bar dots: both families live on points, not on
+ * series, and a group at exactly the threshold counts as stable.
+ */
+const components = ["auth", "billing", "search", "cart", "profile"];
+
+export const stabilityModel = {
+  kind: "bar",
+  type: "stabilityDistribution",
+  categories: components,
+  formatValue: (value) => `${Math.round(value)}%`,
+  series: [
+    {
+      id: "stabilityRate",
+      label: "stability, threshold 90%",
+      points: [100, 96, 72, 90, 55].map((y, index) => ({
+        x: components[index],
+        y,
+        color: y >= 90 ? "var(--ark-status-passed)" : "var(--ark-status-failed)",
+        family: y >= 90 ? "green" : "red",
+      })),
+    },
+  ],
+};
+
+/** Gauge panel — the SVG canon, no chart library involved. */
+export const passRateModel = {
+  kind: "gauge",
+  type: "custom",
+  total: 34,
+  unit: "из",
+  formatValue: (value) => String(value),
+  series: [
+    { id: "passed", label: "passed", value: 30, ...STATUS.passed },
+  ],
+};
+
+/** Table panel — rows with an indicator each, drawn by the `dom` renderer. */
+export const layersTableModel = {
+  kind: "table",
+  type: "custom",
+  columns: ["Слой", "Тестов"],
+  series: LAYERS.map((layer) => ({
+    ...layer,
+    color: `var(--ark-layer-${layer.id})`,
+  })),
+};
+
+/**
  * Custom panel — not derived from test results at all: nine deployed services,
  * seven healthy. Dots resolve to orange + green, the two families on the chart.
  */
