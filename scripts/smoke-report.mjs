@@ -40,6 +40,34 @@ page.on("console", (message) => {
 page.on("pageerror", (error) => consoleErrors.push(`pageerror: ${error}`));
 
 await page.goto(URL_UNDER_TEST, { waitUntil: "networkidle" });
+await page.waitForSelector("#app-header .header", { timeout: 10_000 });
+
+// theme.header — the DS primitive, above the report, without covering its nav.
+const header = await page.evaluate(() => {
+  const mount = document.getElementById("app-header");
+  const app = document.getElementById("app");
+  const switcher = [...document.querySelectorAll("button, div")].find(
+    (node) => /Отчет|Графики/.test(node.textContent ?? "") && node.getBoundingClientRect().height < 40,
+  );
+  return {
+    brand: Boolean(mount?.querySelector('[data-testid="header-brand"]')),
+    product: mount?.querySelector('[data-testid="ark-header-product"]')?.textContent?.trim(),
+    bandHeight: Math.round(mount?.querySelector(".header")?.getBoundingClientRect().height ?? 0),
+    appPadTop: Number.parseInt(getComputedStyle(app).paddingTop, 10),
+    switcherTop: switcher ? Math.round(switcher.getBoundingClientRect().top) : -1,
+  };
+});
+
+check(header.brand, "theme.header: DS brand missing — this is not the shared primitive");
+check(header.product === "Reference App", `theme.header: product name "${header.product}"`);
+check(
+  header.appPadTop >= header.bandHeight,
+  `theme.header: report padded ${header.appPadTop}px under a ${header.bandHeight}px band`,
+);
+check(
+  header.switcherTop >= header.bandHeight,
+  `theme.header: Allure section switcher at ${header.switcherTop}px is under the header band`,
+);
 
 // Charts live in their own section of the Awesome report.
 await page.getByText("Отчет", { exact: true }).first().click();
@@ -108,6 +136,23 @@ check(page_.stockWidgets >= 1, "no stock widget left — the fork should not tak
 check(
   page_.percentage === "88.24%",
   `current status percentage: got "${page_.percentage}", expected "88.24%"`,
+);
+
+// The DS header toggle drives the whole report; canvas tiles must redraw.
+await page.click('[data-testid="header-theme-toggle"]');
+await page.waitForTimeout(1500);
+
+const afterToggle = await page.evaluate(() => ({
+  theme: document.documentElement.dataset.theme,
+  layerE2e: getComputedStyle(document.querySelector(".widget-tile__body"))
+    .getPropertyValue("--ark-layer-e2e")
+    .trim(),
+}));
+
+check(afterToggle.theme === "dark", `theme toggle: data-theme is "${afterToggle.theme}"`);
+check(
+  afterToggle.layerE2e === "#ff574f",
+  `theme toggle: layer palette did not switch to dark (--ark-layer-e2e = ${afterToggle.layerE2e})`,
 );
 
 check(consoleErrors.length === 0, `console errors:\n  ${consoleErrors.join("\n  ")}`);

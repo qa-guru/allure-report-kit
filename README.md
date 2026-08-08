@@ -150,9 +150,13 @@ node generators/ethalon/tests-java/scripts/validate-allurerc.mjs \
 ## `theme.header`
 
 `theme.header` mounts the design-system header above the report — the shared
-primitive, not a copy of a consumer app's header. It keeps the report nav
-intact, mirrors the theme (`html.theme-light` ↔ `html[data-theme]`), and with
-`singleFile: true` every asset must be a data URI.
+primitive, not a copy of a consumer app's header. The report is pushed down by
+the band's *measured* height, so Allure's own section switcher stays reachable,
+and the theme is mirrored both ways (`html.theme-light` ↔ `html[data-theme]`):
+the toggle in the header drives the report and the kit tiles together.
+
+Not supported with `singleFile: true` — the plugin falls back to stock Allure
+and says so.
 
 The design-system stays the source of truth; the pinned copy under
 `src/theme/vendor/design-system/` is refreshed mechanically:

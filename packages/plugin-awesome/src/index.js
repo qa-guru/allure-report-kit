@@ -12,7 +12,7 @@
  */
 import { readFile, readdir } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { cwd } from "node:process";
 
 import AwesomePlugin from "@allurereport/plugin-awesome";
@@ -106,6 +106,11 @@ export default class KitAwesomePlugin {
     );
   }
 
+  #headerEnabled() {
+    const header = this.#kitManifest?.theme?.header;
+    return Boolean(header?.enabled) && header.source !== "none";
+  }
+
   #transformHtml(html, upstreamAssets) {
     // Drop the tags upstream just emitted for its own bundle.
     let output = html;
@@ -115,7 +120,10 @@ export default class KitAwesomePlugin {
         .replace(new RegExp(`\\s*<link[^>]*href="[^"]*${asset}"[^>]*/?>`, "g"), "");
     }
 
-    const head = [styleTag(this.#forkManifest["main.css"])].join("\n    ");
+    const head = [
+      styleTag(this.#forkManifest["main.css"]),
+      ...(this.#headerEnabled() ? [styleTag("kit/theme/header.css")] : []),
+    ].join("\n    ");
     const body = [
       ...this.#libs.map((lib) => scriptTag(`kit/${lib.id}.js`)),
       `<script>window.allureReportKit = ${JSON.stringify(this.#kitManifest)}</script>`,
@@ -146,6 +154,40 @@ export default class KitAwesomePlugin {
     };
   }
 
+  async #copyTree(context, from, prefix) {
+    for (const entry of await readdir(from, { recursive: true, withFileTypes: true })) {
+      if (!entry.isFile()) {
+        continue;
+      }
+      const absolute = join(entry.parentPath ?? entry.path, entry.name);
+      const target = `${prefix}/${relative(from, absolute).split(sep).join("/")}`;
+      await context.reportFiles.addFile(target, await readFile(absolute));
+    }
+  }
+
+  /**
+   * The DS header is copied as a tree rather than bundled: its module resolves
+   * `../templates/header.html` against its own URL, which only works if the
+   * `js/` + `templates/` layout survives into the report.
+   */
+  async #writeHeaderAssets(context) {
+    const themeDir = join(
+      dirname(require.resolve("@qa-guru/allure-report-kit/package.json")),
+      "src/theme",
+    );
+    await context.reportFiles.addFile(
+      "kit/theme/header.css",
+      await readFile(join(themeDir, "header.css")),
+    );
+    // One copy serves both consumers: the stylesheet's relative `@import`s and
+    // the header module's own template lookup.
+    await this.#copyTree(
+      context,
+      join(themeDir, "vendor/design-system"),
+      "kit/theme/vendor/design-system",
+    );
+  }
+
   async #writeKitAssets(context) {
     const distDir = this.#forkDistDir();
     for (const fileName of await readdir(distDir)) {
@@ -156,6 +198,9 @@ export default class KitAwesomePlugin {
     }
     for (const lib of this.#libs) {
       await context.reportFiles.addFile(`kit/${lib.id}.js`, await readFile(lib.path));
+    }
+    if (this.#headerEnabled()) {
+      await this.#writeHeaderAssets(context);
     }
   }
 

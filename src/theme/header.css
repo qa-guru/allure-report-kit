@@ -1,10 +1,22 @@
 /* `theme.header` stylesheet — load only when the DS report header is enabled.
- * Kept separate from kit.css so reports without a header pay nothing. */
+ * Kept separate from kit.css so reports without a header pay nothing.
+ *
+ * Tokens come from the header-scoped copy: declaring the design-system palette
+ * on `#app-header` gives the header everything it needs while leaving the host
+ * report's own theme untouched. Component styles below are class-scoped
+ * (`.header`, `.link`, `.icon-btn`, …) and safe to load globally.
+ */
 
-@import url("vendor/design-system/css/tokens.css");
+@import url("vendor/design-system/css/tokens.header.css");
 @import url("vendor/design-system/css/header.css");
 @import url("vendor/design-system/css/link.css");
 @import url("vendor/design-system/css/icon-btn.css");
 @import url("vendor/design-system/css/icon.css");
 @import url("vendor/design-system/css/input.css");
 @import url("vendor/design-system/css/lang-toggle.css");
+
+/* The DS header is fixed; `.header` lives inside the scoped mount, so the band
+ * height has to be readable from outside it too. */
+:root {
+  --ark-header-height: 40px;
+}

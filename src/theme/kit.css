@@ -155,9 +155,11 @@
 /* ---- theme.header ---- */
 
 /* DS header is fixed — push the report body below the occupied band. Padding,
- * not margin: a top margin on the first child collapses through the body. */
+ * not margin: a top margin on the first child collapses through the body.
+ * `--header-occupied-height` is declared inside the scoped header mount, so
+ * outside it the kit's own band height applies. */
 .ark-report--with-header {
-  padding-top: var(--header-occupied-height, 40px);
+  padding-top: var(--header-occupied-height, var(--ark-header-height, 40px));
 }
 
 .ark-header__product {

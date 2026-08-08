@@ -20,6 +20,7 @@
     "src"
   ],
   "dependencies": {
+    "@qa-guru/allure-report-kit": "file:../..",
     "@qa-guru/allure-report-kit-web-awesome": "file:../web-awesome"
   },
   "peerDependencies": {

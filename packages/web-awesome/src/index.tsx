@@ -32,7 +32,12 @@ import { currentTrId } from "./stores/testResult";
 import { fetchTreeFiltersData } from "./stores/treeFilters/actions";
 import { migrateFilterParam } from "./stores/treeFilters/utils";
 
+import { mountKitHeader } from "./kitHeader";
 import * as styles from "./styles.scss";
+
+// FORK DELTA: kit theme belongs to the entry bundle, not to the charts chunk —
+// the report header offset applies on every section, charts or not.
+import "@qa-guru/allure-report-kit/theme.css";
 
 const Loader = () => {
   return (
@@ -85,6 +90,8 @@ const App = () => {
 
   useEffect(() => {
     prefetchData();
+    // FORK DELTA: theme.header — report chrome, mounted once for the whole app.
+    mountKitHeader();
   }, []);
 
   useSignalEffect(() => {

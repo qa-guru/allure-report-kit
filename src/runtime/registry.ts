@@ -70,7 +70,9 @@ export function createLibResolver(
     if (!resolved && allowDynamicImport) {
       const specifier = specifiers[name] ?? name;
       try {
-        const module = (await import(/* @vite-ignore */ specifier)) as Record<string, unknown>;
+        const module = (await import(
+          /* webpackIgnore: true */ /* @vite-ignore */ specifier
+        )) as Record<string, unknown>;
         resolved = (module.default as unknown) ?? module;
       } catch {
         resolved = undefined;

@@ -55,12 +55,56 @@ const BANNER = "/* vendored from zero-design-system/projects/design-system-home/
  * report's tokens where they exist. Standalone pages load `theme/standalone.css`,
  * which brings `tokens.css` back.
  */
+const dropTokensImport = (content) =>
+  content.replace(
+    /@import url\("tokens\.css"\);\n/,
+    "/* sync-ds: tokens.css import dropped — see kit.css (host owns the chrome) */\n",
+  );
+
 const TRANSFORMS = {
-  "css/indicator.css": (content) =>
-    content.replace(
-      /@import url\("tokens\.css"\);\n/,
-      "/* sync-ds: tokens.css import dropped — see kit.css (host owns the chrome) */\n",
-    ),
+  "css/indicator.css": dropTokensImport,
+  "css/plaque-divider.css": dropTokensImport,
+};
+
+function block(content, selector) {
+  const pattern = new RegExp(`^${selector}\\s*\\{\\n([\\s\\S]*?)\\n\\}`, "m");
+  return pattern.exec(content)?.[1];
+}
+
+/**
+ * Derive a header-scoped copy of `tokens.css`.
+ *
+ * The report header is the one place that legitimately needs the full
+ * design-system palette, but `tokens.css` declares it on `:root` and also
+ * restyles `body`. Loaded as is inside a report it repaints the host and
+ * overrides the kit's chrome layer. Custom properties inherit, so moving the
+ * declarations onto `#app-header` gives the header everything and the rest of
+ * the report nothing.
+ *
+ * Derived rather than hand-copied: the values stay owned by the design-system.
+ */
+function scopeTokensToHeader(content) {
+  const root = block(content, ":root");
+  const light = block(content, "html\\.theme-light");
+
+  if (!root || !light) {
+    throw new Error("sync-ds: tokens.css layout changed — cannot derive the header scope");
+  }
+
+  return [
+    "/* sync-ds: derived from tokens.css — declarations moved onto #app-header",
+    " * so the report header gets the DS palette without repainting the host. */",
+    "",
+    `#app-header {\n${root}\n}`,
+    "",
+    `html.theme-light #app-header {\n${light}\n}`,
+    "",
+  ].join("\n");
+}
+
+/** Vendored files the kit derives instead of copying: target ← [source, transform]. */
+const DERIVED = {
+  "css/tokens.header.css": ["css/tokens.css", scopeTokensToHeader],
 };
 
 function findSource() {
@@ -94,25 +138,37 @@ function main() {
   const stale = [];
   let written = 0;
 
-  for (const file of FILES) {
-    const from = join(source, file);
+  const emit = (file, next) => {
     const to = join(VENDOR_ROOT, file);
-    if (!existsSync(from)) {
-      console.warn(`sync-ds: missing in source, skipped — ${file}`);
-      continue;
-    }
-    const next = withBanner(file, readFileSync(from, "utf8"));
     const current = existsSync(to) ? readFileSync(to, "utf8") : undefined;
     if (current === next) {
-      continue;
+      return;
     }
     if (check) {
       stale.push(file);
-      continue;
+      return;
     }
     mkdirSync(dirname(to), { recursive: true });
     writeFileSync(to, next, "utf8");
     written += 1;
+  };
+
+  for (const file of FILES) {
+    const from = join(source, file);
+    if (!existsSync(from)) {
+      console.warn(`sync-ds: missing in source, skipped — ${file}`);
+      continue;
+    }
+    emit(file, withBanner(file, readFileSync(from, "utf8")));
+  }
+
+  for (const [target, [sourceFile, transform]] of Object.entries(DERIVED)) {
+    const from = join(source, sourceFile);
+    if (!existsSync(from)) {
+      console.warn(`sync-ds: missing in source, skipped — ${target} (from ${sourceFile})`);
+      continue;
+    }
+    emit(target, BANNER + transform(readFileSync(from, "utf8")));
   }
 
   if (check) {

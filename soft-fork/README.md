@@ -18,7 +18,7 @@ plugin. An explicit `import` set by the user is never overwritten.
 
 ## The delta
 
-Three files differ from upstream `web-awesome`. Everything else is upstream code.
+Five files differ from upstream `web-awesome`. Everything else is upstream code.
 
 ### 1. `src/components/Charts/index.tsx` — the seam
 
@@ -35,7 +35,19 @@ The manifest arrives as `window.allureReportKit`, injected by the plugin.
 Allure chart data → backend-agnostic kit models. One branch per data shape, not
 per (chart type × backend) pair. Types without a branch stay on `stock`.
 
-### 3. `src/assets/scss/index.scss` — a build fix, not a feature
+### 3. `src/index.tsx` — two lines
+
+Mounts `theme.header` once for the whole app (report chrome, unlike the tile bar
+which is card chrome) and pulls the kit theme into the entry bundle rather than
+the lazy charts chunk, so the header offset applies on every section.
+
+### 4. `src/kitHeader.ts` — the header mount
+
+Loads the design-system header from the tree the plugin copies into the report.
+It is not bundled: the module resolves `../templates/header.html` against its
+own URL, which only survives if the `js/` + `templates/` layout does.
+
+### 5. `src/assets/scss/index.scss` — a build fix, not a feature
 
 Upstream imports design tokens from a sibling package by relative path
 (`../../../../web-components/src/...`), which only resolves inside the allure3
@@ -95,4 +107,5 @@ Pinned at `@allurereport/* 3.13.x` (shipped by `allure@3.14.3`).
 
 - Dashboard plugin — same recipe, not applied.
 - `singleFile: true` — the plugin falls back to stock Allure and says so.
+- Two theme switches (the DS header's and Allure's own) work independently.
 - Publishing: the packages resolve through `file:` links, nothing is on npm.

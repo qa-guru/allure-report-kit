@@ -24,8 +24,6 @@ import { toChartModel, toPanelModel } from "./kitModel";
 import { getChartWidgetByType } from "./stockWidgets";
 import * as styles from "./styles.scss";
 
-import "@qa-guru/allure-report-kit/theme.css";
-
 const currentTheme = computed(() => themeStore.value.current);
 
 declare const window: Window & {

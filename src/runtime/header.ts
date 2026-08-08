@@ -41,6 +41,34 @@ function ensureMount(container: HTMLElement): HTMLElement {
   return mount;
 }
 
+/**
+ * Publish the real occupied band as `--ark-header-height`.
+ *
+ * The nominal `--header-height` misses the bottom border, and the DS header
+ * doubles its band when the metrics row wraps — measuring is the only value
+ * that stays right.
+ */
+function trackHeaderHeight(mount: HTMLElement): () => void {
+  const header = mount.querySelector<HTMLElement>(".header");
+  if (!header) {
+    return () => {};
+  }
+  const apply = (): void => {
+    document.documentElement.style.setProperty(
+      "--ark-header-height",
+      `${Math.ceil(header.getBoundingClientRect().height)}px`,
+    );
+  };
+  apply();
+
+  if (typeof ResizeObserver === "undefined") {
+    return () => {};
+  }
+  const observer = new ResizeObserver(apply);
+  observer.observe(header);
+  return () => observer.disconnect();
+}
+
 /** DS writes `html.theme-light`; Allure reads `html[data-theme]`. */
 function syncReportTheme(): () => void {
   const html = document.documentElement;
@@ -107,6 +135,9 @@ export async function mountReportHeader(
     ...(options.brandHref ? { brand: { href: options.brandHref } } : {}),
     ...(options.nav ? { nav: options.nav } : {}),
     lang: { default: options.lang ?? "ru" },
+    // Seed from the host: the DS header applies its own default on mount, which
+    // would otherwise flip a dark report to light the moment it appears.
+    theme: { default: document.documentElement.dataset.theme === "dark" ? "dark" : "light" },
   };
 
   // Compiled to dist/runtime/, while the vendored primitives ship under
@@ -114,7 +145,9 @@ export async function mountReportHeader(
   const moduleUrl =
     options.moduleUrl ??
     new URL("../../src/theme/vendor/design-system/js/header.js", import.meta.url);
-  await import(/* @vite-ignore */ String(moduleUrl));
+  // The URL is resolved at runtime against the report; bundlers must not try to
+  // follow it, or the import turns into a missing chunk.
+  await import(/* webpackIgnore: true */ /* @vite-ignore */ String(moduleUrl));
 
   const slot = await waitForSlot(mount);
   if (slot && options.productName) {
@@ -125,6 +158,14 @@ export async function mountReportHeader(
     options.contentRoot.classList.add("ark-report--with-header");
   }
 
-  const dispose = options.syncReportTheme === false ? () => {} : syncReportTheme();
-  return { mount, dispose };
+  const stopTracking = trackHeaderHeight(mount);
+  const stopThemeSync = options.syncReportTheme === false ? () => {} : syncReportTheme();
+
+  return {
+    mount,
+    dispose: () => {
+      stopTracking();
+      stopThemeSync();
+    },
+  };
 }
