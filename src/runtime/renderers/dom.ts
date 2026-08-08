@@ -12,6 +12,7 @@
 import type { StatusFamily } from "../../types.js";
 import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "../model.js";
 import { renderQualityGateHost } from "../quality-gate-render.js";
+import { renderTestsTableHost } from "../tests-table-render.js";
 import { familyForColor, orderFamilies } from "../palette.js";
 
 function cell(tag: "td" | "th", text: string, className?: string): HTMLElement {
@@ -89,10 +90,29 @@ function renderQualityGate(context: RenderContext): RenderResult {
   return { families: [], renderedBy: "dom" };
 }
 
+function renderTestsTable(context: RenderContext): RenderResult {
+  const { host, model, cssVar, isDark } = context;
+  const data = model.testsTable;
+  if (!data) {
+    host.replaceChildren();
+    return { families: [], renderedBy: "dom" };
+  }
+  renderTestsTableHost(host, data, { cssVar, isDark });
+  return { families: [], renderedBy: "dom" };
+}
+
 export const domRenderer: ChartRenderer = {
   id: "dom",
-  supports: (model: ChartModel) => model.kind === "table" || model.kind === "qualityGate",
-  render: async (context) =>
-    context.model.kind === "qualityGate" ? renderQualityGate(context) : renderTable(context),
+  supports: (model: ChartModel) =>
+    model.kind === "table" || model.kind === "qualityGate" || model.kind === "testsTable",
+  render: async (context) => {
+    if (context.model.kind === "qualityGate") {
+      return renderQualityGate(context);
+    }
+    if (context.model.kind === "testsTable") {
+      return renderTestsTable(context);
+    }
+    return renderTable(context);
+  },
   destroy: (host) => host.replaceChildren(),
 };

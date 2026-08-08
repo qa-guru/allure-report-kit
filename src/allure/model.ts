@@ -9,7 +9,7 @@
  * `@allurereport/web-commons`: the kit reads four fields and should not gain a
  * dependency on the report's internals for that.
  */
-import type { KitCustomPanel, KitPanelData, KitQualityGateData, StatusFamily } from "../types.js";
+import type { KitCustomPanel, KitPanelData, KitQualityGateData, KitTestsTableData, StatusFamily } from "../types.js";
 import type { ChartModel, ChartSeries, ChartTreeNode } from "../runtime/model.js";
 
 export interface AllureChartData {
@@ -376,14 +376,35 @@ function panelModelKind(panel: KitCustomPanel): ChartModel["kind"] {
   if (panel.kind === "qualityGate") {
     return "qualityGate";
   }
+  if (panel.kind === "testsTable") {
+    return "testsTable";
+  }
   return panel.kind === "donut" || panel.kind === undefined
     ? "pie"
     : (panel.kind as ChartModel["kind"]);
 }
 
+function asTestsTableData(
+  panel: KitCustomPanel,
+  payload: KitPanelData | KitQualityGateData | KitTestsTableData | undefined,
+): KitTestsTableData | undefined {
+  if (!payload || !("rows" in payload)) {
+    return undefined;
+  }
+  const table = payload as KitTestsTableData;
+  const lang = (panel.lang as KitTestsTableData["lang"]) ?? table.lang;
+  const columns = table.columns ?? (panel.data as KitTestsTableData | undefined)?.columns;
+  return {
+    rows: table.rows ?? [],
+    ...(columns ? { columns } : {}),
+    ...(table.emptyRowsLabel ? { emptyRowsLabel: table.emptyRowsLabel } : {}),
+    ...(lang ? { lang } : {}),
+  };
+}
+
 function asQualityGateData(
   panel: KitCustomPanel,
-  payload: KitPanelData | KitQualityGateData | undefined,
+  payload: KitPanelData | KitQualityGateData | KitTestsTableData | undefined,
 ): KitQualityGateData | undefined {
   if (!payload || !("rules" in payload)) {
     return undefined;
@@ -407,7 +428,10 @@ function asQualityGateData(
   };
 }
 
-function panelModel(panel: KitCustomPanel, data: KitPanelData | KitQualityGateData | undefined): ChartModel {
+function panelModel(
+  panel: KitCustomPanel,
+  data: KitPanelData | KitQualityGateData | KitTestsTableData | undefined,
+): ChartModel {
   if (panel.kind === "qualityGate") {
     return {
       kind: "qualityGate",
@@ -415,6 +439,16 @@ function panelModel(panel: KitCustomPanel, data: KitPanelData | KitQualityGateDa
       title: panel.title,
       series: [],
       qualityGate: asQualityGateData(panel, data),
+    };
+  }
+  if (panel.kind === "testsTable") {
+    return {
+      kind: "testsTable",
+      type: "custom",
+      title: panel.title,
+      series: [],
+      columns: (data as KitTestsTableData | undefined)?.columns,
+      testsTable: asTestsTableData(panel, data),
     };
   }
   const panelData = data as KitPanelData | undefined;
@@ -457,7 +491,7 @@ export async function loadPanelModel(panel: KitCustomPanel): Promise<ChartModel>
     if (!response.ok) {
       throw new Error(`${response.status} ${response.statusText}`);
     }
-    const payload = (await response.json()) as KitPanelData | KitQualityGateData;
+    const payload = (await response.json()) as KitPanelData | KitQualityGateData | KitTestsTableData;
     return panelModel(panel, payload);
   } catch (error) {
     console.warn(

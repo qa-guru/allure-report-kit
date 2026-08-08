@@ -5,6 +5,51 @@
  * layers) so the page can be compared side by side with the dashboard canon.
  */
 
+/** Allure quality gate — dogfood sample (failed). */
+export const allureQualityGateModel = {
+  kind: "qualityGate",
+  type: "custom",
+  series: [],
+  qualityGate: {
+    passed: false,
+    rules: [
+      {
+        id: "maxFailures",
+        message: "The number of failed tests 3 exceeds the allowed threshold value 0",
+        passed: false,
+        actual: 3,
+        expected: 0,
+      },
+    ],
+    barTitle: "Allure Quality Gate",
+    lang: "ru",
+  },
+};
+
+/** Sonar quality gate — dogfood sample (passed). */
+export const sonarQualityGateModel = {
+  kind: "qualityGate",
+  type: "custom",
+  series: [],
+  qualityGate: {
+    passed: true,
+    kind: "sonar",
+    testId: "sonar-quality-gate",
+    rules: [
+      {
+        id: "coverage",
+        message: "Coverage on Overall Code is 100, required ≥ 80",
+        passed: true,
+        actual: 100,
+        expected: 80,
+        comparator: "LT",
+      },
+    ],
+    barTitle: "Sonar Quality Gate",
+    lang: "ru",
+  },
+};
+
 const STATUS = {
   passed: { color: "var(--ark-status-passed)", family: "green" },
   failed: { color: "var(--ark-status-failed)", family: "red" },
@@ -166,4 +211,55 @@ export const servicesStatusModel = {
       family: "orange",
     },
   ],
+};
+
+/** Tests table panel — sparkline trend + stability dots (dom renderer). */
+export const testsTableModel = {
+  kind: "testsTable",
+  type: "custom",
+  series: [],
+  columns: ["Тест", "Статус", "Тренд", "Стабильность"],
+  testsTable: {
+    columns: ["Тест", "Статус", "Тренд", "Стабильность"],
+    lang: "ru",
+    rows: [
+      {
+        id: "login",
+        name: "shouldLoginWithValid…",
+        fullName: "auth.LoginTests.shouldLoginWithValidCredentials",
+        status: "passed",
+        history: [
+          { status: "passed", durationSec: 1.32 },
+          { status: "passed", durationSec: 1.18 },
+          { status: "passed", durationSec: 1.05 },
+          { status: "passed", durationSec: 1.24 },
+        ],
+        flakyFlips: 0,
+      },
+      {
+        id: "reject",
+        name: "shouldRejectInvalid…",
+        fullName: "auth.LoginTests.shouldRejectInvalidPassword",
+        status: "passed",
+        history: [
+          { status: "failed", durationSec: 0.95 },
+          { status: "passed", durationSec: 0.82 },
+          { status: "failed", durationSec: 0.91 },
+          { status: "passed", durationSec: 0.88 },
+        ],
+        flakyFlips: 2,
+      },
+      {
+        id: "checkout",
+        name: "checkoutFlowCompletes",
+        status: "failed",
+        history: [
+          { status: "passed", durationSec: 4.2 },
+          { status: "failed", durationSec: 5.1 },
+          { status: "failed", durationSec: 4.8 },
+        ],
+        flakyFlips: 1,
+      },
+    ],
+  },
 };

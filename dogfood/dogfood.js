@@ -12,14 +12,17 @@ import { charts, panels, presets, theme, withKit } from "../dist/index.js";
 import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
 import { createKitRuntime, mountReportHeader } from "../dist/runtime/index.js";
 import {
+  allureQualityGateModel,
   currentStatusModel,
   durationDynamicsModel,
   durationsModel,
   layersTableModel,
   passRateModel,
   servicesStatusModel,
+  sonarQualityGateModel,
   stabilityModel,
   testingPyramidModel,
+  testsTableModel,
 } from "./data.js";
 
 const config = withKit({
@@ -87,6 +90,12 @@ const config = withKit({
             columns: ["Слой", "Тестов"],
             layout: "2x2",
           }),
+          panels.testsTable({
+            id: "testsTable",
+            title: "Таблица тестов",
+            layout: "2x2",
+            dots: false,
+          }),
           // same panel on the amCharts adapter — spike, falls back to a stub
           panels.custom({
             id: "servicesAmcharts",
@@ -112,8 +121,8 @@ const manifest = config.plugins.awesome.options.kit;
 const declaredCharts = config.plugins.awesome.options.charts;
 
 const MODELS = [
-  null,
-  null,
+  allureQualityGateModel,
+  sonarQualityGateModel,
   currentStatusModel,
   durationDynamicsModel,
   testingPyramidModel,
@@ -122,6 +131,7 @@ const MODELS = [
   stabilityModel,
   passRateModel,
   layersTableModel,
+  testsTableModel,
   servicesStatusModel,
   currentStatusModel,
 ];

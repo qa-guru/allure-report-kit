@@ -97,7 +97,7 @@ export interface KitSeries {
   points?: KitSeriesPoint[];
 }
 
-export type PanelKind = "donut" | "bar" | "line" | "pyramid" | "gauge" | "table" | "qualityGate";
+export type PanelKind = "donut" | "bar" | "line" | "pyramid" | "gauge" | "table" | "qualityGate" | "testsTable";
 
 export interface KitPanelData {
   series: KitSeries[];
@@ -185,6 +185,27 @@ export interface KitQualityGateData {
   barTitle?: string;
   config?: KitQualityGateConfig;
   labels?: QualityGateLabels;
+  lang?: "ru" | "en";
+}
+
+export interface KitTestsTableHistoryPoint {
+  status?: string;
+  durationSec?: number;
+}
+
+export interface KitTestsTableRow {
+  id?: string;
+  name: string;
+  fullName?: string;
+  status: string;
+  history?: KitTestsTableHistoryPoint[];
+  flakyFlips?: number;
+}
+
+export interface KitTestsTableData {
+  columns?: string[];
+  rows: KitTestsTableRow[];
+  emptyRowsLabel?: Partial<Record<"ru" | "en", string>>;
   lang?: "ru" | "en";
 }
 

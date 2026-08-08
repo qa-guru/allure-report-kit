@@ -13,6 +13,8 @@ import { chromium } from "playwright";
 const URL_UNDER_TEST = process.argv[2] ?? "http://localhost:3021/dogfood/";
 
 const EXPECTED_TILES = [
+  { type: "custom", renderer: "dom", renderedBy: "dom" },
+  { type: "custom", renderer: "dom", renderedBy: "dom" },
   { type: "currentStatus", renderer: "stock", renderedBy: "stock-placeholder" },
   { type: "durationDynamics", renderer: "stock", renderedBy: "stock-placeholder" },
   { type: "testingPyramid", renderer: "svg", renderedBy: "svg" },
@@ -21,15 +23,17 @@ const EXPECTED_TILES = [
   { type: "stabilityDistribution", renderer: "stock", renderedBy: "stock-placeholder" },
   { type: "custom", renderer: "svg", renderedBy: "svg" },
   { type: "custom", renderer: "dom", renderedBy: "dom" },
+  { type: "custom", renderer: "dom", renderedBy: "dom" },
   { type: "custom", renderer: "amcharts", renderedBy: "amcharts-stub" },
   { type: "currentStatus", renderer: "stock", renderedBy: "stock-placeholder" },
 ];
 
-const PANEL_INDEX = 4;
-const STABILITY_INDEX = 5;
-const GAUGE_INDEX = 6;
-const TABLE_INDEX = 7;
-const STOCK_INDEX = 9;
+const PANEL_INDEX = 6;
+const STABILITY_INDEX = 7;
+const GAUGE_INDEX = 8;
+const TABLE_INDEX = 9;
+const TESTS_TABLE_INDEX = 10;
+const STOCK_INDEX = 12;
 
 const failures = [];
 
@@ -100,15 +104,20 @@ EXPECTED_TILES.forEach((expected, index) => {
     tile.renderedBy === expected.renderedBy,
     `tile ${index}: rendered by ${tile.renderedBy}, expected ${expected.renderedBy}`,
   );
-  check(tile.hasBar, `tile ${index}: no widget-tile__bar`);
+  if (index < 2) {
+    check(!tile.hasBar, `tile ${index}: quality gate tile should not duplicate widget-tile__bar`);
+  } else {
+    check(tile.hasBar, `tile ${index}: no widget-tile__bar`);
+  }
   check(tile.bodyChildren > 0, `tile ${index}: empty body`);
 });
 
-// Locked 2×2 keys carry the Allure chart type — ADR 006 order must hold.
+// Locked 2×2 keys carry the Allure chart type — ADR 006 order must hold (after QG lead).
 ["currentStatus", "durationDynamics", "testingPyramid", "durations"].forEach((type, index) => {
+  const tileIndex = index + 2;
   check(
-    tiles[index]?.key?.endsWith(type),
-    `locked quad [${index}]: expected ${type}, key is "${tiles[index]?.key}"`,
+    tiles[tileIndex]?.key?.endsWith(type),
+    `locked quad [${tileIndex}]: expected ${type}, key is "${tiles[tileIndex]?.key}"`,
   );
 });
 
@@ -162,9 +171,27 @@ check(
   `table header: got ${JSON.stringify(table.header)}`,
 );
 
+const testsTablePanel = await page.$eval(
+  `.widget-tile[data-ark-tile$=":${TESTS_TABLE_INDEX}:testsTable"] .widget-tile__body`,
+  (body) => ({
+    rows: body.querySelectorAll("tbody tr").length,
+    sparklines: body.querySelectorAll(".sparkline--duration").length,
+    flakyBadges: body.querySelectorAll(".badge--flaky").length,
+    header: [...body.querySelectorAll("thead th")].map((cell) => cell.textContent.trim()),
+  }),
+).catch(() => ({ rows: 0, sparklines: 0, flakyBadges: 0, header: [] }));
+check(testsTablePanel.rows === 3, `tests table: expected 3 rows, got ${testsTablePanel.rows}`);
+check(testsTablePanel.sparklines >= 2, `tests table: expected sparklines, got ${testsTablePanel.sparklines}`);
+check(testsTablePanel.flakyBadges >= 1, `tests table: expected flaky badge, got ${testsTablePanel.flakyBadges}`);
+check(
+  JSON.stringify(testsTablePanel.header) ===
+    JSON.stringify(["Тест", "Статус", "Тренд", "Стабильность"]),
+  `tests table header: got ${JSON.stringify(testsTablePanel.header)}`,
+);
+
 // Pyramid keeps the six canon tiers as rounded rects.
 const pyramidTiers = await page.$$eval(
-  '.widget-tile[data-ark-tile$=":2:testingPyramid"] .widget-tile__body svg rect',
+  '.widget-tile[data-ark-tile$=":4:testingPyramid"] .widget-tile__body svg rect',
   (nodes) => nodes.length,
 );
 check(pyramidTiers === 6, `pyramid: expected 6 tiers, got ${pyramidTiers}`);

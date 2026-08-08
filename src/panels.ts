@@ -47,6 +47,7 @@ const CANON_RENDERER: Partial<Record<PanelKind, RendererRef>> = {
   gauge: "svg",
   table: "dom",
   qualityGate: "dom",
+  testsTable: "dom",
 };
 
 export function custom(options: CustomPanelOptions): KitCustomPanel {
@@ -123,6 +124,30 @@ export function qualityGate(options: QualityGatePanelOptions): KitCustomPanel {
     dots,
     ...(labels || lang ? { labels, lang } : {}),
     source: { from: "qualityGate" },
+  });
+}
+
+/** Tests table — name | status | trend (sparkline) | stability (dots + flaky). */
+export function testsTable(
+  options: Omit<CustomPanelOptions, "kind" | "data"> & {
+    columns?: string[];
+    data?: import("./types.js").KitTestsTableData;
+  },
+): KitCustomPanel {
+  const { columns, data, dots = false, ...rest } = options;
+  const merged: import("./types.js").KitTestsTableData | undefined =
+    columns || data
+      ? {
+          rows: [],
+          ...data,
+          ...(columns ? { columns } : {}),
+        }
+      : data;
+  return custom({
+    ...rest,
+    kind: "testsTable",
+    dots,
+    ...(merged ? { data: merged as unknown as KitPanelData } : {}),
   });
 }
 

@@ -8,6 +8,7 @@ import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/all
 import { sonarProjectStatusToQualityGateOptions } from "@qa-guru/allure-report-kit/runtime";
 
 import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
+import testsTableFixture from "../test/fixtures/tests-table-panel.json" with { type: "json" };
 
 const overviewTiles = presets.fromOverview({
   preset: OVERVIEW_PRESET,
@@ -94,6 +95,15 @@ const sonarQualityGatePanel = () => {
 
 const leadQualityGates = () => [allureQualityGatePanel(), sonarQualityGatePanel()];
 
+const testsTablePanel = () =>
+  panels.testsTable({
+    id: "testsTable",
+    title: "Таблица тестов",
+    layout: "2x2",
+    dots: false,
+    data: testsTableFixture,
+  });
+
 export default withKit({
   name: "allure-report-kit e2e",
   output: "./allure-report",
@@ -128,6 +138,7 @@ export default withKit({
         charts: [
           ...leadQualityGates(),
           ...overviewTiles,
+          testsTablePanel(),
 
           servicesPanel(),
 
@@ -153,6 +164,7 @@ export default withKit({
         layout: [
           ...leadQualityGates(),
           ...overviewTiles,
+          testsTablePanel(),
 
           servicesPanel(),
 

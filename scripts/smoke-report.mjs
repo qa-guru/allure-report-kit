@@ -313,10 +313,11 @@ await checkStockLockedQuad(awesome.page, "awesome");
 
 const awesomeTiles = await readKitTiles(awesome.page);
 checkKitTiles("awesome", awesomeTiles, [
-  { title: "Пирамида тестирования", renderer: "svg" },
-  { title: "Длительности по layer", renderer: "highcharts" },
   { title: "Allure Quality Gate", renderer: "dom" },
   { title: "Sonar Quality Gate", renderer: "dom" },
+  { title: "Пирамида тестирования", renderer: "svg" },
+  { title: "Длительности по layer", renderer: "highcharts" },
+  { title: "Таблица тестов", renderer: "dom" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
 ]);
@@ -325,6 +326,20 @@ const qualityGate = await awesome.page.$('[data-testid="quality-gate"]');
 check(Boolean(qualityGate), "awesome quality gate: DS primitive missing in report");
 const sonarQualityGate = await awesome.page.$('[data-testid="sonar-quality-gate"]');
 check(Boolean(sonarQualityGate), "awesome sonar quality gate: DS primitive missing in report");
+
+const testsTablePanel = await awesome.page.evaluate(() => {
+  const tile = [...document.querySelectorAll(".widget-tile")].find(
+    (node) => node.querySelector(".widget-tile__title")?.textContent?.trim() === "Таблица тестов",
+  );
+  const body = tile?.querySelector(".widget-tile__body");
+  return {
+    rows: body?.querySelectorAll("tbody tr").length ?? 0,
+    sparklines: body?.querySelectorAll(".sparkline--duration").length ?? 0,
+    flaky: body?.querySelectorAll(".badge--flaky").length ?? 0,
+  };
+});
+check(testsTablePanel.rows >= 3, `awesome tests table: expected rows, got ${testsTablePanel.rows}`);
+check(testsTablePanel.sparklines >= 2, `awesome tests table: expected sparklines, got ${testsTablePanel.sparklines}`);
 
 const gauge = await awesome.page.evaluate(() => {
   const tile = [...document.querySelectorAll(".widget-tile")].find(
@@ -349,10 +364,11 @@ await checkStockLockedQuad(dashboard.page, "dashboard");
 
 const dashboardTiles = await readKitTiles(dashboard.page);
 checkKitTiles("dashboard", dashboardTiles, [
-  { title: "Пирамида тестирования", renderer: "svg" },
-  { title: "Длительности по layer", renderer: "highcharts" },
   { title: "Allure Quality Gate", renderer: "dom" },
   { title: "Sonar Quality Gate", renderer: "dom" },
+  { title: "Пирамида тестирования", renderer: "svg" },
+  { title: "Длительности по layer", renderer: "highcharts" },
+  { title: "Таблица тестов", renderer: "dom" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
   {

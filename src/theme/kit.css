@@ -21,6 +21,10 @@
 @import url("vendor/design-system/css/quality-gate.css");
 @import url("vendor/design-system/css/qg-info.css");
 @import url("vendor/design-system/css/code-highlight.css");
+@import url("vendor/design-system/css/badge.css");
+@import url("vendor/design-system/css/sparkline.css");
+@import url("vendor/design-system/css/stability-cell.css");
+@import url("vendor/design-system/css/tests-table-panel.css");
 
 /* Chrome defaults live in a cascade layer so an unlayered design-system
  * `tokens.css` (loaded only by `theme/standalone.css`) overrides them: unlayered
