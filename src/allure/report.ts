@@ -75,6 +75,7 @@ let runtime: KitRuntime | undefined;
  * uses, so nothing proprietary is bundled and a missing library degrades to the
  * stock widget instead of failing.
  */
+/* c8 ignore start — browser singleton: needs window + chart libs; exercised by e2e smoke */
 export function getKitRuntime(): KitRuntime | undefined {
   const manifest = readManifest();
   if (!manifest) {
@@ -96,6 +97,7 @@ export function getKitRuntime(): KitRuntime | undefined {
   }
   return runtime;
 }
+/* c8 ignore stop */
 
 /** A tile the kit draws itself, as opposed to leaving it to Allure. */
 export function isKitOwned(tile: ResolvedTile | undefined): tile is ResolvedTile {
@@ -136,6 +138,7 @@ const TIERS: [number, TileTier][] = [
  * Returns `undefined` while the cell has no size yet: on first paint the host is
  * still collapsed, and deriving a layout from zero would bake in a wrong box.
  */
+/* c8 ignore start — layout measure: needs real DOM box; e2e smoke territory */
 export function cellGeometry(host: HTMLElement): { layout: TileLayout; tier: TileTier } | undefined {
   const { width } = host.getBoundingClientRect();
   if (width < 1) {
@@ -148,6 +151,7 @@ export function cellGeometry(host: HTMLElement): { layout: TileLayout; tier: Til
   const tier = TIERS.find(([min]) => width >= min)?.[1] ?? "micro";
   return { layout: `${cols}x${rows}`, tier };
 }
+/* c8 ignore stop */
 
 /**
  * Fill in what the config left open, preferring the measured cell.
@@ -177,6 +181,7 @@ export function withReportLayout(tile: ResolvedTile, host?: HTMLElement): Resolv
  * follows the content the callback is about to redraw, and reacting to that
  * would feed back into itself.
  */
+/* c8 ignore start — ResizeObserver + rAF; not unit-mocked on purpose */
 export function observeCell(
   host: HTMLElement,
   onChange: (geometry: { layout: TileLayout; tier: TileTier }) => void,
@@ -206,6 +211,7 @@ export function observeCell(
     observer.disconnect();
   };
 }
+/* c8 ignore stop */
 
 export interface PairedTile<T> {
   chartId: string;

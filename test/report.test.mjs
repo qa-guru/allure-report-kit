@@ -18,7 +18,8 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { pairTiles, tilesForList } = await import("../dist/allure/report.js");
+const { pairTiles, tilesForList, readManifest, isKitOwned, withReportLayout, resolveTileModel, canKitRender, REPORT_TILE_LAYOUT } =
+  await import("../dist/allure/report.js");
 const { withKit, charts, panels, presets } = await import("../dist/index.js");
 
 const tilesOf = (config, plugin = "awesome") => config.plugins[plugin].options.kit.tiles;
@@ -155,4 +156,104 @@ test("each plugin only sees the list it renders", () => {
     ["durations"],
   );
   assert.equal(tilesForList(manifest, "charts"), undefined);
+});
+
+test("readManifest is absent outside a report window", () => {
+  assert.equal(readManifest(), undefined);
+});
+
+test("isKitOwned leaves stock and nivo to Allure", () => {
+  const [kitTile] = tilesOf(awesome([charts.currentStatus({ renderer: "echarts" })]));
+  const stock = { ...kitTile, renderer: { id: "stock" } };
+  const nivo = { ...kitTile, renderer: { id: "nivo" } };
+
+  assert.equal(isKitOwned(undefined), false);
+  assert.equal(isKitOwned(stock), false);
+  assert.equal(isKitOwned(nivo), false);
+  assert.equal(isKitOwned(kitTile), true);
+});
+
+test("withReportLayout fills the wide default and keeps an explicit layout", () => {
+  const [tile] = tilesOf(awesome([charts.currentStatus()]));
+  const filled = withReportLayout(tile);
+  assert.equal(filled.layout, REPORT_TILE_LAYOUT);
+  assert.equal(filled.tier, undefined);
+
+  const explicit = withReportLayout({ ...tile, layout: "1x1", tier: "micro" });
+  assert.equal(explicit.layout, "1x1");
+  assert.equal(explicit.tier, "micro");
+});
+
+test("resolveTileModel loads a panel or maps chart data", async () => {
+  const tiles = tilesOf(
+    awesome([
+      charts.currentStatus(),
+      panels.custom({
+        id: "services",
+        kind: "bar",
+        data: { series: [{ id: "a", label: "a", value: 2 }] },
+      }),
+    ]),
+  );
+  const chartTile = tiles.find((tile) => tile.type === "currentStatus");
+  const panelTile = tiles.find((tile) => tile.panel);
+
+  assert.equal(await resolveTileModel(chartTile, undefined), undefined);
+  const mapped = await resolveTileModel(chartTile, {
+    type: "currentStatus",
+    data: { passed: 2, failed: 1, broken: 0, skipped: 0, unknown: 0, total: 3 },
+  });
+  assert.equal(mapped?.kind, "pie");
+  assert.equal(mapped?.total, 3);
+
+  const panelModel = await resolveTileModel(panelTile, { type: "currentStatus" });
+  assert.equal(panelModel?.kind, "bar");
+  assert.equal(panelModel?.series[0].value, 2);
+});
+
+test("canKitRender refuses a missing model when no runtime is mounted", () => {
+  const [tile] = tilesOf(awesome([charts.currentStatus({ renderer: "echarts" })]));
+  assert.equal(canKitRender(tile, undefined), false);
+});
+
+test("pairTiles without tiles keeps every chart entry for Allure", () => {
+  const paired = pairTiles(
+    [
+      ["a", { type: "currentStatus" }],
+      ["b", { type: "durations" }],
+    ],
+    undefined,
+  );
+  assert.deepEqual(
+    paired.map((entry) => entry.chartId),
+    ["a", "b"],
+  );
+});
+
+test("positional walk keeps panels and leftover entries", () => {
+  const legacy = tilesOf(
+    awesome([charts.currentStatus(), panels.custom({ id: "services" }), charts.durations()]),
+  ).map(({ chartId, ...tile }) => tile);
+
+  const paired = pairTiles(
+    [
+      ["uuid-a", { type: "currentStatus" }],
+      ["uuid-b", { type: "durations" }],
+      ["uuid-c", { type: "statusDynamics" }],
+    ],
+    legacy,
+  );
+
+  assert.deepEqual(
+    paired.map((entry) => [
+      entry.chartId,
+      entry.tile?.panel?.id ?? entry.tile?.type,
+    ]),
+    [
+      ["uuid-a", "currentStatus"],
+      ["kit-panel-services", "services"],
+      ["uuid-b", "durations"],
+      ["uuid-c", undefined],
+    ],
+  );
 });

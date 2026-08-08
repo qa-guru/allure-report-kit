@@ -31,7 +31,7 @@ const CHARTS = JSON.parse(
   readFileSync(new URL("./fixtures/allure-charts.json", import.meta.url), "utf8"),
 );
 
-const { toChartModel } = await import("../dist/allure/model.js");
+const { toChartModel, toPanelModel, loadPanelModel } = await import("../dist/allure/model.js");
 
 const TYPES = [
   "currentStatus",
@@ -201,5 +201,73 @@ test("treemap and heatmap keep their own shape", () => {
   );
   for (const series of heatmap.series) {
     assert.equal(series.points.length, heatmap.categories.length, "heatmap row is ragged");
+  }
+});
+
+test("unknown chart types and empty treemaps fall back to stock", () => {
+  assert.equal(toChartModel({ type: "notARealChart" }), undefined);
+  assert.equal(toChartModel({ type: "coverageDiff" }), undefined);
+  assert.equal(toChartModel({ type: "successRateDistribution", treeMap: undefined }), undefined);
+});
+
+test("panel models rename donut to pie and keep other kinds", () => {
+  const donut = toPanelModel({
+    type: "custom",
+    id: "a",
+    kind: "donut",
+    data: { series: [{ id: "passed", label: "passed", value: 1 }], total: 4, unit: "из" },
+  });
+  assert.equal(donut.kind, "pie");
+  assert.equal(donut.total, 4);
+  assert.equal(donut.unit, "из");
+
+  const bare = toPanelModel({ type: "custom", id: "b" });
+  assert.equal(bare.kind, "pie");
+  assert.deepEqual(bare.series, []);
+
+  const table = toPanelModel({
+    type: "custom",
+    id: "c",
+    kind: "table",
+    data: { series: [], columns: ["name"], categories: ["x"] },
+  });
+  assert.equal(table.kind, "table");
+  assert.deepEqual(table.columns, ["name"]);
+  assert.deepEqual(table.categories, ["x"]);
+});
+
+test("loadPanelModel prefers dataUrl and falls back on a failed fetch", async () => {
+  const inline = {
+    type: "custom",
+    id: "services",
+    kind: "bar",
+    data: { series: [{ id: "inline", label: "inline", value: 1 }] },
+  };
+  assert.equal((await loadPanelModel(inline)).series[0].id, "inline");
+
+  const previous = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    json: async () => ({ series: [{ id: "remote", label: "remote", value: 9 }], total: 9 }),
+  });
+  try {
+    const loaded = await loadPanelModel({ ...inline, dataUrl: "widgets/kit-panels/services.json" });
+    assert.equal(loaded.series[0].id, "remote");
+    assert.equal(loaded.total, 9);
+  } finally {
+    globalThis.fetch = previous;
+  }
+
+  const warnings = [];
+  const warn = console.warn;
+  console.warn = (line) => warnings.push(line);
+  globalThis.fetch = async () => ({ ok: false, status: 404, statusText: "Not Found" });
+  try {
+    const fallback = await loadPanelModel({ ...inline, dataUrl: "missing.json" });
+    assert.equal(fallback.series[0].id, "inline");
+    assert.ok(warnings.some((line) => String(line).includes('panel "services"')));
+  } finally {
+    console.warn = warn;
+    globalThis.fetch = previous;
   }
 });

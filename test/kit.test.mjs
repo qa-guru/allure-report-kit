@@ -210,3 +210,171 @@ test("theme.header is the DS primitive and stays under theme", () => {
   assert.equal(configured.header.productName, "Reference App");
   assert.equal(configured.chrome, undefined);
 });
+
+test("panel factories set kind, canon renderer and caption fields", () => {
+  const data = panels.series([{ id: "passed", label: "passed", value: 3, family: "green" }]);
+
+  assert.equal(panels.donut({ id: "d", data, total: 10, unit: "из" }).kind, "donut");
+  assert.equal(panels.donut({ id: "d", data, total: 10 }).data.total, 10);
+  assert.equal(panels.bar({ id: "b", data }).kind, "bar");
+  assert.equal(panels.line({ id: "l", data }).kind, "line");
+  assert.equal(panels.pyramid({ id: "p" }).renderer, "svg");
+  assert.equal(panels.gauge({ id: "g", total: 100, unit: "%" }).renderer, "svg");
+  assert.equal(panels.gauge({ id: "g", total: 100 }).data.total, 100);
+  assert.equal(panels.table({ id: "t", columns: ["name", "count"] }).renderer, "dom");
+  assert.deepEqual(panels.table({ id: "t", columns: ["name"] }).data.columns, ["name"]);
+  // Donut/bar inherit page default — no forced renderer.
+  assert.equal(panels.donut({ id: "d" }).renderer, undefined);
+  assert.equal(panels.bar({ id: "b" }).renderer, undefined);
+});
+
+test("fromRun and fromHistory carry source folds without inlining series", () => {
+  const run = panels.fromRun({
+    id: "by-owner",
+    groupBy: "owner",
+    metric: "passRate",
+    limit: 5,
+    columns: ["owner", "rate"],
+    total: 40,
+    unit: "%",
+  });
+  assert.deepEqual(run.source, { from: "run", groupBy: "owner", metric: "passRate", limit: 5 });
+  assert.equal(run.data.total, 40);
+  assert.deepEqual(run.data.series, []);
+
+  const bare = panels.fromRun({ id: "by-status", groupBy: "status" });
+  assert.deepEqual(bare.source, { from: "run", groupBy: "status", metric: "count" });
+  assert.equal(bare.data, undefined);
+
+  const history = panels.fromHistory({
+    id: "trend",
+    metric: "flakyRate",
+    limit: 8,
+    splitBy: "status",
+    unit: "%",
+    columns: ["run", "rate"],
+  });
+  assert.equal(history.kind, "line");
+  assert.deepEqual(history.source, {
+    from: "history",
+    metric: "flakyRate",
+    limit: 8,
+    splitBy: "status",
+  });
+  assert.equal(history.data.unit, "%");
+
+  const defaults = panels.fromHistory({ id: "pass", kind: "bar" });
+  assert.equal(defaults.kind, "bar");
+  assert.deepEqual(defaults.source, { from: "history", metric: "passRate" });
+});
+
+test("each chart factory names its upstream type and keeps options", () => {
+  assert.equal(charts.statusDynamics({ limit: 4 }).type, "statusDynamics");
+  assert.equal(charts.statusTransitions({ limit: 3 }).limit, 3);
+  assert.equal(charts.stabilityDistribution({ threshold: 80 }).threshold, 80);
+  assert.equal(charts.testBaseGrowthDynamics({ statuses: ["passed"] }).type, "testBaseGrowthDynamics");
+  assert.equal(charts.statusAgePyramid({ limit: 6 }).type, "statusAgePyramid");
+  assert.deepEqual(charts.testResultSeverities({ levels: ["blocker"] }).levels, ["blocker"]);
+  assert.equal(charts.coverageDiff({ title: "Δ" }).title, "Δ");
+  assert.equal(charts.successRateDistribution().type, "successRateDistribution");
+  assert.equal(charts.problemsDistribution().by, "environment");
+  // Pyramid still defaults to the SVG canon even when options are set.
+  assert.equal(charts.testingPyramid({ layers: ["unit", "e2e"] }).renderer, "svg");
+});
+
+test("renderer factories stay inert specs; options travel through", () => {
+  assert.deepEqual(renderers.stock({ animate: false }), { id: "stock", options: { animate: false } });
+  assert.equal(renderers.nivo().id, "nivo");
+  assert.equal(renderers.amcharts().id, "amcharts");
+  assert.equal(renderers.svg().id, "svg");
+  assert.equal(renderers.dom().id, "dom");
+  assert.deepEqual(renderers.normalizeRenderer("highcharts", renderers.echarts()), { id: "highcharts" });
+  assert.deepEqual(renderers.normalizeRenderer(undefined, renderers.echarts()), { id: "echarts" });
+});
+
+test("tokensOnly drops tile chrome and header; empty token blocks stay silent", () => {
+  const tokens = theme.tokensOnly();
+  assert.equal(tokens.id, "tokens-only");
+  assert.equal(tokens.tile.bar, false);
+  assert.equal(tokens.header.enabled, false);
+
+  const css = themeToCss(tokens);
+  assert.doesNotMatch(css, /--indicator-mix/);
+  // Empty override maps must not invent a selector with an empty body.
+  const bare = themeToCss({
+    id: "bare",
+    mode: "auto",
+    tokens: {},
+    tokensLight: {},
+    tokensDark: {},
+    hostPalette: false,
+  });
+  assert.equal(bare, "");
+});
+
+test("withKit records unknown renderers, layout and tier on the tile", () => {
+  const config = withKit({
+    name: "T",
+    plugins: {
+      awesome: {
+        options: {
+          charts: [
+            charts.currentStatus({
+              renderer: "chart.js",
+              layout: "2x1",
+              tier: "compact",
+            }),
+          ],
+        },
+      },
+    },
+  });
+  const tile = awesomeManifest(config).tiles[0];
+  assert.equal(tile.renderer.id, "chart.js");
+  assert.equal(tile.layout, "2x1");
+  assert.equal(tile.tier, "compact");
+  assert.ok(awesomeManifest(config).diagnostics.some((d) => d.code === "renderer-unknown"));
+});
+
+test("an empty charts list skips the locked-quad check", () => {
+  const config = withKit({
+    name: "T",
+    plugins: { awesome: { options: { charts: [] } } },
+  });
+  // No tiles → no kit manifest attachment; the locked-quad warn must stay quiet.
+  assert.equal(config.plugins.awesome.options.kit, undefined);
+});
+
+test("diagnostics print when silence is off", () => {
+  const previous = process.env.ALLURE_REPORT_KIT_SILENT;
+  delete process.env.ALLURE_REPORT_KIT_SILENT;
+  const warnings = [];
+  const infos = [];
+  const warn = console.warn;
+  const info = console.info;
+  console.warn = (line) => warnings.push(line);
+  console.info = (line) => infos.push(line);
+  try {
+    withKit({
+      name: "T",
+      plugins: {
+        awesome: {
+          options: {
+            singleFile: true,
+            charts: [charts.durationDynamics()],
+          },
+        },
+      },
+    });
+  } finally {
+    console.warn = warn;
+    console.info = info;
+    if (previous === undefined) {
+      delete process.env.ALLURE_REPORT_KIT_SILENT;
+    } else {
+      process.env.ALLURE_REPORT_KIT_SILENT = previous;
+    }
+  }
+  assert.ok(warnings.some((line) => String(line).includes("[locked-quad]")));
+  assert.ok(infos.some((line) => String(line).includes("[single-file]")));
+});
