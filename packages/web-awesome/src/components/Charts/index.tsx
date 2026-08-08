@@ -16,6 +16,7 @@ import { themeStore } from "@allurereport/web-commons";
 import { Grid, GridItem, Loadable, PageLoader, ThemeProvider } from "@allurereport/web-components";
 import type { ResolvedTile } from "@qa-guru/allure-report-kit";
 import {
+  canKitRender,
   getKitRuntime,
   isKitOwned,
   pairTiles,
@@ -81,7 +82,8 @@ export const Charts = () => {
             ({ chartId, chartData, tile }) => {
               if (isKitOwned(tile)) {
                 const model = tile.panel ? toPanelModel(tile.panel) : toChartModel(chartData as any);
-                if (model) {
+                // A backend that cannot draw this kind leaves the tile to Allure.
+                if (canKitRender(tile, model)) {
                   return <KitTile key={chartId} tile={tile} model={model} />;
                 }
               }

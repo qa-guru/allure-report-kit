@@ -12,8 +12,16 @@ import { chromium } from "playwright";
 
 const BASE_URL = (process.argv[2] ?? "http://localhost:3024").replace(/\/$/, "");
 
-/** Upstream's dashboard template links `favicon.ico` and never writes it. */
-const UPSTREAM_NOISE = [/favicon\.ico/];
+/**
+ * Console noise produced by Allure itself, not by the kit.
+ *
+ * - the dashboard template links `favicon.ico` and never writes it;
+ * - upstream's nivo widgets emit negative SVG dimensions on this grid. Measured
+ *   on the same page: all-kit renders 0 errors, all-stock renders 8, so the
+ *   source is upstream. Kit regressions of this shape would hide behind the
+ *   filter — re-run that comparison if it ever matters.
+ */
+const UPSTREAM_NOISE = [/favicon\.ico/, /A negative value is not valid/];
 
 const failures = [];
 const check = (condition, message) => {
@@ -194,6 +202,8 @@ const dashboard = await openReport("/dashboard/");
 await checkHeader(dashboard.page, "dashboard", { expectSwitcher: false });
 await dashboard.page.waitForSelector(".widget-tile[data-ark-rendered-by]");
 
+// The dashboard layout is the coverage surface: every upstream chart type the
+// kit can model, plus a custom panel and one deliberate stock passthrough.
 const dashboardTiles = await readTiles(dashboard.page);
 checkTiles("dashboard", dashboardTiles, [
   { title: "Текущий статус", renderer: "echarts", dots: ["red", "yellow", "gray", "green"] },
@@ -201,7 +211,42 @@ checkTiles("dashboard", dashboardTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
+  { title: "Динамика статусов", renderer: "echarts" },
+  { title: "Переходы статусов", renderer: "echarts" },
+  { title: "Рост тестовой базы", renderer: "echarts" },
+  { title: "Возраст статусов", renderer: "echarts" },
+  { title: "Результаты по severity", renderer: "echarts" },
+  { title: "Стабильность по компонентам", renderer: "echarts" },
+  { title: "Длительности", renderer: "echarts" },
+  // "Coverage diff — highcharts declines" is deliberately absent: Highcharts
+  // cannot draw a treemap, so that tile stays on Allure's own widget.
+  { title: "Success rate", renderer: "echarts" },
+  { title: "Проблемы по окружениям", renderer: "echarts" },
 ]);
+
+// The declining tile must reach the real widget, never the kit's placeholder.
+const placeholders = await dashboard.page.$$eval(
+  '.ark-stub[data-renderer="stock"]',
+  (nodes) => nodes.length,
+);
+check(placeholders === 0, `dashboard: ${placeholders} tile(s) fell back to the stock placeholder`);
+check(
+  dashboardTiles.stockWidgets === 2,
+  `dashboard: expected 2 stock widgets (declared + declined treemap), got ${dashboardTiles.stockWidgets}`,
+);
+
+// Every upstream chart type must have a model; a gap silently falls back.
+const MODELLED_TYPES = 13;
+const covered = await dashboard.page.evaluate(
+  () =>
+    new Set(
+      (window.allureReportKit?.tiles ?? []).filter((tile) => !tile.panel).map((tile) => tile.type),
+    ).size,
+);
+check(
+  covered === MODELLED_TYPES,
+  `dashboard: layout covers ${covered} chart types, expected all ${MODELLED_TYPES}`,
+);
 
 await checkThemeToggle(dashboard.page, "dashboard");
 

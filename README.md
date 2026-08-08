@@ -76,17 +76,21 @@ Full example: `examples/minimal/allurerc.mjs`.
 
 ## Renderers
 
-| id | Backend | Notes |
-|----|---------|-------|
-| `stock` (alias `nivo`) | Allure's own widget | upstream draws it; the registry fallback |
-| `echarts` | Apache ECharts | page default, Apache-2.0 |
-| `highcharts` | Highcharts | showcase; commercial licence is yours to hold |
-| `amcharts` | amCharts 5 | adapter + spike; needs bundling, draws a stub otherwise |
-| `svg` | none | kit canon — the testing pyramid |
+| id | Backend | Draws | Notes |
+|----|---------|-------|-------|
+| `stock` (alias `nivo`) | Allure's own widget | everything | upstream draws it |
+| `echarts` | Apache ECharts | pie, bar, line, treemap, heatmap | page default, Apache-2.0 |
+| `highcharts` | Highcharts | pie, bar, line | commercial licence is yours to hold |
+| `amcharts` | amCharts 5 | pie | adapter + spike; needs bundling, draws a stub otherwise |
+| `svg` | none | pyramid | kit canon |
 
 Rules: a page may mix renderers freely, **one tile is drawn by exactly one
-renderer**, and a renderer that cannot draw a model falls back to `stock` with a
-note instead of throwing.
+renderer**, and a backend that cannot draw a given kind never claims the tile —
+inside a report it stays on Allure's own widget.
+
+Models are backend-agnostic, one branch per **data shape** rather than per
+(chart type × library) pair, which is what covers all 13 upstream chart types
+without a combinatorial explosion of adapters.
 
 Adding a backend means implementing one interface — chart models are
 backend-agnostic, so there is no per-(chart × library) adapter:

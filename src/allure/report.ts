@@ -7,6 +7,7 @@
  * lives here instead of being copied into each fork.
  */
 import { createKitRuntime, type KitRuntime } from "../runtime/index.js";
+import type { ChartModel } from "../runtime/model.js";
 import type { KitRuntimeManifest, ResolvedTile } from "../types.js";
 
 interface KitWindow {
@@ -61,6 +62,22 @@ export function getKitRuntime(): KitRuntime | undefined {
 /** A tile the kit draws itself, as opposed to leaving it to Allure. */
 export function isKitOwned(tile: ResolvedTile | undefined): tile is ResolvedTile {
   return Boolean(tile) && tile!.renderer.id !== "stock" && tile!.renderer.id !== "nivo";
+}
+
+/**
+ * Can the requested backend actually draw this model?
+ *
+ * Asked before taking the tile over, not after. Inside a report the registry's
+ * fallback is a placeholder — the real stock widget is a Preact component the
+ * runtime cannot reach — so an unsupported pair (say a treemap on Highcharts)
+ * has to stay on Allure's own branch instead of being claimed and dropped.
+ */
+export function canKitRender(tile: ResolvedTile, model: ChartModel | undefined): boolean {
+  if (!model) {
+    return false;
+  }
+  const renderer = getKitRuntime()?.registry.get(tile.renderer.id);
+  return Boolean(renderer?.supports(model));
 }
 
 export function withReportLayout(tile: ResolvedTile): ResolvedTile {

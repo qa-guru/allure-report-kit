@@ -7,7 +7,18 @@
  */
 import type { KitThemeConfig, ResolvedTile, StatusFamily, TileType } from "../types.js";
 
-export type ChartModelKind = "pie" | "bar" | "line" | "pyramid";
+export type ChartModelKind = "pie" | "bar" | "line" | "pyramid" | "treemap" | "heatmap";
+
+/**
+ * Hierarchy for treemap charts. `colorValue` is a 0..1 quality score — the
+ * renderer turns it into a colour so the ramp follows the theme.
+ */
+export interface ChartTreeNode {
+  id: string;
+  value?: number;
+  colorValue?: number;
+  children?: ChartTreeNode[];
+}
 
 export interface ChartPoint {
   x: string | number;
@@ -40,6 +51,10 @@ export interface ChartModel {
   unit?: string;
   /** Percentage shown in the middle of a donut; computed when omitted. */
   percentage?: number;
+  /** Hierarchy for `treemap`; `series` stays empty for that kind. */
+  tree?: ChartTreeNode;
+  /** Formats a cell/leaf value for tooltips and labels. */
+  formatValue?: (value: number) => string;
   meta?: Record<string, unknown>;
 }
 

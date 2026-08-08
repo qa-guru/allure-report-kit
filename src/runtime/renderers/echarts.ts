@@ -22,6 +22,15 @@ interface EChartsApi {
 const instances = new WeakMap<HTMLElement, EChartsInstance>();
 const observers = new WeakMap<HTMLElement, ResizeObserver>();
 
+function observeResize(host: HTMLElement, instance: EChartsInstance): void {
+  if (observers.has(host) || typeof ResizeObserver === "undefined") {
+    return;
+  }
+  const observer = new ResizeObserver(() => instance.resize());
+  observer.observe(host);
+  observers.set(host, observer);
+}
+
 function seriesColors(context: RenderContext): string[] {
   return context.model.series.map(
     (series, index) => series.color ?? context.cssVar(`--ark-series-${index}`, "#4b9bff"),
@@ -134,6 +143,148 @@ function lineOption(context: RenderContext, colors: string[]): Record<string, un
   };
 }
 
+/**
+ * Quality ramp for 0..1 scores: failed → broken → passed.
+ *
+ * Read from the theme at draw time rather than hardcoded, so a treemap follows
+ * the same palette as the donut next to it.
+ */
+function qualityRamp(context: RenderContext): (score: number) => string {
+  const stops = [
+    { at: 0, color: context.cssVar("--ark-status-failed", "#fd5a3e") },
+    { at: 0.5, color: context.cssVar("--ark-status-broken", "#ffd050") },
+    { at: 1, color: context.cssVar("--ark-status-passed", "#49cb68") },
+  ];
+  return (score) => {
+    const clamped = Math.min(Math.max(score, 0), 1);
+    const stop = stops.reduce((best, candidate) =>
+      Math.abs(candidate.at - clamped) < Math.abs(best.at - clamped) ? candidate : best,
+    );
+    return stop.color;
+  };
+}
+
+function familiesForScores(scores: number[]): StatusFamily[] {
+  const families = new Set<StatusFamily>();
+  for (const score of scores) {
+    families.add(score >= 0.75 ? "green" : score >= 0.4 ? "yellow" : "red");
+  }
+  return orderFamilies(families);
+}
+
+interface TreeNode {
+  id: string;
+  value?: number;
+  colorValue?: number;
+  children?: TreeNode[];
+}
+
+function treemapOption(context: RenderContext): {
+  option: Record<string, unknown>;
+  scores: number[];
+} {
+  const ramp = qualityRamp(context);
+  const scores: number[] = [];
+
+  const convert = (node: TreeNode): Record<string, unknown> => {
+    const children = node.children?.map(convert);
+    if (node.colorValue !== undefined) {
+      scores.push(node.colorValue);
+    }
+    return {
+      name: node.id,
+      ...(node.value === undefined ? {} : { value: node.value }),
+      ...(children?.length ? { children } : {}),
+      ...(node.colorValue === undefined ? {} : { itemStyle: { color: ramp(node.colorValue) } }),
+    };
+  };
+
+  const root = context.model.tree as TreeNode | undefined;
+  const data = root?.children?.map(convert) ?? (root ? [convert(root)] : []);
+
+  return {
+    scores,
+    option: {
+      animation: false,
+      tooltip: { trigger: "item" },
+      series: [
+        {
+          type: "treemap",
+          roam: false,
+          nodeClick: false,
+          breadcrumb: { show: false },
+          top: 4,
+          left: 4,
+          right: 4,
+          bottom: 4,
+          itemStyle: { borderColor: context.cssVar("--ark-surface", "#fff"), borderWidth: 2, gapWidth: 2 },
+          label: {
+            show: true,
+            fontSize: 11,
+            color: context.cssVar("--ark-band-ink", "rgba(255,255,255,0.92)"),
+          },
+          upperLabel: { show: false },
+          levels: [{ itemStyle: { gapWidth: 3 } }, { itemStyle: { gapWidth: 1 } }],
+          data,
+        },
+      ],
+    },
+  };
+}
+
+function heatmapOption(context: RenderContext): {
+  option: Record<string, unknown>;
+  scores: number[];
+} {
+  const { model } = context;
+  const columns = model.categories ?? [];
+  const rows = model.series.map((series) => series.label ?? series.id);
+  const ramp = qualityRamp(context);
+  const scores: number[] = [];
+
+  const cells = model.series.flatMap((series, rowIndex) =>
+    (series.points ?? []).map((point) => {
+      const columnIndex = columns.indexOf(String(point.x));
+      scores.push(1 - point.y);
+      return {
+        value: [columnIndex, rowIndex, point.y],
+        itemStyle: { color: ramp(1 - point.y) },
+      };
+    }),
+  );
+
+  const axisLabel = { color: context.cssVar("--ark-text-muted", "#777"), fontSize: 10 };
+
+  return {
+    scores,
+    option: {
+      animation: false,
+      grid: { left: 90, right: 12, top: 12, bottom: 30 },
+      tooltip: {
+        formatter: (params: { value: [number, number, number] }) =>
+          `${rows[params.value[1]]} · ${columns[params.value[0]]}: ${
+            model.formatValue?.(params.value[2]) ?? params.value[2]
+          }`,
+      },
+      xAxis: { type: "category", data: columns, axisLabel, splitArea: { show: true } },
+      yAxis: { type: "category", data: rows, axisLabel, splitArea: { show: true } },
+      series: [
+        {
+          type: "heatmap",
+          data: cells,
+          label: {
+            show: true,
+            fontSize: 10,
+            color: context.cssVar("--ark-band-ink", "rgba(255,255,255,0.92)"),
+            formatter: (params: { value: [number, number, number] }) =>
+              model.formatValue?.(params.value[2]) ?? String(params.value[2]),
+          },
+        },
+      ],
+    },
+  };
+}
+
 function buildOption(context: RenderContext, colors: string[]): Record<string, unknown> {
   switch (context.model.kind) {
     case "pie":
@@ -150,8 +301,7 @@ function buildOption(context: RenderContext, colors: string[]): Record<string, u
 export const echartsRenderer: ChartRenderer = {
   id: "echarts",
 
-  supports: (model: ChartModel) =>
-    model.kind === "pie" || model.kind === "bar" || model.kind === "line",
+  supports: (model: ChartModel) => model.kind !== "pyramid",
 
   render: async (context: RenderContext): Promise<RenderResult> => {
     const api = (await context.resolveLib("echarts")) as EChartsApi | undefined;
@@ -168,18 +318,26 @@ export const echartsRenderer: ChartRenderer = {
     });
     instances.set(context.host, instance);
 
+    // Score-driven charts colour themselves from the quality ramp, so their
+    // families come from the drawn values rather than from series colours.
+    if (context.model.kind === "treemap" || context.model.kind === "heatmap") {
+      const built =
+        context.model.kind === "treemap" ? treemapOption(context) : heatmapOption(context);
+      instance.setOption({
+        ...built.option,
+        ...(context.options.option as Record<string, unknown> | undefined),
+      });
+      observeResize(context.host, instance);
+      return { families: familiesForScores(built.scores), renderedBy: "echarts" };
+    }
+
     const colors = seriesColors(context);
     instance.setOption({
       ...buildOption(context, colors),
       ...(context.options.option as Record<string, unknown> | undefined),
     });
 
-    if (!observers.has(context.host) && typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(() => instance.resize());
-      observer.observe(context.host);
-      observers.set(context.host, observer);
-    }
-
+    observeResize(context.host, instance);
     return { families: collectFamilies(context, colors), renderedBy: "echarts" };
   },
 

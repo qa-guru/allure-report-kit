@@ -129,6 +129,8 @@ Pinned at `@allurereport/* 3.13.x` (shipped by `allure@3.14.3`).
 - `singleFile: true` — the plugins fall back to stock Allure and say so.
 - Two theme switches (the DS header's and Allure's own) work independently.
 - `web-awesome` is not type-checked (see above).
-- Upstream's dashboard template links `favicon.ico` and never writes it — a
-  pre-existing 404 the smoke filters out rather than papering over.
+- Two upstream console defects the smoke filters out explicitly, both measured
+  rather than assumed: the dashboard template links `favicon.ico` and never
+  writes it, and upstream's nivo widgets emit negative SVG dimensions on this
+  grid (same page: all-kit → 0 errors, all-stock → 8).
 - Publishing: the packages resolve through `file:` links, nothing is on npm.

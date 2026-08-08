@@ -82,7 +82,28 @@ export default withKit({
             },
           }),
 
-          charts.successRateDistribution({ title: "Success rate", renderer: "stock" }),
+          // Coverage surface: every remaining upstream chart type, kit-rendered.
+          charts.statusDynamics({ title: "Динамика статусов", limit: 20 }),
+          charts.statusTransitions({ title: "Переходы статусов", limit: 20 }),
+          charts.testBaseGrowthDynamics({ title: "Рост тестовой базы", limit: 20 }),
+          charts.statusAgePyramid({ title: "Возраст статусов", limit: 20 }),
+          charts.testResultSeverities({ title: "Результаты по severity" }),
+          charts.stabilityDistribution({
+            title: "Стабильность по компонентам",
+            groupBy: "label-name:component",
+            threshold: 90,
+            stabilizationPeriod: 2,
+            skipStatuses: ["skipped", "unknown"],
+          }),
+          charts.durations({ title: "Длительности", groupBy: "none" }),
+          // Highcharts cannot draw a treemap without extra modules, so this
+          // tile must land back on Allure's own widget instead of a placeholder.
+          charts.coverageDiff({ title: "Coverage diff — highcharts declines", renderer: "highcharts" }),
+          charts.successRateDistribution({ title: "Success rate" }),
+          charts.problemsDistribution({ title: "Проблемы по окружениям" }),
+
+          // One tile stays on Allure's own widget on purpose.
+          charts.currentStatus({ title: "Текущий статус — stock", renderer: "stock" }),
         ],
       },
     },

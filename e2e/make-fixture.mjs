@@ -39,6 +39,23 @@ function statusFor(index, [, failed, broken, skipped]) {
   return "passed";
 }
 
+/**
+ * Churn between runs.
+ *
+ * Without it every run is identical and the history-driven charts (status
+ * transitions, test base growth) are all zeroes — they render an empty grid and
+ * prove nothing. One flipping test and one appearing test are enough.
+ */
+function churn(layer, index, run) {
+  if (layer === "component" && index === 1) {
+    return { status: run % 2 === 0 ? "passed" : "failed" };
+  }
+  if (layer === "api" && index === 3) {
+    return { skip: run === 0 };
+  }
+  return {};
+}
+
 /** `run` shifts durations so a repeated generate produces a visible trend. */
 export async function makeFixture({ run = 0, seed = 1 } = {}) {
   await rm(RESULTS_DIR, { recursive: true, force: true });
@@ -51,7 +68,11 @@ export async function makeFixture({ run = 0, seed = 1 } = {}) {
     const [total] = counts;
 
     for (let index = 0; index < total; index += 1) {
-      const status = statusFor(index, counts);
+      const drift = churn(layer, index, run);
+      if (drift.skip) {
+        continue;
+      }
+      const status = drift.status ?? statusFor(index, counts);
       const name = `${layer} case ${index + 1}`;
       const jitter = ((index * 37 + seed * 13) % 11) / 10;
       const duration = Math.round(BASE_DURATION[layer] * (1 + jitter * 0.4) * (1 - run * 0.06));

@@ -8,6 +8,7 @@ export type { AllureChartData } from "./model.js";
 
 export {
   REPORT_TILE_LAYOUT,
+  canKitRender,
   getKitRuntime,
   isKitOwned,
   pairTiles,
