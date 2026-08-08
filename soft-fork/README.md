@@ -25,8 +25,9 @@ forked bundle to load.
 
 ## The delta
 
-Four files differ from upstream in each web bundle. Everything else is upstream
-code, and everything that is not JSX glue lives in the kit package
+Four source files differ from upstream in each web bundle, plus the TypeScript
+config (see "Type checking"). Everything else is upstream code, and everything
+that is not JSX glue lives in the kit package
 (`@qa-guru/allure-report-kit/allure`), shared by both forks.
 
 ### 1. The seam — `Charts/index.tsx` (Awesome) · `Dashboard/index.tsx` (Dashboard)
@@ -71,6 +72,29 @@ kit plugin wraps it and proxies `context.reportFiles`:
 No file is read back from disk and no report DOM is scraped, which is exactly
 what separates this from the `dashboard-overrides.js` approach it replaces.
 
+## Chart data gets stable keys
+
+Upstream keys `widgets/charts.json` by `randomUUID()`, regenerated for each
+environment section, so the browser has nothing to match a tile against. The
+plugin re-keys the widget in flight to `ark-<list>-<index>` — the tile's position
+in the list the plugin renders — and `withKit` puts the same id on the manifest
+tile. Pairing in the browser is then a lookup rather than a positional walk, and a
+tile the report did not generate can no longer shift the rest.
+
+The walk still happens once, on the plugin side, where both the config and the
+result are in hand: upstream iterates the tile list in order and drops the types it
+does not know, so the n-th generated entry belongs to the n-th chart tile. When the
+types do not line up, the entry keeps its original key and stays with Allure.
+
+`panels.fromRun` rides the same interception: the plugin resolves the grouping
+against the store and writes `widgets/kit-panels/<id>.json`, then puts the url on
+the manifest tile. Panel data never goes into `index.html`.
+
+One consequence worth knowing: the proxy is installed from `start` on, not just in
+`done`. The upstream plugin builds its data writer from the context it receives in
+`start` and keeps it, so a proxy installed later would see `index.html` but never
+`widgets/*`.
+
 ## Chart backends are not bundled
 
 The fork ships no chart library. The plugin copies the UMD build of each backend
@@ -85,35 +109,43 @@ consumer installs those under their own licence.
 
 Asymmetric, and worth knowing before trusting a green build:
 
-- **`web-dashboard`** type-checks. Its `moduleResolution` was bumped from `node`
-  to `bundler` (a fork delta) so the checker can see the kit's `exports`
-  subpaths; with that, upstream's source is clean.
-- **`web-awesome`** does not. Upstream's `tsconfig.json` references a
-  `tsconfig.node.json` for its vitest setup, which turns the config into a
-  solution config and leaves `fork-ts-checker` inert — a deliberate `const x:
-  number = "s"` compiles without a word. Dropping the reference surfaces **82
-  pre-existing upstream errors** (missing `types` path alias, `preact/compat`
-  typings, implicit `any`): that source never type-checked outside the allure3
-  monorepo. The fork keeps upstream's config rather than pretending otherwise.
+- **`web-dashboard`** type-checks in full. Its `moduleResolution` was bumped from
+  `node` to `bundler` (a fork delta) so the checker can see the kit's `exports`
+  subpaths; with that, upstream's source is clean and every error fails.
+- **`web-awesome`** does not type-check as upstream ships it. Its
+  `tsconfig.json` references a `tsconfig.node.json` for the vitest setup, which
+  turns the config into a solution config and leaves `fork-ts-checker` inert — a
+  deliberate `const x: number = "s"` compiles without a word.
 
-So the Awesome delta is verified by the build and the e2e smoke, not by `tsc`.
-Making it checkable is a PLAN-0.1 item.
+`npm run typecheck:fork` closes the gap without pretending the upstream source is
+clean. It checks Awesome through `tsconfig.delta.json` — upstream's config minus
+the project reference, plus the `types` path alias upstream declares in
+web-dashboard but forgot here — and then:
+
+- **every error inside the delta files fails**, which is the part the fork owns;
+- errors elsewhere are counted against a budget (**19** as measured on
+  `@allurereport/web-awesome@3.13.0`: `preact/compat` typings, implicit `any`,
+  a missing `@allurereport/web-components/global` module). A rise fails; a drop
+  asks you to lower the budget.
+
+The gate is verified the only way that means anything: introducing a type error in
+the seam and watching it fail.
 
 ## Build
 
 ```bash
-npm --prefix packages/web-awesome install
-npm --prefix packages/web-dashboard install
+npm run setup               # installs and builds everything in dependency order
 npm run build:fork          # both bundles → dist/multi
-npm --prefix e2e install
-npm --prefix e2e run report # real reports at e2e/allure-report/{awesome,dashboard}
+npm run report              # real reports at e2e/allure-report/{awesome,dashboard}
+npm run typecheck:fork      # the delta must stay clean
 ```
 
 `dist/` is gitignored: a fresh clone builds the bundles.
 
 ## Upstream sync
 
-Pinned at `@allurereport/* 3.13.x` (shipped by `allure@3.14.3`).
+Pinned at `@allurereport/* 3.13.x` (shipped by `allure@3.14.3`) — exact versions
+in the fork `dependencies`, `~3.13.0` in the plugin `peerDependencies`.
 
 1. Diff the four delta files above against the new upstream `src`; everything
    else can be replaced wholesale.
@@ -121,14 +153,26 @@ Pinned at `@allurereport/* 3.13.x` (shipped by `allure@3.14.3`).
    branch, not a new switch case.
 3. Re-check the upstream `dist/multi/manifest.json` shape — the plugin drops
    assets by matching it.
-4. `npm run sync:ds` in the kit — design-system primitives may have moved.
-5. `npm run verify` (unit + dogfood) and `npm run verify:report` (real report).
+4. Re-check that `generateCharts` still keys entries per tile in config order and
+   that the plugin still builds its writer from the `start` context — the stable
+   chart ids rest on both.
+5. `npm run sync:ds` in the kit — design-system primitives may have moved.
+6. Refresh the parity fixture from the regenerated report, so the models are
+   checked against current upstream data:
+
+   ```bash
+   node -e 'const s=require("./e2e/allure-report/dashboard/widgets/charts.json"),o={};
+     for(const d of Object.values(s.general)) o[d.type] ??= d;
+     require("node:fs").writeFileSync("test/fixtures/allure-charts.json", JSON.stringify(o,null,2)+"\n")'
+   ```
+
+7. `npm run typecheck:fork`, `npm run verify` (unit + dogfood) and
+   `npm run verify:report` (real reports).
 
 ## Not done yet
 
-- `singleFile: true` — the plugins fall back to stock Allure and say so.
-- Two theme switches (the DS header's and Allure's own) work independently.
-- `web-awesome` is not type-checked (see above).
+- `singleFile: true` — the plugins fall back to stock Allure and say so, and
+  `withKit` reports it at config time, before anything is generated.
 - Two upstream console defects the smoke filters out explicitly, both measured
   rather than assumed: the dashboard template links `favicon.ico` and never
   writes it, and upstream's nivo widgets emit negative SVG dimensions on this

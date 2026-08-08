@@ -68,9 +68,10 @@ Full example: `examples/minimal/allurerc.mjs`.
 |--------|---------|
 | `withKit(config)` | Wraps an Allure 3 config: resolves renderers, writes the `options.kit` manifest, reports diagnostics |
 | `charts.*` | Typed builders for all 13 upstream chart types |
-| `panels.custom / donut / bar / line / pyramid` | Kit-owned widget types |
+| `panels.custom / donut / bar / line / pyramid / gauge / table` | Kit-owned widget types |
+| `panels.fromRun` | Panel whose data the plugin computes from the run |
 | `theme.qaGuru / tokensOnly / header` | Token sets and the report header |
-| `renderers.stock / echarts / highcharts / amcharts / svg` | Renderer specs (inert data) |
+| `renderers.stock / echarts / highcharts / amcharts / svg / dom` | Renderer specs (inert data) |
 | `presets.lockedQuad / isLockedQuad` | The ADR 006 first screen |
 | `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, registry, `mountReportHeader` |
 
@@ -79,10 +80,11 @@ Full example: `examples/minimal/allurerc.mjs`.
 | id | Backend | Draws | Notes |
 |----|---------|-------|-------|
 | `stock` (alias `nivo`) | Allure's own widget | everything | upstream draws it |
-| `echarts` | Apache ECharts | pie, bar, line, treemap, heatmap | page default, Apache-2.0 |
+| `echarts` | Apache ECharts | pie, bar, line, treemap, heatmap, gauge | page default, Apache-2.0 |
 | `highcharts` | Highcharts | pie, bar, line | commercial licence is yours to hold |
 | `amcharts` | amCharts 5 | pie | adapter + spike; needs bundling, draws a stub otherwise |
-| `svg` | none | pyramid | kit canon |
+| `svg` | none | pyramid, gauge | kit canon |
+| `dom` | none | table | kit canon; no chart library draws rows |
 
 Rules: a page may mix renderers freely, **one tile is drawn by exactly one
 renderer**, and a backend that cannot draw a given kind never claims the tile —
@@ -126,6 +128,12 @@ design-system `widget-tile`: `__bar` (indicators + title) and `__body` (chart).
 | `["red", "green"]` | that fixed set |
 | `false` | no indicator row at all |
 
+"Really drawn" is checked against the paint, not just the model: after rendering,
+a family whose colour is nowhere in the tile's data marks — an all-zero stacked
+series, a slice the library dropped — loses its dot. A family may also come from
+a single **point** rather than a series, which is how `stabilityDistribution`
+shows one bar per group coloured by its own threshold.
+
 Families always render in one order: red, orange, yellow, purple, gray, green,
 blue. These are **not** the three macOS traffic-lights of the design-system
 `panel__dots` — a different primitive.
@@ -133,6 +141,32 @@ blue. These are **not** the three macOS traffic-lights of the design-system
 Stock Allure 3 skips unknown chart types (`generateChartData` ends in
 `default: break`), so a config with panels still loads without the fork — the
 panel simply does not appear, and `withKit` says so.
+
+### Panels from the run
+
+A panel does not have to carry its data in the config. `panels.fromRun` names a
+grouping, and the plugin resolves it against the store at generation time and
+ships the result as a report widget — so the panel follows the run the way a
+stock chart does, and nothing about it is inlined into `index.html`.
+
+```js
+panels.fromRun({
+  id: "layersTable",
+  title: "Тесты по слоям",
+  groupBy: "layer",        // status | layer | severity | label:<name>
+  metric: "count",         // count | passRate | duration
+  kind: "table",
+  columns: ["Слой", "Тестов"],
+  limit: 5,                // the tail folds into `other`
+});
+```
+
+`groupBy: "status"` and `"layer"` colour their groups from the locked canon, so
+the bar indicators keep working; any other grouping falls back to the theme's
+series ramp. This one needs the soft-fork — an upstream plugin has nothing to
+compute it with, and `withKit` says so.
+
+A panel can also point at a widget you write yourself with `dataUrl`.
 
 ## Locked 2×2
 
@@ -202,7 +236,9 @@ npm run sync:ds        # refresh vendored design-system primitives
 npm run verify         # build + unit tests + dogfood smoke
 
 npm run build:fork     # webpack → packages/web-{awesome,dashboard}/dist
+npm run typecheck:fork # type-check the fork delta (see soft-fork/README.md)
 npm run verify:report  # build + forks + real reports + report smoke
+npm run smoke:ci       # both smokes on servers the script owns (no stands)
 ```
 
 Two levels of proof:
@@ -217,6 +253,18 @@ so history exists), so it depends on nobody's build output.
 
 ## Licences
 
-The kit is Apache-2.0 and ships no chart library code. ECharts is Apache-2.0.
-Highcharts and amCharts 5 are proprietary: obtain and hold your own licence.
-No licence key belongs in this repository.
+The kit is Apache-2.0 and **ships no chart library code**. Every backend is an
+optional peer dependency; the plugin copies the UMD build of the ones your config
+actually uses out of your own `node_modules` into the report. A report that does
+not use Highcharts does not carry Highcharts, and the kit never redistributes a
+proprietary bundle.
+
+| Library | Licence | What it means for you |
+|---------|---------|-----------------------|
+| ECharts | Apache-2.0 | no strings; the page default |
+| Highcharts | proprietary, free for non-commercial use | a commercial user holds their own licence |
+| amCharts 5 | proprietary, free with attribution | the attribution link is required in free mode |
+| nivo | MIT | arrives transitively with Allure, draws the `stock` tiles |
+
+No licence key or licence file belongs in this repository. This table is the
+counterpart of ADR 012 §6 in the monorepo — keep the two in step.
