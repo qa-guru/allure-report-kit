@@ -142,6 +142,22 @@ npm run typecheck:fork      # the delta must stay clean
 
 `dist/` is gitignored: a fresh clone builds the bundles.
 
+## Versioning
+
+Fork package `version` tracks upstream, not a private semver line:
+
+| Upstream (`allureUpstream`) | Our `version` | Meaning |
+|-----------------------------|---------------|---------|
+| `3.14.3` | `3.14.3` | first publish for this upstream pin |
+| `3.14.3` | `3.14.3-1`, `3.14.3-2`, … | our revisions while Allure stays on 3.14.3 |
+| `3.14.4` | `3.14.4` / `3.14.4-1` | only after Allure actually ships 3.14.4 |
+
+npm rejects four-segment versions (`3.14.3.1`); fork revisions are `3.14.3-N`.
+
+**Never** publish `3.14.4` / `3.14.5` while upstream is still `3.14.3` — those numbers belong to Allure. Gate: `npm run check:upstream` (`scripts/check-upstream.mjs`).
+
+`plugin-core` and `@qa-guru/allure-report-kit` stay on their own product versions (`0.x`).
+
 ## Upstream sync
 
 Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in the fork

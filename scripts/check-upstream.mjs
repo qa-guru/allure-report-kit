@@ -2,10 +2,18 @@
 /**
  * Keep the soft-fork packages and the Allure 3 they fork on one version.
  *
- * The forked bundles are upstream source with a four-file delta, so their
- * version mirrors the upstream release they track: `3.14.x`, where the patch is
- * the fork revision. `allureUpstream` records the exact upstream version, which
- * the version alone stops telling once the fork ships a revision of its own.
+ * Versioning (hard rule):
+ *   - `allureUpstream` = exact upstream Allure release the fork is built from
+ *     (e.g. 3.14.3).
+ *   - `version` = that same number, or a fork revision under it:
+ *       3.14.3        — first publish for this upstream pin
+ *       3.14.3-1      — our 1st revision while upstream stays 3.14.3
+ *       3.14.3-2      — our 2nd revision, …
+ *     (npm rejects four-segment `3.14.3.1`; use `3.14.3-N` instead.)
+ *   - NEVER invent 3.14.4 / 3.14.5 while upstream is still 3.14.3.
+ *     Those numbers belong to Allure. When upstream ships 3.14.4, we move
+ *     `allureUpstream` (and `version`) to 3.14.4, then 3.14.4-1 for our
+ *     revisions of that pin.
  *
  * What drifts in practice is not the number in `version` but one forgotten
  * `@allurereport/*` range in one package, so every declared range is checked
@@ -38,6 +46,15 @@ const readPackage = (dir) => JSON.parse(readFileSync(join(ROOT, dir, "package.js
 
 const minorOf = (version) => version.split(".").slice(0, 2).join(".");
 
+/** Upstream pin, or upstream + `-N` fork revision (N ≥ 1). */
+const isForkVersionOf = (version, upstream) => {
+  if (version === upstream) {
+    return true;
+  }
+  const escaped = upstream.replaceAll(".", String.raw`\.`);
+  return new RegExp(`^${escaped}-([1-9]\\d*)$`).test(version);
+};
+
 const manifests = FORK_PACKAGES.map((dir) => ({ dir, json: readPackage(dir) }));
 
 const pins = new Set(manifests.map(({ json }) => json.allureUpstream));
@@ -51,8 +68,9 @@ const expectedRange = `~${minorOf(upstream)}.0`;
 
 for (const { dir, json } of manifests) {
   check(
-    minorOf(json.version) === minorOf(upstream),
-    `${dir}: version ${json.version} does not mirror upstream ${upstream} — the fork tracks a release, not a product of its own`,
+    isForkVersionOf(json.version, upstream),
+    `${dir}: version ${json.version} is not ${upstream} or ${upstream}-N — ` +
+      `do not invent patches ahead of upstream (that number belongs to Allure)`,
   );
 
   // An exact pin is right for what the fork compiles against, a `~range` for
@@ -100,7 +118,7 @@ try {
     readFileSync(join(ROOT, "e2e/node_modules/@allurereport/plugin-awesome/package.json"), "utf8"),
   ).version;
   check(
-    minorOf(installed) === minorOf(upstream),
+    installed === upstream,
     `e2e runs @allurereport/plugin-awesome ${installed} while the fork tracks ${upstream}`,
   );
 } catch {
