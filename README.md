@@ -4,8 +4,7 @@ DX kit for **Allure Report 3**: a theme, pluggable chart renderers, custom
 panels with bar indicators, and a real design-system header on top of the
 report.
 
-> v0.1 — works inside a real generated Allure 3 report. Nothing is published to
-> npm yet; the packages resolve through `file:` links. See `soft-fork/README.md`.
+> v0.2 — works inside a real generated Allure 3 report. See `soft-fork/README.md`.
 
 ## Why
 
@@ -23,7 +22,7 @@ a renderer registry.
 ```bash
 npm i -D @qa-guru/allure-report-kit
 # pick the backends you actually use — all optional peers
-npm i -D echarts highcharts
+npm i -D highcharts
 ```
 
 ## Usage
@@ -34,7 +33,7 @@ import { withKit, charts, panels, presets, renderers, theme } from "@qa-guru/all
 export default withKit({
   name: "Reference App Tests",
   historyPath: "./history.jsonl",
-  renderer: renderers.echarts(),
+  renderer: renderers.stock(),
   softFork: true,
 
   theme: theme.qaGuru({
@@ -71,7 +70,7 @@ Full example: `examples/minimal/allurerc.mjs`.
 | `panels.custom / donut / bar / line / pyramid / gauge / table` | Kit-owned widget types |
 | `panels.fromRun` | Panel whose data the plugin computes from the run |
 | `theme.qaGuru / tokensOnly / header` | Token sets and the report header |
-| `renderers.stock / echarts / highcharts / amcharts / svg / dom` | Renderer specs (inert data) |
+| `renderers.stock / nivo / highcharts / amcharts / svg / dom` | Renderer specs (inert data) |
 | `presets.lockedQuad / isLockedQuad` | The ADR 006 first screen |
 | `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, registry, `mountReportHeader` |
 
@@ -79,8 +78,7 @@ Full example: `examples/minimal/allurerc.mjs`.
 
 | id | Backend | Draws | Notes |
 |----|---------|-------|-------|
-| `stock` (alias `nivo`) | Allure's own widget | everything | upstream draws it |
-| `echarts` | Apache ECharts | pie, bar, line, treemap, heatmap, gauge | page default, Apache-2.0 |
+| `stock` (alias `nivo`) | Allure's own widget | everything | **page default**, upstream draws it |
 | `highcharts` | Highcharts | pie, bar, line | commercial licence is yours to hold |
 | `amcharts` | amCharts 5 | pie | adapter + spike; needs bundling, draws a stub otherwise |
 | `svg` | none | pyramid, gauge | kit canon |
@@ -261,7 +259,6 @@ proprietary bundle.
 
 | Library | Licence | What it means for you |
 |---------|---------|-----------------------|
-| ECharts | Apache-2.0 | no strings; the page default |
 | Highcharts | proprietary, free for non-commercial use | a commercial user holds their own licence |
 | amCharts 5 | proprietary, free with attribution | the attribution link is required in free mode |
 | nivo | MIT | arrives transitively with Allure, draws the `stock` tiles |

@@ -36,7 +36,7 @@ export default withKit({
   appendHistory: true,
   historyLimit: 20,
 
-  renderer: renderers.echarts(),
+  renderer: renderers.stock(),
   softFork: true,
 
   theme: theme.qaGuru({
@@ -69,7 +69,7 @@ export default withKit({
             kind: "gauge",
           }),
 
-          charts.statusDynamics({ title: "Динамика статусов", limit: 20, renderer: "echarts" }),
+          charts.statusDynamics({ title: "Динамика статусов", limit: 20 }),
           charts.testResultSeverities({ title: "Результаты по severity", renderer: "stock" }),
         ],
       },
@@ -113,6 +113,7 @@ export default withKit({
             kind: "bar",
             limit: 4,
             unit: "%",
+            renderer: "highcharts",
           }),
 
           // Trend rather than snapshot: the data is the history Allure appends

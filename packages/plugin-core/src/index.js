@@ -19,7 +19,6 @@ const require = createRequire(import.meta.url);
 
 /** UMD builds exposing a global — no chart library is bundled into the kit. */
 const CHART_LIBS = {
-  echarts: { specifier: "echarts/dist/echarts.min.js", global: "echarts" },
   highcharts: { specifier: "highcharts/highcharts.js", global: "Highcharts" },
 };
 

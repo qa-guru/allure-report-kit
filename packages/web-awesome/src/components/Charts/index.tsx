@@ -5,7 +5,7 @@
  * `stockWidgets.tsx` and is now the `stock` renderer path.
  *
  * Here it is wrapped by the kit registry: the manifest written by `withKit`
- * says which renderer each tile wants, so a page can mix ECharts, Highcharts,
+ * says which renderer each tile wants, so a page can mix Highcharts,
  * amCharts and the SVG canon, and kit-owned panels (which Allure skips as
  * unknown chart types) get a place in the grid.
  *

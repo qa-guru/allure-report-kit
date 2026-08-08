@@ -101,9 +101,9 @@ The fork ships no chart library. The plugin copies the UMD build of each backend
 the config actually uses **from the consumer's `node_modules`** into
 `kit/<id>.js` and adds a script tag; the runtime picks them up off `window`.
 
-That keeps ECharts out of the bundle for reports that do not use it, and — more
-importantly — means the kit never redistributes Highcharts or amCharts. The
-consumer installs those under their own licence.
+That keeps unused backends out of the bundle — and, more importantly, means the
+kit never redistributes Highcharts or amCharts. The consumer installs those under
+their own licence.
 
 ## Type checking
 
@@ -192,7 +192,7 @@ Pinned at `@allurereport/* 3.14.3` (CLI `allure@3.14.3`) — exact versions in t
 npm i -D @qa-guru/allure-report-kit \
   @qa-guru/allure-report-kit-awesome \
   @qa-guru/allure-report-kit-dashboard \
-  echarts highcharts \
+  highcharts \
   @allurereport/plugin-awesome@~3.14.0 \
   @allurereport/plugin-dashboard@~3.14.0
 ```

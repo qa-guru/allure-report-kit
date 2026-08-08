@@ -36,7 +36,6 @@ const TILE_LIST_KEYS = ["charts", "layout"] as const;
 const KNOWN_RENDERERS = new Set([
   "stock",
   "nivo",
-  "echarts",
   "highcharts",
   "amcharts",
   "svg",
@@ -175,7 +174,7 @@ function checkRunPanelsNeedFork(
  *
  * @example
  * export default defineConfig(withKit({
- *   renderer: renderers.echarts(),
+ *   renderer: renderers.stock(),
  *   theme: theme.qaGuru(),
  *   plugins: { awesome: { options: { charts: presets.lockedQuad() } } },
  * }));

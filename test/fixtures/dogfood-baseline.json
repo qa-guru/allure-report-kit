@@ -1,21 +1,4 @@
 {
-  "pie:echarts": {
-    "key": "pie:echarts",
-    "renderedBy": "echarts",
-    "dots": [
-      "red",
-      "yellow",
-      "gray",
-      "green"
-    ],
-    "markCount": 5,
-    "svgPaths": 5,
-    "texts": [
-      "88.24%",
-      "из 34"
-    ],
-    "bodyChildren": 2
-  },
   "pie:highcharts": {
     "key": "pie:highcharts",
     "renderedBy": "highcharts",
@@ -33,35 +16,14 @@
     ],
     "bodyChildren": 1
   },
-  "bar:echarts": {
-    "key": "bar:echarts",
-    "renderedBy": "echarts",
-    "dots": [
-      "red",
-      "orange",
-      "yellow",
-      "purple",
-      "green",
-      "blue"
-    ],
-    "markCount": 36,
-    "svgPaths": 37,
-    "texts": [
-      "0",
-      "10",
-      "10–30s",
-      "12",
-      "1–2s",
-      "2",
-      "2–5s",
-      "4",
-      "5–10s",
-      "6",
-      "8",
-      "<1s",
-      ">30s"
-    ],
-    "bodyChildren": 2
+  "pie:amcharts": {
+    "key": "pie:amcharts",
+    "renderedBy": "amcharts-stub",
+    "dots": [],
+    "markCount": 0,
+    "svgPaths": 0,
+    "texts": [],
+    "bodyChildren": 1
   },
   "bar:highcharts": {
     "key": "bar:highcharts",
@@ -90,20 +52,6 @@
       "8",
       "<1s",
       ">30s"
-    ],
-    "bodyChildren": 1
-  },
-  "gauge:echarts": {
-    "key": "gauge:echarts",
-    "renderedBy": "echarts",
-    "dots": [
-      "green"
-    ],
-    "markCount": 3,
-    "svgPaths": 3,
-    "texts": [
-      "30",
-      "из 34"
     ],
     "bodyChildren": 1
   },

@@ -2,9 +2,9 @@
 /**
  * Headless smoke of real Allure 3 reports built with the kit plugins.
  *
- * Unlike smoke-dogfood.mjs this one proves the soft-fork itself: the tiles under
- * test are rendered by the forked web bundles inside Allure's own shell, next to
- * untouched stock widgets. Both Awesome and Dashboard are checked.
+ * Unlike smoke-dogfood.mjs this one proves the soft-fork itself: kit tiles are
+ * rendered by the forked web bundles inside Allure's own shell, next to
+ * untouched stock nivo widgets. Both Awesome and Dashboard are checked.
  *
  * Usage: node scripts/smoke-report.mjs [baseUrl]
  */
@@ -90,10 +90,10 @@ async function checkHeader(page, label, { expectSwitcher }) {
   return header;
 }
 
-async function readTiles(page) {
+async function readKitTiles(page) {
   return page.evaluate(() => ({
     manifest: Boolean(window.allureReportKit),
-    tiles: [...document.querySelectorAll(".widget-tile")].map((node) => ({
+    tiles: [...document.querySelectorAll(".widget-tile[data-ark-rendered-by]")].map((node) => ({
       renderer: node.dataset.arkRenderer,
       renderedBy: node.dataset.arkRenderedBy,
       title: node.querySelector(".widget-tile__title")?.textContent?.trim(),
@@ -109,7 +109,7 @@ async function readTiles(page) {
   }));
 }
 
-function checkTiles(label, actual, expected) {
+function checkKitTiles(label, actual, expected) {
   check(actual.manifest, `${label}: window.allureReportKit is missing`);
   check(
     actual.tiles.length === expected.length,
@@ -140,8 +140,50 @@ function checkTiles(label, actual, expected) {
     }
   });
 
-  // A tile declared `renderer: "stock"` must stay on Allure's own widget.
-  check(actual.stockWidgets >= 1, `${label}: no stock widget left — the fork took over every tile`);
+  check(actual.stockWidgets >= 1, `${label}: no stock nivo widget left on the page`);
+}
+
+/**
+ * Locked 2×2 slots [0–1] use page default `stock` — upstream nivo, not kit tiles.
+ * Assert on the stock widget DOM (ResponsivePie centre label, arc fills).
+ */
+async function checkStockLockedQuad(page, label) {
+  const stock = await page.evaluate(() => {
+    const widgets = [...document.querySelectorAll('[class*="styles_widget"]')];
+    const texts = (widget) =>
+      [...widget.querySelectorAll("svg text")]
+        .map((node) => node.textContent?.trim())
+        .filter(Boolean);
+    const arcFills = (widget) =>
+      [...widget.querySelectorAll('svg path[fill]:not([fill="none"])')].map((node) =>
+        node.getAttribute("fill"),
+      );
+    const paths = (widget) => widget.querySelectorAll("svg path, svg line, svg rect").length;
+
+    return {
+      count: widgets.length,
+      currentStatus: widgets[0]
+        ? { texts: texts(widgets[0]), fills: arcFills(widgets[0]) }
+        : undefined,
+      durationDynamics: widgets[1]
+        ? { texts: texts(widgets[1]), marks: paths(widgets[1]) }
+        : undefined,
+    };
+  });
+
+  check(stock.count >= 2, `${label} locked quad: expected at least 2 stock widgets, got ${stock.count}`);
+  check(
+    stock.currentStatus?.texts.includes("88.24%"),
+    `${label} current status (nivo): centre label ${JSON.stringify(stock.currentStatus?.texts)}`,
+  );
+  check(
+    (stock.currentStatus?.fills.length ?? 0) >= 4,
+    `${label} current status (nivo): expected status arcs, got ${stock.currentStatus?.fills.length ?? 0}`,
+  );
+  check(
+    (stock.durationDynamics?.marks ?? 0) >= 1,
+    `${label} duration dynamics (nivo): expected drawn marks, got ${stock.durationDynamics?.marks ?? 0}`,
+  );
 }
 
 /**
@@ -178,8 +220,6 @@ async function checkPalette(page, label) {
     palette.failed === palette.canonFailed,
     `${label} palette: failed is ${palette.failed} while the canon is ${palette.canonFailed}`,
   );
-  // The whole mechanism rests on upstream keeping the colour unresolved in the
-  // markup; a stock tile that paints a literal would silently stop following.
   check(
     palette.stockFills.length > 0,
     `${label} palette: no stock mark paints through a status token — upstream may have stopped emitting var()`,
@@ -189,16 +229,11 @@ async function checkPalette(page, label) {
 
 /**
  * The tile follows its grid cell, not the config.
- *
- * `layout` drives the body aspect ratio and the SVG viewBox, and it is measured
- * off the real cell — which keeps moving after the first paint. Narrowing the
- * window has to re-bucket it, and the old modifier has to go with it, or the
- * element would carry two layouts and the stylesheet would pick.
  */
 async function checkResize(page, label) {
   const layoutOf = () =>
     page.evaluate(() => {
-      const tile = document.querySelector(".widget-tile");
+      const tile = document.querySelector(".widget-tile[data-ark-rendered-by]");
       return [...tile.classList].filter((name) => name.startsWith("widget-tile--layout-"));
     });
 
@@ -242,8 +277,6 @@ async function checkThemeToggle(page, label) {
     `${label} theme toggle: palette did not switch to dark (--ark-layer-e2e = ${after.layerE2e})`,
   );
 
-  // The other direction: Allure's own control writes `data-theme`, and the DS
-  // header has to follow instead of keeping a stale palette and icon.
   await page.evaluate(() => {
     document.documentElement.dataset.theme = "light";
   });
@@ -265,30 +298,25 @@ async function checkThemeToggle(page, label) {
 const awesome = await openReport("/awesome/");
 await checkHeader(awesome.page, "awesome", { expectSwitcher: true });
 
-// Charts live in their own section of the Awesome report.
 await awesome.page.getByText("Отчет", { exact: true }).first().click();
 await awesome.page.getByText("Графики", { exact: true }).first().click();
 await awesome.page.waitForSelector(".widget-tile[data-ark-rendered-by]");
 await awesome.page.waitForFunction(
   (count) => document.querySelectorAll(".widget-tile[data-ark-rendered-by]").length >= count,
-  7,
+  4,
   { timeout: 15_000 },
 );
 
-const awesomeTiles = await readTiles(awesome.page);
-checkTiles("awesome", awesomeTiles, [
-  { title: "Текущий статус", renderer: "echarts", dots: ["red", "yellow", "gray", "green"] },
-  { title: "Динамика длительности", renderer: "echarts", dots: ["blue"] },
+await checkStockLockedQuad(awesome.page, "awesome");
+
+const awesomeTiles = await readKitTiles(awesome.page);
+checkKitTiles("awesome", awesomeTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
-  // Data computed from the run and fetched as a widget — only the passed arc is
-  // drawn, so only green earns a dot.
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
-  { title: "Динамика статусов", renderer: "echarts" },
 ]);
 
-// The gauge proves the widget round-trip: nothing about it is in the manifest.
 const gauge = await awesome.page.evaluate(() => {
   const tile = [...document.querySelectorAll(".widget-tile")].find(
     (node) => node.querySelector(".widget-tile__title")?.textContent?.trim() === "Прошло тестов",
@@ -299,12 +327,6 @@ const gauge = await awesome.page.evaluate(() => {
 check(gauge.reading === "30", `awesome gauge: reading "${gauge.reading}", expected 30 passed`);
 check(gauge.caption === "из 34", `awesome gauge: caption "${gauge.caption}", expected "из 34"`);
 
-// Statistic carries `total` next to the statuses; a wrong sum halves this.
-const percentage = await awesome.page.evaluate(
-  () => document.querySelector('.widget-tile[data-ark-renderer="echarts"] text')?.textContent?.trim(),
-);
-check(percentage === "88.24%", `awesome: current status percentage "${percentage}"`);
-
 await checkPalette(awesome.page, "awesome");
 await checkThemeToggle(awesome.page, "awesome");
 
@@ -314,52 +336,33 @@ const dashboard = await openReport("/dashboard/");
 await checkHeader(dashboard.page, "dashboard", { expectSwitcher: false });
 await dashboard.page.waitForSelector(".widget-tile[data-ark-rendered-by]");
 
-// The dashboard layout is the coverage surface: every upstream chart type the
-// kit can model, plus a custom panel and one deliberate stock passthrough.
-const dashboardTiles = await readTiles(dashboard.page);
-checkTiles("dashboard", dashboardTiles, [
-  { title: "Текущий статус", renderer: "echarts", dots: ["red", "yellow", "gray", "green"] },
-  { title: "Динамика длительности", renderer: "echarts", dots: ["blue"] },
+await checkStockLockedQuad(dashboard.page, "dashboard");
+
+const dashboardTiles = await readKitTiles(dashboard.page);
+checkKitTiles("dashboard", dashboardTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
-  // Table rows come from the run, one indicator per layer.
   {
     title: "Тесты по слоям",
     renderer: "dom",
     dots: ["red", "orange", "yellow", "purple", "gray", "green"],
   },
-  // A rate per layer: only the two layers with flaky tests are painted, so the
-  // zero-valued groups earn no dot — including the folded `other`.
-  { title: "Flaky по слоям", renderer: "echarts", dots: ["red", "orange"] },
-  // Trend over the runs in history, which no chart in the config can reach.
+  { title: "Flaky по слоям", renderer: "highcharts", dots: ["red", "orange"] },
   { title: "Pass rate по прогонам", renderer: "highcharts", dots: ["blue"] },
-  { title: "Динамика статусов", renderer: "echarts" },
-  { title: "Переходы статусов", renderer: "echarts" },
-  { title: "Рост тестовой базы", renderer: "echarts" },
-  { title: "Возраст статусов", renderer: "echarts" },
-  { title: "Результаты по severity", renderer: "echarts" },
-  { title: "Стабильность по компонентам", renderer: "echarts" },
-  { title: "Длительности", renderer: "echarts" },
-  // "Coverage diff — highcharts declines" is deliberately absent: Highcharts
-  // cannot draw a treemap, so that tile stays on Allure's own widget.
-  { title: "Success rate", renderer: "echarts" },
-  { title: "Проблемы по окружениям", renderer: "echarts" },
 ]);
 
-// The declining tile must reach the real widget, never the kit's placeholder.
 const placeholders = await dashboard.page.$$eval(
   '.ark-stub[data-renderer="stock"]',
   (nodes) => nodes.length,
 );
 check(placeholders === 0, `dashboard: ${placeholders} tile(s) fell back to the stock placeholder`);
 check(
-  dashboardTiles.stockWidgets === 2,
-  `dashboard: expected 2 stock widgets (declared + declined treemap), got ${dashboardTiles.stockWidgets}`,
+  dashboardTiles.stockWidgets >= 10,
+  `dashboard: expected many stock nivo widgets with page default stock, got ${dashboardTiles.stockWidgets}`,
 );
 
-// Every upstream chart type must have a model; a gap silently falls back.
 const MODELLED_TYPES = 13;
 const covered = await dashboard.page.evaluate(
   () =>
@@ -372,8 +375,6 @@ check(
   `dashboard: layout covers ${covered} chart types, expected all ${MODELLED_TYPES}`,
 );
 
-// The trend has a point per run in history, so it only exists because the
-// generator ran more than once — a single-run report would draw a flat line.
 const trend = await dashboard.page.evaluate(() => {
   const tile = [...document.querySelectorAll(".widget-tile")].find(
     (node) =>

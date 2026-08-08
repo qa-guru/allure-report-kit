@@ -3,7 +3,7 @@
  * Structural baseline for the dogfood compare grid.
  *
  * One model drawn by more than one backend — pie/bar/gauge ×
- * echarts/highcharts/svg. We capture counts and families, not pixels: a backend
+ * pie/bar/gauge × highcharts/amcharts/svg. We capture counts and families, not pixels: a backend
  * that drops a slice or stops painting from the canon fails here rather than
  * waiting to be noticed on the stand.
  *
@@ -25,11 +25,9 @@ const FIXTURE = join(ROOT, "test/fixtures/dogfood-baseline.json");
 
 /** Same grid as dogfood/dogfood.js — keep in sync. */
 export const COMPARE_KEYS = [
-  "pie:echarts",
   "pie:highcharts",
-  "bar:echarts",
+  "pie:amcharts",
   "bar:highcharts",
-  "gauge:echarts",
   "gauge:svg",
 ];
 

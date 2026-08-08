@@ -1,13 +1,12 @@
 {
   "name": "@qa-guru/allure-report-kit",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "DX kit for Allure Report 3: theme, pluggable chart renderers, custom panels, DS report header",
   "keywords": [
     "allure",
     "allure3",
     "report",
     "charts",
-    "echarts",
     "highcharts",
     "amcharts",
     "testing"
@@ -80,7 +79,6 @@
   },
   "peerDependencies": {
     "@allurereport/charts-api": "~3.14.0",
-    "echarts": ">=5",
     "highcharts": ">=11"
   },
   "peerDependenciesMeta": {
@@ -88,9 +86,6 @@
       "optional": true
     },
     "@allurereport/charts-api": {
-      "optional": true
-    },
-    "echarts": {
       "optional": true
     },
     "highcharts": {
@@ -102,7 +97,6 @@
     "allure": "3.14.3",
     "allure-js-commons": "3.10.2",
     "allure-node-test": "3.10.2",
-    "echarts": "^6.1.0",
     "esbuild": "^0.28.1",
     "highcharts": "^13.0.0",
     "playwright": "^1.62.1",

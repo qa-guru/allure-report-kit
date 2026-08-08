@@ -6,10 +6,9 @@
  * Same manifest the soft-fork web layer will consume, so what renders here is
  * what the report renders.
  */
-import * as echarts from "echarts";
 import Highcharts from "highcharts";
 
-import { charts, panels, presets, renderers, theme, withKit } from "../dist/index.js";
+import { charts, panels, presets, theme, withKit } from "../dist/index.js";
 import { createKitRuntime, mountReportHeader } from "../dist/runtime/index.js";
 import {
   currentStatusModel,
@@ -26,7 +25,6 @@ const config = withKit({
   name: "allure-report-kit dogfood",
   historyPath: "./history.jsonl",
   softFork: true,
-  renderer: renderers.echarts(),
   theme: theme.qaGuru({
     header: theme.header({
       productName: "Reference App",
@@ -110,7 +108,7 @@ const MODELS = [
 
 const runtime = createKitRuntime({
   theme: manifest.theme,
-  libs: { echarts, highcharts: Highcharts },
+  libs: { highcharts: Highcharts },
   allowDynamicImport: false,
 });
 
@@ -147,9 +145,9 @@ function legendRow(tile, result) {
  * drops a slice fails a check rather than waiting to be noticed.
  */
 const COMPARISONS = [
-  { id: "pie", model: currentStatusModel, renderers: ["echarts", "highcharts"] },
-  { id: "bar", model: durationsModel, renderers: ["echarts", "highcharts"] },
-  { id: "gauge", model: passRateModel, renderers: ["echarts", "svg"] },
+  { id: "pie", model: currentStatusModel, renderers: ["highcharts", "amcharts"] },
+  { id: "bar", model: durationsModel, renderers: ["highcharts"] },
+  { id: "gauge", model: passRateModel, renderers: ["svg"] },
 ];
 
 async function mountComparisons(container) {

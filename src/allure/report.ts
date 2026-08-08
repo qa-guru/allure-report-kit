@@ -19,7 +19,6 @@ import { loadPanelModel, toChartModel, type AllureChartData } from "./model.js";
 
 interface KitWindow {
   allureReportKit?: KitRuntimeManifest;
-  echarts?: unknown;
   Highcharts?: unknown;
   am5?: unknown;
 }
@@ -86,7 +85,6 @@ export function getKitRuntime(): KitRuntime | undefined {
     runtime = createKitRuntime({
       theme: manifest.theme,
       libs: {
-        ...(scope.echarts ? { echarts: scope.echarts } : {}),
         ...(scope.Highcharts ? { highcharts: scope.Highcharts } : {}),
         ...(scope.am5 ? { amcharts: scope.am5 } : {}),
       },

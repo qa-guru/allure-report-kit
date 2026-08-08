@@ -16,7 +16,7 @@ export default withKit({
   historyPath: "./history.jsonl",
   appendHistory: false,
 
-  renderer: renderers.echarts(),
+  renderer: renderers.stock(),
   softFork: true,
 
   theme: theme.qaGuru({

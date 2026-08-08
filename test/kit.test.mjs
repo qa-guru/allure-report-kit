@@ -44,7 +44,7 @@ test("lockedQuad reproduces the ADR 006 order", () => {
 test("withKit resolves the page default renderer per tile", () => {
   const config = withKit({
     name: "T",
-    renderer: renderers.echarts(),
+    renderer: renderers.stock(),
     plugins: {
       awesome: {
         options: { charts: presets.lockedQuad({ renderers: { durations: "highcharts" } }) },
@@ -54,7 +54,7 @@ test("withKit resolves the page default renderer per tile", () => {
 
   assert.deepEqual(
     awesomeManifest(config).tiles.map((tile) => tile.renderer.id),
-    ["echarts", "echarts", "svg", "highcharts"],
+    ["stock", "stock", "svg", "highcharts"],
   );
 });
 
@@ -288,8 +288,8 @@ test("renderer factories stay inert specs; options travel through", () => {
   assert.equal(renderers.amcharts().id, "amcharts");
   assert.equal(renderers.svg().id, "svg");
   assert.equal(renderers.dom().id, "dom");
-  assert.deepEqual(renderers.normalizeRenderer("highcharts", renderers.echarts()), { id: "highcharts" });
-  assert.deepEqual(renderers.normalizeRenderer(undefined, renderers.echarts()), { id: "echarts" });
+  assert.deepEqual(renderers.normalizeRenderer("highcharts", renderers.stock()), { id: "highcharts" });
+  assert.deepEqual(renderers.normalizeRenderer(undefined, renderers.stock()), { id: "stock" });
 });
 
 test("tokensOnly drops tile chrome and header; empty token blocks stay silent", () => {

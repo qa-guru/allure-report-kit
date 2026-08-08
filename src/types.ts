@@ -30,7 +30,6 @@ export type DotsSpec = "fromSeries" | StatusFamily[] | false;
 export type BuiltinRendererId =
   | "stock"
   | "nivo"
-  | "echarts"
   | "highcharts"
   | "amcharts"
   | "svg"

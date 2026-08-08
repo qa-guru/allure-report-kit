@@ -39,12 +39,10 @@ export function createLibResolver(
   options: LibResolverOptions = {},
 ): LibResolver {
   const globals: Record<string, string> = {
-    echarts: "echarts",
     highcharts: "Highcharts",
     amcharts: "am5",
   };
   const specifiers: Record<string, string> = {
-    echarts: "echarts",
     highcharts: "highcharts",
     amcharts: "@amcharts/amcharts5",
     "amcharts/percent": "@amcharts/amcharts5/percent",

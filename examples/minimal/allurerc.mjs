@@ -18,8 +18,8 @@ import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/all
 
 /**
  * Locked 2×2, indices 0–3 — order is the invariant, renderers are not:
- *   [0] currentStatus   echarts
- *   [1] durationDynamics echarts
+ *   [0] currentStatus   stock (nivo)
+ *   [1] durationDynamics stock (nivo)
  *   [2] testingPyramid   svg (kit canon)
  *   [3] durations/layer  highcharts (showcase)
  */
@@ -34,8 +34,8 @@ export default withKit({
   appendHistory: true,
   historyLimit: 20,
 
-  // Page default for every kit-owned tile without its own `renderer`.
-  renderer: renderers.echarts(),
+  // Page default: upstream nivo passthrough for kit-owned tiles without `renderer`.
+  renderer: renderers.stock(),
 
   theme: theme.qaGuru({
     header: theme.header({
@@ -80,7 +80,7 @@ export default withKit({
 
           // Stock tiles stay stock — Allure renders them with nivo.
           charts.testResultSeverities({ renderer: "stock" }),
-          charts.statusDynamics({ limit: 20, renderer: "echarts" }),
+          charts.statusDynamics({ limit: 20 }),
         ],
       },
     },

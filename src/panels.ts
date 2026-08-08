@@ -39,8 +39,7 @@ export interface CustomPanelOptions {
  * Kinds only the kit canon can draw, and the renderer that draws them.
  *
  * Without this a `table` would inherit the page default and be dropped — no
- * chart backend draws rows — and a gauge would silently depend on ECharts being
- * installed. An explicit `renderer` in the config still wins.
+ * chart backend draws rows. An explicit `renderer` in the config still wins.
  */
 const CANON_RENDERER: Partial<Record<PanelKind, RendererRef>> = {
   pyramid: "svg",

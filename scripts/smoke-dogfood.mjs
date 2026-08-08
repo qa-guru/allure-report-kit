@@ -13,12 +13,12 @@ import { chromium } from "playwright";
 const URL_UNDER_TEST = process.argv[2] ?? "http://localhost:3021/dogfood/";
 
 const EXPECTED_TILES = [
-  { type: "currentStatus", renderer: "echarts", renderedBy: "echarts" },
-  { type: "durationDynamics", renderer: "echarts", renderedBy: "echarts" },
+  { type: "currentStatus", renderer: "stock", renderedBy: "stock-placeholder" },
+  { type: "durationDynamics", renderer: "stock", renderedBy: "stock-placeholder" },
   { type: "testingPyramid", renderer: "svg", renderedBy: "svg" },
   { type: "durations", renderer: "highcharts", renderedBy: "highcharts" },
   { type: "custom", renderer: "highcharts", renderedBy: "highcharts" },
-  { type: "stabilityDistribution", renderer: "echarts", renderedBy: "echarts" },
+  { type: "stabilityDistribution", renderer: "stock", renderedBy: "stock-placeholder" },
   { type: "custom", renderer: "svg", renderedBy: "svg" },
   { type: "custom", renderer: "dom", renderedBy: "dom" },
   { type: "custom", renderer: "amcharts", renderedBy: "amcharts-stub" },
@@ -123,11 +123,10 @@ check(
   `custom panel title: got "${panel?.title}"`,
 );
 
-// Per-point colours: both families sit on points of a single series, and a bar at
-// exactly the threshold counts as stable.
+// Per-point colours on a kit-rendered bar; stock placeholder has no drawn series.
 check(
-  JSON.stringify(tiles[STABILITY_INDEX]?.dots) === JSON.stringify(["red", "green"]),
-  `stability dots: expected ["red","green"], got ${JSON.stringify(tiles[STABILITY_INDEX]?.dots)}`,
+  JSON.stringify(tiles[STABILITY_INDEX]?.dots) === JSON.stringify([]),
+  `stability dots: stock placeholder has no series dots, got ${JSON.stringify(tiles[STABILITY_INDEX]?.dots)}`,
 );
 
 // dots: false → no indicator row at all (never three traffic-lights).
@@ -181,11 +180,9 @@ check(header.product === "Reference App", `theme.header: product name is "${head
 
 // Compare grid — same models, different backends (structural baseline source).
 const COMPARE_KEYS = [
-  "pie:echarts",
   "pie:highcharts",
-  "bar:echarts",
+  "pie:amcharts",
   "bar:highcharts",
-  "gauge:echarts",
   "gauge:svg",
 ];
 

@@ -11,7 +11,7 @@ export default withKit({
   output: "./allure-report-watch",
   softFork: true,
 
-  renderer: renderers.echarts(),
+  renderer: renderers.stock(),
 
   theme: theme.qaGuru({
     header: theme.header({

@@ -121,7 +121,6 @@
 
 /* Canvas/SVG backends measure their host, so it must own the body box. */
 .widget-tile__body > .ark-chart,
-.widget-tile__body > div[_echarts_instance_],
 .widget-tile__body > .highcharts-container {
   width: 100%;
   height: 100%;

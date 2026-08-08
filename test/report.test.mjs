@@ -163,7 +163,7 @@ test("readManifest is absent outside a report window", () => {
 });
 
 test("isKitOwned leaves stock and nivo to Allure", () => {
-  const [kitTile] = tilesOf(awesome([charts.currentStatus({ renderer: "echarts" })]));
+  const [kitTile] = tilesOf(awesome([charts.currentStatus({ renderer: "highcharts" })]));
   const stock = { ...kitTile, renderer: { id: "stock" } };
   const nivo = { ...kitTile, renderer: { id: "nivo" } };
 
@@ -212,7 +212,7 @@ test("resolveTileModel loads a panel or maps chart data", async () => {
 });
 
 test("canKitRender refuses a missing model when no runtime is mounted", () => {
-  const [tile] = tilesOf(awesome([charts.currentStatus({ renderer: "echarts" })]));
+  const [tile] = tilesOf(awesome([charts.currentStatus({ renderer: "highcharts" })]));
   assert.equal(canKitRender(tile, undefined), false);
 });
 

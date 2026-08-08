@@ -12,7 +12,6 @@ import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "./m
 import { RendererRegistry, createLibResolver } from "./registry.js";
 import { amchartsRenderer } from "./renderers/amcharts.js";
 import { domRenderer } from "./renderers/dom.js";
-import { echartsRenderer } from "./renderers/echarts.js";
 import { highchartsRenderer } from "./renderers/highcharts.js";
 import { stockRenderer } from "./renderers/stock.js";
 import { svgRenderer } from "./renderers/svg.js";
@@ -22,7 +21,7 @@ export interface KitRuntimeOptions {
   theme?: KitThemeConfig;
   /** Extra or replacement renderers, merged after the built-ins. */
   renderers?: ChartRenderer[];
-  /** Pre-imported chart libraries, keyed as `echarts` / `highcharts` / `amcharts`. */
+  /** Pre-imported chart libraries, keyed as `highcharts` / `amcharts`. */
   libs?: Record<string, unknown>;
   /** Let the resolver `import()` a missing library by bare specifier. */
   allowDynamicImport?: boolean;
@@ -58,7 +57,6 @@ function builtinRenderers(): ChartRenderer[] {
     stockRenderer,
     svgRenderer,
     domRenderer,
-    echartsRenderer,
     highchartsRenderer,
     amchartsRenderer,
   ];
@@ -240,7 +238,6 @@ export { mountReportHeader } from "./header.js";
 export { stockRenderer, createStockRenderer } from "./renderers/stock.js";
 export { svgRenderer } from "./renderers/svg.js";
 export { domRenderer } from "./renderers/dom.js";
-export { echartsRenderer } from "./renderers/echarts.js";
 export { highchartsRenderer } from "./renderers/highcharts.js";
 export { amchartsRenderer } from "./renderers/amcharts.js";
 export { familiesOf } from "./families.js";

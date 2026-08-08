@@ -23,12 +23,7 @@ export function nivo(options?: Record<string, unknown>): RendererSpec {
   return spec("nivo", options);
 }
 
-/** Apache ECharts — page default for kit-owned tiles. */
-export function echarts(options?: Record<string, unknown>): RendererSpec {
-  return spec("echarts", options);
-}
-
-/** Highcharts — v0.1 showcase backend. Licence is the user's responsibility. */
+/** Highcharts — showcase backend. Licence is the user's responsibility. */
 export function highcharts(options?: Record<string, unknown>): RendererSpec {
   return spec("highcharts", options);
 }
@@ -55,4 +50,4 @@ export function normalizeRenderer(ref: RendererRef | undefined, fallback: Render
   return typeof ref === "string" ? { id: ref } : ref;
 }
 
-export const DEFAULT_RENDERER: RendererSpec = { id: "echarts" };
+export const DEFAULT_RENDERER: RendererSpec = { id: "stock" };

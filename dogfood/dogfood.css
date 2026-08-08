@@ -85,10 +85,6 @@ body {
   font-weight: 600;
 }
 
-.ark-legend__badge[data-renderer="echarts"] {
-  color: var(--ark-layer-manual);
-}
-
 .ark-legend__badge[data-renderer="highcharts"] {
   color: var(--ark-layer-component);
 }
