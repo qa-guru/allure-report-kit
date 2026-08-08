@@ -8,146 +8,47 @@ header on top of the report.
 
 ## Gallery
 
-Screens from the e2e fixture (`npm run verify:report` → stands `ark-report`
-:3024 and `ark-dogfood` :3021).
+Screens from the e2e fixture (`npm run verify:report` → `ark-report` :3024) and
+DS demos (`design-system-preview` :3000) for failed QG / info popovers.
 
-### Awesome vs Dashboard
+### Charts — stock vs kit
 
-Same kit layout leads both surfaces — locked 2×2, then Allure + Sonar quality
-gates.
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-**Awesome** — Charts tab
-
-<img src="docs/readme/overview-awesome.png" alt="Awesome Charts tab with kit panels" />
-
-</td>
-<td width="50%" valign="top">
-
-**Dashboard** — full layout
-
-<img src="docs/readme/overview-dashboard.png" alt="Dashboard overview with kit panels" />
-
-</td>
-</tr>
-</table>
-
-### Stock Allure vs kit
-
-Same locked 2×2 row: upstream nivo on the left pair, kit soft-fork on the right
-(SVG pyramid + Highcharts durations, DS `widget-tile` chrome and status dots).
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-**Stock Allure** — `currentStatus` + `durationDynamics` (nivo)
-
-<img src="docs/readme/stock-locked-top.png" alt="Stock Allure current status and duration dynamics" />
-
-</td>
-<td width="50%" valign="top">
-
-**With kit** — `testingPyramid` (svg) + `durations` (highcharts)
-
-<img src="docs/readme/kit-pyramid-durations.png" alt="Kit testing pyramid and durations by layer" />
-
-</td>
-</tr>
-</table>
+| Widget | Stock Allure | With kit |
+|--------|--------------|----------|
+| **Current status** (`currentStatus`) | <img src="docs/readme/stock-current-status.png" alt="Stock current status" width="360" /> | <img src="docs/readme/kit-current-status.png" alt="Kit current status (Highcharts)" width="360" /> |
+| **Duration dynamics** (`durationDynamics`) | <img src="docs/readme/stock-duration-dynamics.png" alt="Stock duration dynamics" width="360" /> | — *(same stock tile; kit does not re-skin this slot)* |
+| **Testing pyramid** (`testingPyramid`) | <img src="docs/readme/stock-testing-pyramid.png" alt="Stock testing pyramid" width="360" /> | <img src="docs/readme/kit-testing-pyramid.png" alt="Kit testing pyramid (svg)" width="360" /> |
+| **Durations by layer** (`durations`) | <img src="docs/readme/stock-durations-layer.png" alt="Stock durations by layer" width="360" /> | <img src="docs/readme/kit-durations-layer.png" alt="Kit durations by layer (Highcharts)" width="360" /> |
+| **Status dynamics** | <img src="docs/readme/stock-status-dynamics.png" alt="Stock status dynamics" width="360" /> | — |
+| **Severities** | <img src="docs/readme/stock-severity.png" alt="Stock severities" width="360" /> | — |
+| **Services status** (custom panel) | — | <img src="docs/readme/kit-current-status-services.png" alt="Kit services status donut" width="360" /> |
+| **Pass rate gauge** (`panels.fromRun`) | — | <img src="docs/readme/kit-gauge.png" alt="Kit pass-rate gauge" width="360" /> |
+| **Tests by layer** (table, `fromRun`) | — | <img src="docs/readme/kit-layers-table.png" alt="Kit layers table" width="360" /> |
+| **Flaky by layer** (`fromRun` + Highcharts) | — | <img src="docs/readme/kit-flaky-bar.png" alt="Kit flaky by layer" width="360" /> |
+| **Pass rate trend** (`fromHistory`) | — | <img src="docs/readme/kit-pass-rate-trend.png" alt="Kit pass-rate trend" width="360" /> |
+| **amCharts adapter** (spike) | — | <img src="docs/readme/kit-amcharts-stub.png" alt="amCharts adapter stub" width="360" /> |
 
 ### Quality gates — Allure + Sonar
 
-`panels.qualityGate()` (verdict from the run) and a Sonar tile (`kind: "sonar"`,
-DS primitive, info popover). Same chrome as neighbouring widgets
-(`--wt-bar-inset` canon).
+Stock Allure has **no chart widget** for the gate (CI / `qualityGate` config only).
+Kit ships DS tiles: passed / failed, `i` hover popover, file links into the modal.
 
-<img src="docs/readme/kit-quality-gates.png" alt="Allure and Sonar quality gate panels" />
+| | Stock Allure | With kit |
+|--|--------------|----------|
+| **Allure QG — passed** | — | <img src="docs/readme/kit-qg-allure-passed.png" alt="Allure QG passed" width="360" /> |
+| **Allure QG — failed** | — | <img src="docs/readme/kit-qg-allure-failed.png" alt="Allure QG failed" width="360" /> |
+| **Sonar QG — passed** | — | <img src="docs/readme/kit-qg-sonar-passed.png" alt="Sonar QG passed" width="360" /> |
+| **Sonar QG — failed** | — | <img src="docs/readme/kit-qg-sonar-failed.png" alt="Sonar QG failed" width="360" /> |
+| **`i` hover / open** (Allure, passed) | — | <img src="docs/readme/kit-qg-info-hover.png" alt="QG info hover popover" width="360" /> |
+| **Modal + links** (Allure, passed) | — | <img src="docs/readme/kit-qg-info-links.png" alt="QG info links and JSON" width="360" /> |
+| **Modal + links** (Allure, failed) | — | <img src="docs/readme/kit-qg-allure-failed-info.png" alt="Failed Allure QG with info modal" width="360" /> |
+| **Links detail** (Allure, failed popover) | — | <img src="docs/readme/kit-qg-allure-failed-links.png" alt="Failed Allure QG popover links and JSON" width="360" /> |
+| **Modal + links** (Sonar, failed) | — | <img src="docs/readme/kit-qg-sonar-failed-info.png" alt="Failed Sonar QG with info modal" width="360" /> |
+| **Modal + links** (Sonar, passed) | — | <img src="docs/readme/kit-qg-sonar-passed-info.png" alt="Passed Sonar QG with info modal" width="360" /> |
 
-Dark theme:
-
-<img src="docs/readme/kit-quality-gates-dark.png" alt="Quality gates in dark theme" />
-
-### Custom, fromRun, fromHistory
-
-DS header, services donut + pass-rate gauge, layer table, flaky bar, pass-rate
-trend.
-
-<img src="docs/readme/header.png" alt="Design-system header on the Allure report" />
-
-<img src="docs/readme/kit-services-gauge.png" alt="Kit services donut and pass-rate gauge" />
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-**Pyramid** (svg)
-
-<img src="docs/readme/kit-pyramid-closeup.png" alt="Testing pyramid close-up" />
-
-</td>
-<td width="50%" valign="top">
-
-**Gauge** (`panels.fromRun`, svg)
-
-<img src="docs/readme/kit-gauge-closeup.png" alt="Pass-rate gauge close-up" />
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-**Table** (`panels.fromRun`, dom)
-
-<img src="docs/readme/kit-layers-table.png" alt="Tests by layer table" />
-
-</td>
-<td width="50%" valign="top">
-
-**Flaky by layer** (highcharts bar)
-
-<img src="docs/readme/kit-flaky-bar.png" alt="Flaky rate by layer bar chart" />
-
-</td>
-</tr>
-</table>
-
-<img src="docs/readme/kit-pass-rate-trend.png" alt="Pass rate trend from history" />
-
-### Theme flip (same tile)
-
-Chrome follows the host light/dark; chart palette stays on the kit canon.
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-**Light**
-
-<img src="docs/readme/kit-services-light.png" alt="Services donut in light theme" />
-
-</td>
-<td width="50%" valign="top">
-
-**Dark**
-
-<img src="docs/readme/kit-services-dark.png" alt="Services donut in dark theme" />
-
-</td>
-</tr>
-</table>
-
-### Multi-renderer (dogfood)
-
-Same model, different backends — Highcharts pie next to the amCharts adapter
-stub (`ark-dogfood`).
-
-<img src="docs/readme/kit-highcharts-amcharts.png" alt="Highcharts pie vs amCharts adapter stub" />
-
-<img src="docs/readme/kit-multi-renderer.png" alt="Dogfood multi-renderer comparison section" />
+Popover paths are real links (`hrefBase` → GitHub): e.g. `allurerc.mjs`,
+`allure/quality-gate.mjs`, `docs/sonar/quality-gate-profile.json`, profile /
+project key for Sonar.
 
 ## Why
 
