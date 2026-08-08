@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "description": "DX kit for Allure Report 3: theme, pluggable chart renderers, custom panels, DS report header",
   "keywords": [
     "allure",
@@ -75,7 +75,8 @@
     "verify:report": "npm run build && npm run build:fork && npm run report && npm run smoke:report && npm run smoke:single",
     "setup": "node scripts/setup.mjs",
     "publish:forks": "node scripts/publish-forks.mjs",
-    "publish:forks:dry": "node scripts/publish-forks.mjs --dry-run"
+    "publish:forks:dry": "node scripts/publish-forks.mjs --dry-run",
+    "release:publish": "node scripts/release-publish.mjs"
   },
   "peerDependencies": {
     "@allurereport/charts-api": "~3.14.0",

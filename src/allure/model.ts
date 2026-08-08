@@ -393,6 +393,8 @@ function asQualityGateData(
   return {
     passed: Boolean((payload as KitQualityGateData).passed),
     rules: (payload as KitQualityGateData).rules ?? [],
+    ...(panel.title ? { title: panel.title } : {}),
+    ...(payload && "config" in payload ? { config: (payload as KitQualityGateData).config } : {}),
     ...(labels ? { labels } : {}),
     ...(lang ? { lang } : {}),
   };

@@ -383,3 +383,42 @@ test("diagnostics print when silence is off", () => {
   assert.ok(warnings.some((line) => String(line).includes("[locked-quad]")));
   assert.ok(infos.some((line) => String(line).includes("[single-file]")));
 });
+
+test("formatQualityGateRuleFormula accepts legacy threshold field", async () => {
+  const { formatQualityGateRuleFormula } = await import("../dist/runtime/quality-gate-render.js");
+  assert.equal(
+    formatQualityGateRuleFormula({
+      id: "maxFailures",
+      passed: false,
+      message: "",
+      actual: 3,
+      threshold: 0,
+    }),
+    "FAIL: 3 > 0",
+  );
+});
+
+test("collectQgInfoDeviationLiterals marks Allure and Sonar failed actuals", async () => {
+  const { collectQgInfoDeviationLiterals } = await import("../dist/runtime/qg-info.js");
+  const { buildSonarQualityGateInfoPayload } = await import("../dist/runtime/sonar-quality-gate.js");
+
+  const allure = collectQgInfoDeviationLiterals({
+    qualityGate: { rules: [{ maxFailures: 0 }] },
+    result: {
+      passed: false,
+      rules: [{ id: "maxFailures", passed: false, actual: 3, expected: 0 }],
+    },
+  });
+  assert.deepEqual([...allure], ["3"]);
+
+  const sonar = collectQgInfoDeviationLiterals(
+    buildSonarQualityGateInfoPayload({
+      status: "ERROR",
+      conditions: [
+        { status: "ERROR", metricKey: "coverage", actualValue: 72.4 },
+        { status: "OK", metricKey: "bugs", actualValue: 0 },
+      ],
+    }),
+  );
+  assert.deepEqual([...sonar], ["72.4"]);
+});

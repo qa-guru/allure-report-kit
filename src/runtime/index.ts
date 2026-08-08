@@ -140,7 +140,10 @@ export class KitRuntime {
           title: options.title ?? model.title,
           layout: tile.layout,
           tier: tile.tier,
-          bar: this.theme.tile?.bar !== false,
+          bar:
+            model.kind === "qualityGate"
+              ? false
+              : this.theme.tile?.bar !== false,
         });
 
     if (!options.element && options.container) {
@@ -153,6 +156,10 @@ export class KitRuntime {
     // Re-applied rather than set at creation: an adopted tile is being redrawn
     // because its cell changed size, and the geometry is the reason.
     applyTileGeometry(elements.root, { layout: tile.layout, tier: tile.tier });
+
+    if (model.kind === "qualityGate" && elements.bar.isConnected) {
+      elements.bar.remove();
+    }
 
     elements.root.dataset.arkTile = tile.key;
     elements.root.dataset.arkRenderer = tile.renderer.id;
@@ -235,6 +242,20 @@ export { RendererRegistry, createLibResolver } from "./registry.js";
 export { resolveDots, syncIndicatorRow } from "./indicators.js";
 export { createTile, adoptTile, applyTileGeometry } from "./tile.js";
 export { mountReportHeader } from "./header.js";
+export {
+  buildQualityGateInfoPayload,
+  formatQualityGateRuleFormula,
+  resolveQualityGateRuleExpected,
+  renderQualityGate,
+  renderQualityGateHost,
+  resolveQualityGateFileSource,
+} from "./quality-gate-render.js";
+export {
+  buildSonarQualityGateInfoPayload,
+  renderSonarQualityGate,
+  sonarProjectStatusToQualityGateOptions,
+} from "./sonar-quality-gate.js";
+export { createQgInfo, collectQgInfoDeviationLiterals } from "./qg-info.js";
 export { stockRenderer, createStockRenderer } from "./renderers/stock.js";
 export { svgRenderer } from "./renderers/svg.js";
 export { domRenderer } from "./renderers/dom.js";

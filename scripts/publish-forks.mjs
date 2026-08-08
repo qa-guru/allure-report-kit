@@ -10,6 +10,7 @@
  * Usage:
  *   node scripts/publish-forks.mjs           # real publish
  *   node scripts/publish-forks.mjs --dry-run
+ *   node scripts/publish-forks.mjs --otp=123456
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -18,6 +19,8 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dryRun = process.argv.includes("--dry-run");
+const otpArg = process.argv.find((arg) => arg.startsWith("--otp="));
+const otp = process.env.NPM_OTP ?? (otpArg ? otpArg.slice("--otp=".length) : undefined);
 
 const kit = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 const KIT_VERSION = kit.version;
@@ -110,6 +113,9 @@ async function main() {
       const args = ["publish", "--access", "public"];
       if (dryRun) {
         args.push("--dry-run");
+      }
+      if (otp) {
+        args.push("--otp", otp);
       }
       run(pkgPath, args);
       console.log(`publish-forks: OK ${prepared.name}@${prepared.version}`);

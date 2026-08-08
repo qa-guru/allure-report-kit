@@ -16,6 +16,7 @@ import type {
   KitConfig,
   KitCustomPanel,
   KitDiagnostic,
+  KitQualityGateConfig,
   KitPluginConfig,
   KitRuntimeManifest,
   KitThemeConfig,
@@ -240,6 +241,13 @@ export function withKit<T extends KitConfig>(config: T): Record<string, unknown>
                 knownIssuesPath: (config as Record<string, unknown>).knownIssuesPath as
                   | string
                   | undefined,
+                ...(((config.qualityGate as { source?: KitQualityGateConfig["source"] } | undefined)
+                  ?.source
+                  ? {
+                      source: (config.qualityGate as { source?: KitQualityGateConfig["source"] })
+                        .source,
+                    }
+                  : {}) as Partial<KitQualityGateConfig>),
               },
             }
           : {}),

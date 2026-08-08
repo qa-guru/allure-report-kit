@@ -165,14 +165,25 @@ export interface KitQualityGateRule {
   id: string;
   message: string;
   passed: boolean;
-  actual?: number;
-  threshold?: number;
+  actual?: number | string;
+  /** Allure 3 canon — configured limit from the rule set. */
+  expected?: number | string;
+  /** @deprecated Legacy kit field — use `expected`. */
+  threshold?: number | string;
   knownExcluded?: number;
+  comparator?: "LT" | "GT" | "EQ" | "NE" | "LTE" | "GTE";
 }
 
 export interface KitQualityGateData {
   passed: boolean;
   rules: KitQualityGateRule[];
+  kind?: "allure" | "sonar";
+  testId?: string;
+  /** Pre-built popover JSON — wins over the default Allure-shaped builder. */
+  infoPayload?: Record<string, unknown>;
+  title?: string;
+  barTitle?: string;
+  config?: KitQualityGateConfig;
   labels?: QualityGateLabels;
   lang?: "ru" | "en";
 }
@@ -196,9 +207,29 @@ export interface KitPanelQualityGateSource {
 
 export type KitPanelSource = KitPanelRunSource | KitPanelHistorySource | KitPanelQualityGateSource;
 
+export interface KitQualityGateFileSource {
+  /** Entry config, e.g. `allurerc.mjs`. */
+  configFile?: string;
+  /** Module that exports `qualityGateRules`, e.g. `allure/quality-gate.mjs`. */
+  rulesFile?: string;
+  /** Known issues JSON relative to the config dir. */
+  knownIssuesFile?: string;
+  profile?: string;
+  projectKey?: string;
+  /** Base URL for relative file paths in the info popover, e.g. GitHub blob prefix. */
+  hrefBase?: string;
+  profileHref?: string;
+  projectHref?: string;
+  sonarHost?: string;
+}
+
 export interface KitQualityGateConfig {
   rules?: Array<Record<string, unknown>>;
   knownIssuesPath?: string;
+  profile?: string;
+  projectKey?: string;
+  conditions?: Array<Record<string, unknown>>;
+  source?: KitQualityGateFileSource;
 }
 
 export interface KitCustomPanel extends KitTileExtras {

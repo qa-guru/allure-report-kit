@@ -253,6 +253,7 @@ test("quality gate evaluation mirrors analytics-index rules", () => {
   assert.equal(verdict.passed, false);
   assert.equal(verdict.rules[0].id, "maxFailures");
   assert.equal(verdict.rules[0].actual, 3);
+  assert.equal(verdict.rules[0].expected, 0);
 });
 
 test("theme.header without the soft-fork is reported", () => {

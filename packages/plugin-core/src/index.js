@@ -412,57 +412,57 @@ export function evaluateQualityGate(testResults, config = {}, options = {}) {
 
   for (const rule of ruleDefs) {
     if (rule.maxFailures !== undefined) {
-      const threshold = rule.maxFailures;
-      const passed = failedCount <= threshold;
+      const expected = rule.maxFailures;
+      const passed = failedCount <= expected;
       rules.push({
         id: "maxFailures",
         passed,
         message: passed
-          ? `Failed tests ${failedCount} within threshold ${threshold}`
-          : `The number of failed tests ${failedCount} exceeds the allowed threshold value ${threshold}`,
+          ? `Failed tests ${failedCount} within threshold ${expected}`
+          : `The number of failed tests ${failedCount} exceeds the allowed threshold value ${expected}`,
         actual: failedCount,
-        threshold,
+        expected,
         knownExcluded,
       });
     }
     if (rule.minTestsCount !== undefined) {
-      const threshold = rule.minTestsCount;
-      const passed = summary.total >= threshold;
+      const expected = rule.minTestsCount;
+      const passed = summary.total >= expected;
       rules.push({
         id: "minTestsCount",
         passed,
         message: passed
-          ? `Test count ${summary.total} meets minimum ${threshold}`
-          : `The number of tests ${summary.total} is below the minimum required ${threshold}`,
+          ? `Test count ${summary.total} meets minimum ${expected}`
+          : `The number of tests ${summary.total} is below the minimum required ${expected}`,
         actual: summary.total,
-        threshold,
+        expected,
       });
     }
     if (rule.successRate !== undefined) {
-      const threshold = rule.successRate;
+      const expected = rule.successRate;
       const actual = Math.round(successRatePct * 10) / 10;
-      const passed = actual >= threshold;
+      const passed = actual >= expected;
       rules.push({
         id: "successRate",
         passed,
         message: passed
-          ? `Success rate ${actual}% meets minimum ${threshold}%`
-          : `Success rate ${actual}% is below the minimum required ${threshold}%`,
+          ? `Success rate ${actual}% meets minimum ${expected}%`
+          : `Success rate ${actual}% is below the minimum required ${expected}%`,
         actual,
-        threshold,
+        expected,
       });
     }
     if (rule.maxDuration !== undefined) {
-      const threshold = rule.maxDuration;
-      const passed = durationSec <= threshold;
+      const expected = rule.maxDuration;
+      const passed = durationSec <= expected;
       rules.push({
         id: "maxDuration",
         passed,
         message: passed
-          ? `Run duration ${durationSec}s within limit ${threshold}s`
-          : `Run duration ${durationSec}s exceeds the maximum allowed ${threshold}s`,
+          ? `Run duration ${durationSec}s within limit ${expected}s`
+          : `Run duration ${durationSec}s exceeds the maximum allowed ${expected}s`,
         actual: durationSec,
-        threshold,
+        expected,
       });
     }
   }
@@ -777,6 +777,15 @@ export function createKitPlugin({
           const data = {
             passed: verdict.passed,
             rules: verdict.rules,
+            config: {
+              rules: gateConfig.rules ?? [],
+              ...(gateConfig.knownIssuesPath
+                ? { knownIssuesPath: gateConfig.knownIssuesPath }
+                : {}),
+              ...(this.#manifest?.qualityGate?.source
+                ? { source: this.#manifest.qualityGate.source }
+                : {}),
+            },
             ...(panel.labels ? { labels: panel.labels } : {}),
             ...(panel.lang ? { lang: panel.lang } : {}),
             ...(this.options.reportLanguage ? { lang: panel.lang ?? this.options.reportLanguage } : {}),

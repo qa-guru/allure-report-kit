@@ -1,7 +1,14 @@
 /* vendored from zero-design-system/projects/design-system-home/design-system — do not edit, run `npm run sync:ds` */
-/* Quality gate — report verdict banner (passed / failed rules). */
+/* Quality gate — callout (legacy) + hybrid tile (bar + split rules + qg-info). */
 
-.quality-gate {
+.quality-gate:empty,
+.quality-gate[hidden] {
+  display: none;
+}
+
+/* ---- Callout (no bar) — variant A baseline, kit legacy ---- */
+
+.quality-gate:not(:has(.quality-gate__bar)) {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -10,50 +17,198 @@
   line-height: 1.45;
 }
 
-.quality-gate:empty,
-.quality-gate[hidden] {
-  display: none;
-}
-
-.quality-gate--passed {
+.quality-gate:not(:has(.quality-gate__bar)).quality-gate--passed {
   border-color: var(--color-success);
   background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
 }
 
-.quality-gate--failed {
+.quality-gate:not(:has(.quality-gate__bar)).quality-gate--failed {
   border-color: var(--color-warning);
   background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surface));
 }
 
-.quality-gate__title {
+.quality-gate:not(:has(.quality-gate__bar)) .quality-gate__title {
   margin: 0;
   font-weight: 600;
   color: var(--color-text);
 }
 
-.quality-gate__rules {
+.quality-gate:not(:has(.quality-gate__bar)) .quality-gate__rules {
   margin: var(--space-2) 0 0;
   padding-left: 1.25rem;
 }
 
-.quality-gate__rule {
+.quality-gate:not(:has(.quality-gate__bar)) .quality-gate__rule {
   margin: 0;
 }
 
-.quality-gate__rule + .quality-gate__rule {
+.quality-gate:not(:has(.quality-gate__bar)) .quality-gate__rule + .quality-gate__rule {
   margin-top: var(--space-1);
 }
 
-.quality-gate__message {
+.quality-gate:not(:has(.quality-gate__bar)) .quality-gate__message {
   color: var(--color-text);
 }
 
-.quality-gate__rule-id {
+.quality-gate:not(:has(.quality-gate__bar)) .quality-gate__rule-id {
   font-size: 0.85em;
   color: var(--color-text-muted);
 }
 
-.quality-gate__rule-id::before {
+.quality-gate:not(:has(.quality-gate__bar)) .quality-gate__rule-id::before {
   content: "·";
   margin: 0 0.35em;
+}
+
+/* ---- Hybrid tile (D bar + H split id + C message + L formula) ---- */
+
+.quality-gate:has(.quality-gate__bar) {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+}
+
+.widget-tile__body:has(> .quality-gate:has(.quality-gate__bar)) {
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.widget-tile__body > .quality-gate:has(.quality-gate__bar) {
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+.quality-gate:has(.quality-gate__bar).quality-gate--failed {
+  border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border));
+}
+
+.quality-gate:has(.quality-gate__bar).quality-gate--passed {
+  border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border));
+}
+
+.widget-tile__body > .quality-gate:has(.quality-gate__bar).quality-gate--failed,
+.widget-tile__body > .quality-gate:has(.quality-gate__bar).quality-gate--passed {
+  border-color: transparent;
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.quality-gate:has(.quality-gate__bar).quality-gate--failed .quality-gate__bar {
+  border-bottom-color: color-mix(in srgb, var(--color-danger) 25%, var(--color-border));
+}
+
+.quality-gate:has(.quality-gate__bar).quality-gate--passed .quality-gate__bar {
+  border-bottom-color: color-mix(in srgb, var(--color-success) 25%, var(--color-border));
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__bar-start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__bar .indicator {
+  --indicator-size: 8px;
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__bar-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__body {
+  padding: 0;
+}
+
+.quality-gate:has(.quality-gate__bar).quality-gate--passed .quality-gate__body {
+  padding: var(--space-2) var(--space-3);
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__verdict {
+  margin: 0;
+  font-weight: 600;
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__verdict--ok {
+  color: var(--color-success);
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__rules {
+  display: grid;
+  /* id col grows with longest key; fit-content cap = 3× base (19.5rem). */
+  grid-template-columns: fit-content(19.5rem) 1fr;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__rule {
+  display: contents;
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__rule + .quality-gate__rule .quality-gate__rule-id,
+.quality-gate:has(.quality-gate__bar) .quality-gate__rule + .quality-gate__rule .quality-gate__rule-detail {
+  border-top: 1px solid var(--color-border);
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__rule-id {
+  box-sizing: border-box;
+  min-width: 6.5rem;
+  padding: var(--space-2) var(--space-3);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-surface-soft));
+  border-right: 1px solid var(--color-border);
+  overflow-wrap: break-word;
+}
+
+.quality-gate:has(.quality-gate__bar).quality-gate--passed .quality-gate__rule-id {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface-soft));
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__rule-detail {
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__message {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.quality-gate:has(.quality-gate__bar) .quality-gate__formula {
+  margin: var(--space-1) 0 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--color-danger);
 }
