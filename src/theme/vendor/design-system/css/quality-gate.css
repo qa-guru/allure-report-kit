@@ -75,19 +75,31 @@
   line-height: 1.45;
 }
 
-.widget-tile__body:has(> .quality-gate:has(.quality-gate__bar)) {
+/*
+ * Inside widget-tile: one chrome only. Tile owns the frame; QG is body content
+ * (its __bar plays the role of widget-tile__bar). Standalone demos keep the card.
+ *
+ * Do not combine `:has(...:has(...))` with other selectors in one rule — nested
+ * :has() can invalidate the whole comma list in Chromium.
+ */
+.widget-tile--quality-gate > .widget-tile__body {
   align-items: stretch;
   justify-content: stretch;
   padding: 0;
+  aspect-ratio: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
-.widget-tile__body > .quality-gate:has(.quality-gate__bar) {
+.widget-tile--quality-gate > .widget-tile__body > .quality-gate {
   flex: 1 1 auto;
   align-self: stretch;
   width: 100%;
   height: 100%;
+  min-height: 0;
   border: none;
   border-radius: 0;
+  background: transparent;
 }
 
 .quality-gate:has(.quality-gate__bar).quality-gate--failed {
@@ -98,9 +110,10 @@
   border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border));
 }
 
-.widget-tile__body > .quality-gate:has(.quality-gate__bar).quality-gate--failed,
-.widget-tile__body > .quality-gate:has(.quality-gate__bar).quality-gate--passed {
-  border-color: transparent;
+.widget-tile--quality-gate > .widget-tile__body > .quality-gate.quality-gate--failed,
+.widget-tile--quality-gate > .widget-tile__body > .quality-gate.quality-gate--passed {
+  border: none;
+  background: transparent;
 }
 
 .quality-gate:has(.quality-gate__bar) .quality-gate__bar {
@@ -108,11 +121,20 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  min-height: 28px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: var(--wt-bar-height, 28px);
+  min-height: var(--wt-bar-height, 28px);
   padding: 0 var(--space-2);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-soft);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+/* Tile already clips corners — bar must not paint a second rounded card top. */
+.widget-tile--quality-gate > .widget-tile__body > .quality-gate > .quality-gate__bar {
+  border-radius: 0;
+  background: color-mix(in srgb, var(--color-text) 3%, transparent);
 }
 
 .quality-gate:has(.quality-gate__bar).quality-gate--failed .quality-gate__bar {

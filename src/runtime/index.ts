@@ -157,8 +157,13 @@ export class KitRuntime {
     // because its cell changed size, and the geometry is the reason.
     applyTileGeometry(elements.root, { layout: tile.layout, tier: tile.tier });
 
-    if (model.kind === "qualityGate" && elements.bar.isConnected) {
-      elements.bar.remove();
+    if (model.kind === "qualityGate") {
+      elements.root.classList.add("widget-tile--quality-gate");
+      if (elements.bar.isConnected) {
+        elements.bar.remove();
+      }
+    } else {
+      elements.root.classList.remove("widget-tile--quality-gate");
     }
 
     elements.root.dataset.arkTile = tile.key;
