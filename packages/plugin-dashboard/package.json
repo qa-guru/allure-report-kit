@@ -1,0 +1,33 @@
+{
+  "name": "@qa-guru/allure-report-kit-dashboard",
+  "version": "0.1.0",
+  "description": "Allure 3 Dashboard plugin wired to the allure-report-kit renderer registry",
+  "license": "Apache-2.0",
+  "author": "QA Guru",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qa-guru/allure-report-kit.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@qa-guru/allure-report-kit-plugin-core": "file:../plugin-core",
+    "@qa-guru/allure-report-kit-web-dashboard": "file:../web-dashboard"
+  },
+  "peerDependencies": {
+    "@allurereport/plugin-dashboard": ">=3.13"
+  },
+  "devDependencies": {
+    "@allurereport/plugin-dashboard": "3.13.0",
+    "@allurereport/web-dashboard": "3.13.0"
+  }
+}

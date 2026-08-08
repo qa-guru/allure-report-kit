@@ -32,7 +32,8 @@ import { currentTrId } from "./stores/testResult";
 import { fetchTreeFiltersData } from "./stores/treeFilters/actions";
 import { migrateFilterParam } from "./stores/treeFilters/utils";
 
-import { mountKitHeader } from "./kitHeader";
+import { mountKitHeader } from "@qa-guru/allure-report-kit/allure";
+
 import * as styles from "./styles.scss";
 
 // FORK DELTA: kit theme belongs to the entry bundle, not to the charts chunk —

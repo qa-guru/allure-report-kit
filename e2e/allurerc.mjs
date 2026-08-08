@@ -59,5 +59,32 @@ export default withKit({
         ],
       },
     },
+
+    dashboard: {
+      options: {
+        reportName: "allure-report-kit e2e — Dashboard",
+        reportLanguage: "ru",
+        layout: [
+          ...lockedQuad,
+
+          panels.custom({
+            id: "servicesCurrentStatus",
+            title: "Текущий статус по сервисам",
+            renderer: "highcharts",
+            dots: "fromSeries",
+            data: {
+              total: 9,
+              unit: "из",
+              series: [
+                { id: "healthy", label: "healthy", value: 7, color: "var(--ark-status-passed)", family: "green" },
+                { id: "degraded", label: "degraded", value: 2, color: "var(--ark-status-orange)", family: "orange" },
+              ],
+            },
+          }),
+
+          charts.successRateDistribution({ title: "Success rate", renderer: "stock" }),
+        ],
+      },
+    },
   },
 });

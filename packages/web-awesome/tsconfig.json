@@ -9,7 +9,10 @@
     "jsxImportSource": "preact",
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    // FORK DELTA: upstream uses "node", which predates package `exports` and
+    // cannot see the kit's `/allure` and `/runtime` subpaths. Webpack already
+    // resolves them; this makes the type checker agree.
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "useUnknownInCatchVariables": false,
     "noEmit": true,
@@ -23,6 +26,8 @@
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"],
+  // Upstream's project reference, kept as is. It makes this a solution config,
+  // which leaves fork-ts-checker inert — see soft-fork/README ("Type checking").
   "references": [
     {
       "path": "./tsconfig.node.json"

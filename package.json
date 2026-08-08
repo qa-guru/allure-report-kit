@@ -34,6 +34,10 @@
       "types": "./dist/runtime/index.d.ts",
       "default": "./dist/runtime/index.js"
     },
+    "./allure": {
+      "types": "./dist/allure/index.d.ts",
+      "default": "./dist/allure/index.js"
+    },
     "./theme.css": "./src/theme/kit.css",
     "./theme/*": "./src/theme/*",
     "./package.json": "./package.json"
@@ -53,7 +57,7 @@
     "smoke": "node scripts/smoke-dogfood.mjs",
     "verify": "npm run build && npm test && npm run smoke",
     "smoke:report": "node scripts/smoke-report.mjs",
-    "build:fork": "npm --prefix packages/web-awesome run build",
+    "build:fork": "npm --prefix packages/web-awesome run build && npm --prefix packages/web-dashboard run build",
     "report": "npm --prefix e2e run report",
     "verify:report": "npm run build && npm run build:fork && npm run report && npm run smoke:report"
   },

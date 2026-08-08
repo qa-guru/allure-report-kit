@@ -1,25 +1,19 @@
 #!/usr/bin/env node
 /**
- * Headless smoke of a real Allure 3 report built with the kit plugin.
+ * Headless smoke of real Allure 3 reports built with the kit plugins.
  *
- * Unlike smoke-dogfood.mjs this one proves the soft-fork itself: the tiles
- * under test are rendered by the forked web bundle inside Allure's own shell,
- * next to an untouched stock widget.
+ * Unlike smoke-dogfood.mjs this one proves the soft-fork itself: the tiles under
+ * test are rendered by the forked web bundles inside Allure's own shell, next to
+ * untouched stock widgets. Both Awesome and Dashboard are checked.
  *
- * Usage: node scripts/smoke-report.mjs [url]
+ * Usage: node scripts/smoke-report.mjs [baseUrl]
  */
 import { chromium } from "playwright";
 
-const URL_UNDER_TEST = process.argv[2] ?? "http://localhost:3024/awesome/";
+const BASE_URL = (process.argv[2] ?? "http://localhost:3024").replace(/\/$/, "");
 
-const EXPECTED = [
-  { title: "Текущий статус", renderer: "echarts", dots: ["red", "yellow", "gray", "green"] },
-  { title: "Динамика длительности", renderer: "echarts", dots: ["blue"] },
-  { title: "Пирамида тестирования", renderer: "svg" },
-  { title: "Длительности по layer", renderer: "highcharts" },
-  { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
-  { title: "Динамика статусов", renderer: "echarts" },
-];
+/** Upstream's dashboard template links `favicon.ico` and never writes it. */
+const UPSTREAM_NOISE = [/favicon\.ico/];
 
 const failures = [];
 const check = (condition, message) => {
@@ -29,132 +23,189 @@ const check = (condition, message) => {
 };
 
 const browser = await chromium.launch({ headless: true, channel: "chromium" });
-const page = await browser.newPage({ viewport: { width: 1400, height: 1400 } });
 
-const consoleErrors = [];
-page.on("console", (message) => {
-  if (message.type() === "error") {
-    consoleErrors.push(message.text());
-  }
-});
-page.on("pageerror", (error) => consoleErrors.push(`pageerror: ${error}`));
+async function openReport(path) {
+  const page = await browser.newPage({ viewport: { width: 1400, height: 1400 } });
+  const consoleErrors = [];
 
-await page.goto(URL_UNDER_TEST, { waitUntil: "networkidle" });
-await page.waitForSelector("#app-header .header", { timeout: 10_000 });
+  page.on("console", (message) => {
+    if (message.type() !== "error") {
+      return;
+    }
+    // A failed request logs a generic text — the url only lives in `location`.
+    const where = message.location()?.url ?? "";
+    if (UPSTREAM_NOISE.some((noise) => noise.test(where) || noise.test(message.text()))) {
+      return;
+    }
+    consoleErrors.push(`${message.text()} (${where})`);
+  });
+  page.on("pageerror", (error) => consoleErrors.push(`pageerror: ${error}`));
 
-// theme.header — the DS primitive, above the report, without covering its nav.
-const header = await page.evaluate(() => {
-  const mount = document.getElementById("app-header");
-  const app = document.getElementById("app");
-  const switcher = [...document.querySelectorAll("button, div")].find(
-    (node) => /Отчет|Графики/.test(node.textContent ?? "") && node.getBoundingClientRect().height < 40,
+  await page.goto(`${BASE_URL}${path}`, { waitUntil: "networkidle" });
+  await page.waitForSelector("#app-header .header", { timeout: 10_000 });
+
+  return { page, consoleErrors };
+}
+
+/** theme.header — the DS primitive, above the report, without covering its nav. */
+async function checkHeader(page, label, { expectSwitcher }) {
+  const header = await page.evaluate((withSwitcher) => {
+    const mount = document.getElementById("app-header");
+    const app = document.getElementById("app");
+    const switcher = withSwitcher
+      ? [...document.querySelectorAll("button, div")].find(
+          (node) =>
+            /Отчет|Графики/.test(node.textContent ?? "") && node.getBoundingClientRect().height < 40,
+        )
+      : undefined;
+    return {
+      brand: Boolean(mount?.querySelector('[data-testid="header-brand"]')),
+      product: mount?.querySelector('[data-testid="ark-header-product"]')?.textContent?.trim(),
+      bandHeight: Math.round(mount?.querySelector(".header")?.getBoundingClientRect().height ?? 0),
+      appPadTop: Number.parseInt(getComputedStyle(app).paddingTop, 10),
+      switcherTop: switcher ? Math.round(switcher.getBoundingClientRect().top) : undefined,
+    };
+  }, expectSwitcher);
+
+  check(header.brand, `${label} header: DS brand missing — this is not the shared primitive`);
+  check(header.product === "Reference App", `${label} header: product name "${header.product}"`);
+  check(
+    header.appPadTop >= header.bandHeight,
+    `${label} header: report padded ${header.appPadTop}px under a ${header.bandHeight}px band`,
   );
-  return {
-    brand: Boolean(mount?.querySelector('[data-testid="header-brand"]')),
-    product: mount?.querySelector('[data-testid="ark-header-product"]')?.textContent?.trim(),
-    bandHeight: Math.round(mount?.querySelector(".header")?.getBoundingClientRect().height ?? 0),
-    appPadTop: Number.parseInt(getComputedStyle(app).paddingTop, 10),
-    switcherTop: switcher ? Math.round(switcher.getBoundingClientRect().top) : -1,
-  };
-});
+  if (expectSwitcher) {
+    check(
+      (header.switcherTop ?? -1) >= header.bandHeight,
+      `${label} header: Allure section switcher at ${header.switcherTop}px is under the band`,
+    );
+  }
+  return header;
+}
 
-check(header.brand, "theme.header: DS brand missing — this is not the shared primitive");
-check(header.product === "Reference App", `theme.header: product name "${header.product}"`);
-check(
-  header.appPadTop >= header.bandHeight,
-  `theme.header: report padded ${header.appPadTop}px under a ${header.bandHeight}px band`,
-);
-check(
-  header.switcherTop >= header.bandHeight,
-  `theme.header: Allure section switcher at ${header.switcherTop}px is under the header band`,
-);
+async function readTiles(page) {
+  return page.evaluate(() => ({
+    manifest: Boolean(window.allureReportKit),
+    tiles: [...document.querySelectorAll(".widget-tile")].map((node) => ({
+      renderer: node.dataset.arkRenderer,
+      renderedBy: node.dataset.arkRenderedBy,
+      title: node.querySelector(".widget-tile__title")?.textContent?.trim(),
+      dots: [...node.querySelectorAll(".widget-tile__bar .indicator-row .indicator")].map((dot) =>
+        [...dot.classList]
+          .find((name) => name.startsWith("indicator--status-"))
+          ?.replace("indicator--status-", ""),
+      ),
+      bodyChildren: node.querySelector(".widget-tile__body")?.childElementCount ?? 0,
+      height: Math.round(node.getBoundingClientRect().height),
+    })),
+    stockWidgets: document.querySelectorAll('[class*="styles_widget"]').length,
+  }));
+}
+
+function checkTiles(label, actual, expected) {
+  check(actual.manifest, `${label}: window.allureReportKit is missing`);
+  check(
+    actual.tiles.length === expected.length,
+    `${label}: expected ${expected.length} kit tiles, got ${actual.tiles.length}`,
+  );
+
+  expected.forEach((want, index) => {
+    const tile = actual.tiles[index];
+    if (!tile) {
+      failures.push(`${label} tile ${index} (${want.title}): missing`);
+      return;
+    }
+    check(tile.title === want.title, `${label} tile ${index}: title "${tile.title}"`);
+    check(
+      tile.renderedBy === want.renderer,
+      `${label} tile ${index} (${want.title}): rendered by ${tile.renderedBy}, expected ${want.renderer}`,
+    );
+    check(tile.bodyChildren > 0, `${label} tile ${index} (${want.title}): empty body`);
+    check(
+      tile.height > 0 && tile.height <= 500,
+      `${label} tile ${index} (${want.title}): height ${tile.height}px out of the grid range`,
+    );
+    if (want.dots) {
+      check(
+        JSON.stringify(tile.dots) === JSON.stringify(want.dots),
+        `${label} tile ${index} (${want.title}): dots ${JSON.stringify(tile.dots)}, expected ${JSON.stringify(want.dots)}`,
+      );
+    }
+  });
+
+  // A tile declared `renderer: "stock"` must stay on Allure's own widget.
+  check(actual.stockWidgets >= 1, `${label}: no stock widget left — the fork took over every tile`);
+}
+
+/** The DS header toggle drives the whole report; canvas tiles must redraw. */
+async function checkThemeToggle(page, label) {
+  await page.click('[data-testid="header-theme-toggle"]');
+  await page.waitForTimeout(1500);
+
+  const after = await page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    layerE2e: getComputedStyle(document.querySelector(".widget-tile__body"))
+      .getPropertyValue("--ark-layer-e2e")
+      .trim(),
+  }));
+
+  check(after.theme === "dark", `${label} theme toggle: data-theme is "${after.theme}"`);
+  check(
+    after.layerE2e === "#ff574f",
+    `${label} theme toggle: palette did not switch to dark (--ark-layer-e2e = ${after.layerE2e})`,
+  );
+}
+
+// ---- Awesome ----------------------------------------------------------------
+
+const awesome = await openReport("/awesome/");
+await checkHeader(awesome.page, "awesome", { expectSwitcher: true });
 
 // Charts live in their own section of the Awesome report.
-await page.getByText("Отчет", { exact: true }).first().click();
-await page.getByText("Графики", { exact: true }).first().click();
-await page.waitForSelector(".widget-tile[data-ark-rendered-by]");
-await page.waitForFunction(
+await awesome.page.getByText("Отчет", { exact: true }).first().click();
+await awesome.page.getByText("Графики", { exact: true }).first().click();
+await awesome.page.waitForSelector(".widget-tile[data-ark-rendered-by]");
+await awesome.page.waitForFunction(
   (count) => document.querySelectorAll(".widget-tile[data-ark-rendered-by]").length >= count,
-  EXPECTED.length,
+  6,
   { timeout: 15_000 },
 );
 
-const page_ = await page.evaluate(() => ({
-  manifest: Boolean(window.allureReportKit),
-  tiles: [...document.querySelectorAll(".widget-tile")].map((node) => ({
-    renderer: node.dataset.arkRenderer,
-    renderedBy: node.dataset.arkRenderedBy,
-    title: node.querySelector(".widget-tile__title")?.textContent?.trim(),
-    dots: [...node.querySelectorAll(".widget-tile__bar .indicator-row .indicator")].map((dot) =>
-      [...dot.classList]
-        .find((name) => name.startsWith("indicator--status-"))
-        ?.replace("indicator--status-", ""),
-    ),
-    bodyChildren: node.querySelector(".widget-tile__body")?.childElementCount ?? 0,
-    height: Math.round(node.getBoundingClientRect().height),
-  })),
-  stockWidgets: document.querySelectorAll('[class*="styles_widget"]').length,
-  percentage: document
-    .querySelector('.widget-tile[data-ark-renderer="echarts"] text')
-    ?.textContent?.trim(),
-}));
-
-check(page_.manifest, "window.allureReportKit is missing — the plugin did not inject the manifest");
-check(
-  page_.tiles.length === EXPECTED.length,
-  `kit tiles: expected ${EXPECTED.length}, got ${page_.tiles.length}`,
-);
-
-EXPECTED.forEach((expected, index) => {
-  const tile = page_.tiles[index];
-  if (!tile) {
-    failures.push(`tile ${index} (${expected.title}): missing`);
-    return;
-  }
-  check(tile.title === expected.title, `tile ${index}: title "${tile.title}"`);
-  check(
-    tile.renderedBy === expected.renderer,
-    `tile ${index} (${expected.title}): rendered by ${tile.renderedBy}, expected ${expected.renderer}`,
-  );
-  check(tile.bodyChildren > 0, `tile ${index} (${expected.title}): empty body`);
-  check(
-    tile.height > 0 && tile.height <= 500,
-    `tile ${index} (${expected.title}): height ${tile.height}px is out of the report grid range`,
-  );
-  if (expected.dots) {
-    check(
-      JSON.stringify(tile.dots) === JSON.stringify(expected.dots),
-      `tile ${index} (${expected.title}): dots ${JSON.stringify(tile.dots)}, expected ${JSON.stringify(expected.dots)}`,
-    );
-  }
-});
-
-// A tile declared `renderer: "stock"` must stay on Allure's own widget.
-check(page_.stockWidgets >= 1, "no stock widget left — the fork should not take over every tile");
+const awesomeTiles = await readTiles(awesome.page);
+checkTiles("awesome", awesomeTiles, [
+  { title: "Текущий статус", renderer: "echarts", dots: ["red", "yellow", "gray", "green"] },
+  { title: "Динамика длительности", renderer: "echarts", dots: ["blue"] },
+  { title: "Пирамида тестирования", renderer: "svg" },
+  { title: "Длительности по layer", renderer: "highcharts" },
+  { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
+  { title: "Динамика статусов", renderer: "echarts" },
+]);
 
 // Statistic carries `total` next to the statuses; a wrong sum halves this.
-check(
-  page_.percentage === "88.24%",
-  `current status percentage: got "${page_.percentage}", expected "88.24%"`,
+const percentage = await awesome.page.evaluate(
+  () => document.querySelector('.widget-tile[data-ark-renderer="echarts"] text')?.textContent?.trim(),
 );
+check(percentage === "88.24%", `awesome: current status percentage "${percentage}"`);
 
-// The DS header toggle drives the whole report; canvas tiles must redraw.
-await page.click('[data-testid="header-theme-toggle"]');
-await page.waitForTimeout(1500);
+await checkThemeToggle(awesome.page, "awesome");
 
-const afterToggle = await page.evaluate(() => ({
-  theme: document.documentElement.dataset.theme,
-  layerE2e: getComputedStyle(document.querySelector(".widget-tile__body"))
-    .getPropertyValue("--ark-layer-e2e")
-    .trim(),
-}));
+// ---- Dashboard --------------------------------------------------------------
 
-check(afterToggle.theme === "dark", `theme toggle: data-theme is "${afterToggle.theme}"`);
-check(
-  afterToggle.layerE2e === "#ff574f",
-  `theme toggle: layer palette did not switch to dark (--ark-layer-e2e = ${afterToggle.layerE2e})`,
-);
+const dashboard = await openReport("/dashboard/");
+await checkHeader(dashboard.page, "dashboard", { expectSwitcher: false });
+await dashboard.page.waitForSelector(".widget-tile[data-ark-rendered-by]");
 
+const dashboardTiles = await readTiles(dashboard.page);
+checkTiles("dashboard", dashboardTiles, [
+  { title: "Текущий статус", renderer: "echarts", dots: ["red", "yellow", "gray", "green"] },
+  { title: "Динамика длительности", renderer: "echarts", dots: ["blue"] },
+  { title: "Пирамида тестирования", renderer: "svg" },
+  { title: "Длительности по layer", renderer: "highcharts" },
+  { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
+]);
+
+await checkThemeToggle(dashboard.page, "dashboard");
+
+const consoleErrors = [...awesome.consoleErrors, ...dashboard.consoleErrors];
 check(consoleErrors.length === 0, `console errors:\n  ${consoleErrors.join("\n  ")}`);
 
 await browser.close();
@@ -168,5 +219,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `smoke-report: OK — ${page_.tiles.length} kit tiles (${[...new Set(page_.tiles.map((t) => t.renderedBy))].join(", ")}) + ${page_.stockWidgets} stock widget(s)`,
+  `smoke-report: OK — awesome ${awesomeTiles.tiles.length} kit + ${awesomeTiles.stockWidgets} stock, ` +
+    `dashboard ${dashboardTiles.tiles.length} kit + ${dashboardTiles.stockWidgets} stock`,
 );

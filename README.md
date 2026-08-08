@@ -194,7 +194,7 @@ Two levels of proof:
 | | What it proves | Stand |
 |---|---|---|
 | `dogfood/` | renderers, panels, indicators, DS header — standalone | `ensure.py ark-dogfood` → :3021 |
-| `e2e/` | the soft-fork inside a generated Allure report | `ensure.py ark-report` → :3024 |
+| `e2e/` | the soft-fork inside generated Awesome **and** Dashboard reports | `ensure.py ark-report` → :3024 |
 
 `e2e/` builds its own deterministic fixture (18 tests over six layers, three runs
 so history exists), so it depends on nobody's build output.

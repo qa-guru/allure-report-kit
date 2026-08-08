@@ -1,0 +1,13 @@
+/* FORK DELTA vs @allurereport/web-dashboard.
+ *
+ * Upstream reaches into a sibling package by relative path:
+ *   @import "../../../../web-components/src/assets/scss/{fonts,typography,palette,
+ *            semantic,spacing,radius,effects,motion}.scss";
+ * That only resolves inside the allure3 monorepo — the published
+ * @allurereport/web-components ships `dist` without `src`.
+ *
+ * The same custom properties (and the @font-face block) are already in the
+ * compiled `@allurereport/web-components/index.css`, which `src/index.tsx`
+ * imports before this file. So the token layer is unchanged, only its source.
+ */
+@import "common.scss";
