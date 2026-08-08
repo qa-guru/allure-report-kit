@@ -16,6 +16,7 @@ import type {
   PanelGroupBy,
   PanelKind,
   PanelMetric,
+  QualityGateLabels,
   RendererRef,
   TileLayout,
   TileTier,
@@ -45,6 +46,7 @@ const CANON_RENDERER: Partial<Record<PanelKind, RendererRef>> = {
   pyramid: "svg",
   gauge: "svg",
   table: "dom",
+  qualityGate: "dom",
 };
 
 export function custom(options: CustomPanelOptions): KitCustomPanel {
@@ -99,6 +101,29 @@ export function table(
   const { columns, data, ...rest } = options;
   const merged = columns ? { series: [], ...data, columns } : data;
   return custom({ ...rest, kind: "table", ...(merged ? { data: merged } : {}) });
+}
+
+export interface QualityGatePanelOptions
+  extends Omit<CustomPanelOptions, "data" | "dataUrl" | "source" | "kind"> {
+  labels?: QualityGateLabels;
+  lang?: "ru" | "en";
+}
+
+/**
+ * Quality gate verdict panel — DS `quality-gate` primitive inside a widget tile.
+ *
+ * Data is computed from the run and `qualityGate.rules` in the config, not
+ * scraped from the Allure DOM.
+ */
+export function qualityGate(options: QualityGatePanelOptions): KitCustomPanel {
+  const { labels, lang, dots = false, ...rest } = options;
+  return custom({
+    ...rest,
+    kind: "qualityGate",
+    dots,
+    ...(labels || lang ? { labels, lang } : {}),
+    source: { from: "qualityGate" },
+  });
 }
 
 export interface FromRunOptions extends Omit<CustomPanelOptions, "data" | "dataUrl" | "source"> {

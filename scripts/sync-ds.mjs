@@ -35,6 +35,7 @@ const FILES = [
   "css/tokens.css",
   "css/widget-tile.css",
   "css/indicator.css",
+  "css/quality-gate.css",
   "css/header.css",
   "css/plaque-divider.css",
   "css/link.css",

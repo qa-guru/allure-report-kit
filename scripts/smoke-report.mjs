@@ -313,9 +313,13 @@ const awesomeTiles = await readKitTiles(awesome.page);
 checkKitTiles("awesome", awesomeTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
+  { title: "Quality gate", renderer: "dom" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
 ]);
+
+const qualityGate = await awesome.page.$('[data-testid="quality-gate"]');
+check(Boolean(qualityGate), "awesome quality gate: DS primitive missing in report");
 
 const gauge = await awesome.page.evaluate(() => {
   const tile = [...document.querySelectorAll(".widget-tile")].find(
@@ -342,6 +346,7 @@ const dashboardTiles = await readKitTiles(dashboard.page);
 checkKitTiles("dashboard", dashboardTiles, [
   { title: "Пирамида тестирования", renderer: "svg" },
   { title: "Длительности по layer", renderer: "highcharts" },
+  { title: "Quality gate", renderer: "dom" },
   { title: "Текущий статус по сервисам", renderer: "highcharts", dots: ["orange", "green"] },
   { title: "Прошло тестов", renderer: "svg", dots: ["green"] },
   {

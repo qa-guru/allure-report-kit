@@ -97,7 +97,7 @@ export interface KitSeries {
   points?: KitSeriesPoint[];
 }
 
-export type PanelKind = "donut" | "bar" | "line" | "pyramid" | "gauge" | "table";
+export type PanelKind = "donut" | "bar" | "line" | "pyramid" | "gauge" | "table" | "qualityGate";
 
 export interface KitPanelData {
   series: KitSeries[];
@@ -161,7 +161,45 @@ export interface KitPanelHistorySource {
   splitBy?: "status";
 }
 
-export type KitPanelSource = KitPanelRunSource | KitPanelHistorySource;
+export interface KitQualityGateRule {
+  id: string;
+  message: string;
+  passed: boolean;
+  actual?: number;
+  threshold?: number;
+  knownExcluded?: number;
+}
+
+export interface KitQualityGateData {
+  passed: boolean;
+  rules: KitQualityGateRule[];
+  labels?: QualityGateLabels;
+  lang?: "ru" | "en";
+}
+
+export type QualityGateLabel = string | Partial<Record<"ru" | "en", string>>;
+
+export interface QualityGateLabels {
+  passed?: QualityGateLabel;
+  failed?: QualityGateLabel;
+}
+
+/**
+ * Derive the quality gate verdict from the run and the config rules.
+ *
+ * Resolved by the kit plugin at generation time — same data path as
+ * `widgets/quality-gate.json`, but shaped for the DS primitive.
+ */
+export interface KitPanelQualityGateSource {
+  from: "qualityGate";
+}
+
+export type KitPanelSource = KitPanelRunSource | KitPanelHistorySource | KitPanelQualityGateSource;
+
+export interface KitQualityGateConfig {
+  rules?: Array<Record<string, unknown>>;
+  knownIssuesPath?: string;
+}
 
 export interface KitCustomPanel extends KitTileExtras {
   type: "custom";
@@ -304,5 +342,6 @@ export interface KitRuntimeManifest {
   theme: KitThemeConfig;
   tiles: ResolvedTile[];
   diagnostics: KitDiagnostic[];
+  qualityGate?: KitQualityGateConfig;
   inline?: KitInlineAssets;
 }

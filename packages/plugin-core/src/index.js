@@ -11,8 +11,9 @@
  * upstream bundle assets are dropped and `index.html` is retagged in flight.
  */
 import { readFile, readdir } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, relative, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { cwd } from "node:process";
 
 const require = createRequire(import.meta.url);
@@ -299,6 +300,179 @@ export function seriesFromHistory(historyPoints, source) {
   };
 }
 
+function readKnownHistoryIds(knownFile) {
+  if (!knownFile || !existsSync(knownFile)) {
+    return new Set();
+  }
+  try {
+    const entries = JSON.parse(readFileSync(knownFile, "utf8"));
+    if (!Array.isArray(entries)) {
+      return new Set();
+    }
+    return new Set(
+      entries
+        .map((entry) => entry?.historyId)
+        .filter((historyId) => typeof historyId === "string" && historyId.length > 0),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function isKnownFailure(result, knownIds) {
+  const historyId = result.historyId;
+  if (!historyId || knownIds.size === 0) {
+    return false;
+  }
+  if (knownIds.has(historyId)) {
+    return true;
+  }
+  for (const knownId of knownIds) {
+    if (historyId.startsWith(`${knownId}.`) || knownId.startsWith(`${historyId}.`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function countActionableFailures(testResults, knownIds) {
+  const seen = new Set();
+  let excluded = 0;
+  let actionable = 0;
+
+  for (const result of testResults) {
+    const status = (result.status ?? "").toLowerCase();
+    if (status !== "failed" && status !== "broken") {
+      continue;
+    }
+    const dedupeKey = result.historyId ?? result.uuid ?? result.name ?? "unknown";
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+    seen.add(dedupeKey);
+    if (isKnownFailure(result, knownIds)) {
+      excluded += 1;
+      continue;
+    }
+    actionable += 1;
+  }
+
+  return { actionable, excluded };
+}
+
+function summarizeRun(testResults) {
+  const summary = {
+    total: testResults.length,
+    passed: 0,
+    failed: 0,
+    broken: 0,
+    skipped: 0,
+    unknown: 0,
+    durationMs: 0,
+  };
+
+  for (const result of testResults) {
+    const status = (result.status ?? "unknown").toLowerCase();
+    if (status in summary && status !== "total" && status !== "durationMs") {
+      summary[status] += 1;
+    } else if (status === "unknown") {
+      summary.unknown += 1;
+    }
+    summary.durationMs += result.duration ?? 0;
+  }
+
+  return summary;
+}
+
+/**
+ * Evaluate `qualityGate.rules` against the current run.
+ *
+ * Mirrors `build-analytics-index.mjs` so the kit panel and analytics-index
+ * stay aligned without DOM scraping.
+ */
+export function evaluateQualityGate(testResults, config = {}, options = {}) {
+  const ruleDefs = config.rules ?? [];
+  if (!ruleDefs.length) {
+    return { passed: true, rules: [] };
+  }
+
+  const knownFile = config.knownIssuesPath
+    ? resolve(options.configDir ?? cwd(), config.knownIssuesPath)
+    : null;
+  const knownIds = readKnownHistoryIds(knownFile);
+  const summary = summarizeRun(testResults);
+  const { actionable: failedCount, excluded: knownExcluded } = countActionableFailures(
+    testResults,
+    knownIds,
+  );
+  const finished = summary.passed + summary.failed + summary.broken;
+  const successRatePct = finished > 0 ? (summary.passed / finished) * 100 : 0;
+  const durationSec = Math.round(summary.durationMs / 1000);
+  const rules = [];
+
+  for (const rule of ruleDefs) {
+    if (rule.maxFailures !== undefined) {
+      const threshold = rule.maxFailures;
+      const passed = failedCount <= threshold;
+      rules.push({
+        id: "maxFailures",
+        passed,
+        message: passed
+          ? `Failed tests ${failedCount} within threshold ${threshold}`
+          : `The number of failed tests ${failedCount} exceeds the allowed threshold value ${threshold}`,
+        actual: failedCount,
+        threshold,
+        knownExcluded,
+      });
+    }
+    if (rule.minTestsCount !== undefined) {
+      const threshold = rule.minTestsCount;
+      const passed = summary.total >= threshold;
+      rules.push({
+        id: "minTestsCount",
+        passed,
+        message: passed
+          ? `Test count ${summary.total} meets minimum ${threshold}`
+          : `The number of tests ${summary.total} is below the minimum required ${threshold}`,
+        actual: summary.total,
+        threshold,
+      });
+    }
+    if (rule.successRate !== undefined) {
+      const threshold = rule.successRate;
+      const actual = Math.round(successRatePct * 10) / 10;
+      const passed = actual >= threshold;
+      rules.push({
+        id: "successRate",
+        passed,
+        message: passed
+          ? `Success rate ${actual}% meets minimum ${threshold}%`
+          : `Success rate ${actual}% is below the minimum required ${threshold}%`,
+        actual,
+        threshold,
+      });
+    }
+    if (rule.maxDuration !== undefined) {
+      const threshold = rule.maxDuration;
+      const passed = durationSec <= threshold;
+      rules.push({
+        id: "maxDuration",
+        passed,
+        message: passed
+          ? `Run duration ${durationSec}s within limit ${threshold}s`
+          : `Run duration ${durationSec}s exceeds the maximum allowed ${threshold}s`,
+        actual: durationSec,
+        threshold,
+      });
+    }
+  }
+
+  return {
+    passed: rules.every((entry) => entry.passed),
+    rules,
+  };
+}
+
 /**
  * Resolve a chart library from the *consumer's* install, never from the kit.
  * Highcharts and amCharts are proprietary: the report may embed them because
@@ -580,15 +754,36 @@ export function createKitPlugin({
       // Retry attempts are a separate read: counting them needs the results the
       // store hides by default, and including them everywhere would inflate
       // every other metric.
-      const needsRetries = panels.some((tile) => RETRY_METRICS.has(tile.panel.source.metric));
+      const needsRetries = panels.some(
+        (tile) =>
+          tile.panel.source.from === "run" && RETRY_METRICS.has(tile.panel.source.metric),
+      );
       const withRetries = needsRetries ? await store.allTestResults({ includeRetries: true }) : [];
       const history = panels.some((tile) => tile.panel.source.from === "history")
         ? await store.allHistoryDataPoints()
         : [];
 
+      const gateConfig = {
+        rules: this.#manifest?.qualityGate?.rules ?? [],
+        knownIssuesPath: this.#manifest?.qualityGate?.knownIssuesPath,
+      };
+
       return panels.map((tile) => {
         const panel = tile.panel;
         const source = panel.source;
+
+        if (source.from === "qualityGate") {
+          const verdict = evaluateQualityGate(testResults, gateConfig);
+          const data = {
+            passed: verdict.passed,
+            rules: verdict.rules,
+            ...(panel.labels ? { labels: panel.labels } : {}),
+            ...(panel.lang ? { lang: panel.lang } : {}),
+            ...(this.options.reportLanguage ? { lang: panel.lang ?? this.options.reportLanguage } : {}),
+          };
+          panel.dataUrl = `${PANEL_WIDGET_DIR}/${panel.id}.json`;
+          return { path: panel.dataUrl, data, tile };
+        }
 
         const computed =
           source.from === "history"

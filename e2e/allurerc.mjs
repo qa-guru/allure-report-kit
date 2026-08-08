@@ -29,6 +29,17 @@ const servicesPanel = () =>
     },
   });
 
+const qualityGatePanel = () =>
+  panels.qualityGate({
+    id: "qualityGate",
+    title: "Quality gate",
+    layout: "4x1",
+    labels: {
+      passed: { ru: "Quality gate пройден", en: "Quality gate passed" },
+      failed: { ru: "Quality gate не пройден", en: "Quality gate failed" },
+    },
+  });
+
 export default withKit({
   name: "allure-report-kit e2e",
   output: "./allure-report",
@@ -58,6 +69,7 @@ export default withKit({
         charts: [
           ...lockedQuad,
 
+          qualityGatePanel(),
           servicesPanel(),
 
           // Data computed from the run by the plugin, fetched as a widget.
@@ -82,6 +94,7 @@ export default withKit({
         layout: [
           ...lockedQuad,
 
+          qualityGatePanel(),
           servicesPanel(),
 
           // Both run-derived panel kinds: a gauge on the SVG canon and a table on

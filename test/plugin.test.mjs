@@ -19,7 +19,7 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { kitDisabledReason, rekeyChartSection, seriesFromHistory, seriesFromRun } = await import(
+const { kitDisabledReason, rekeyChartSection, seriesFromHistory, seriesFromRun, evaluateQualityGate } = await import(
   "../packages/plugin-core/src/index.js"
 );
 const { withKit, charts, panels, presets, theme } = await import("../dist/index.js");
@@ -239,6 +239,20 @@ test("a history panel walks the runs oldest first, inside the window", () => {
       ["failed", [0, 2, 1]],
     ],
   );
+});
+
+test("quality gate evaluation mirrors analytics-index rules", () => {
+  const run = [
+    { status: "passed" },
+    { status: "failed", historyId: "a" },
+    { status: "failed", historyId: "b" },
+    { status: "broken", historyId: "c" },
+  ];
+
+  const verdict = evaluateQualityGate(run, { rules: [{ maxFailures: 0 }] });
+  assert.equal(verdict.passed, false);
+  assert.equal(verdict.rules[0].id, "maxFailures");
+  assert.equal(verdict.rules[0].actual, 3);
 });
 
 test("theme.header without the soft-fork is reported", () => {

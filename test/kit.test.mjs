@@ -223,6 +223,11 @@ test("panel factories set kind, canon renderer and caption fields", () => {
   assert.equal(panels.gauge({ id: "g", total: 100 }).data.total, 100);
   assert.equal(panels.table({ id: "t", columns: ["name", "count"] }).renderer, "dom");
   assert.deepEqual(panels.table({ id: "t", columns: ["name"] }).data.columns, ["name"]);
+  const gate = panels.qualityGate({ id: "qualityGate", title: "Quality gate" });
+  assert.equal(gate.kind, "qualityGate");
+  assert.equal(gate.renderer, "dom");
+  assert.equal(gate.dots, false);
+  assert.deepEqual(gate.source, { from: "qualityGate" });
   // Donut/bar inherit page default — no forced renderer.
   assert.equal(panels.donut({ id: "d" }).renderer, undefined);
   assert.equal(panels.bar({ id: "b" }).renderer, undefined);

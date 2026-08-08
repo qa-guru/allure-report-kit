@@ -231,6 +231,18 @@ export function withKit<T extends KitConfig>(config: T): Record<string, unknown>
         theme,
         tiles: resolvedTiles,
         diagnostics: [],
+        ...(config.qualityGate || (config as Record<string, unknown>).knownIssuesPath
+          ? {
+              qualityGate: {
+                rules:
+                  ((config.qualityGate as { rules?: Array<Record<string, unknown>> } | undefined)
+                    ?.rules ?? []) as Array<Record<string, unknown>>,
+                knownIssuesPath: (config as Record<string, unknown>).knownIssuesPath as
+                  | string
+                  | undefined,
+              },
+            }
+          : {}),
       };
       options.kit = manifest;
     }

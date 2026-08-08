@@ -1,0 +1,59 @@
+/* vendored from zero-design-system/projects/design-system-home/design-system — do not edit, run `npm run sync:ds` */
+/* Quality gate — report verdict banner (passed / failed rules). */
+
+.quality-gate {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+}
+
+.quality-gate:empty,
+.quality-gate[hidden] {
+  display: none;
+}
+
+.quality-gate--passed {
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
+}
+
+.quality-gate--failed {
+  border-color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surface));
+}
+
+.quality-gate__title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.quality-gate__rules {
+  margin: var(--space-2) 0 0;
+  padding-left: 1.25rem;
+}
+
+.quality-gate__rule {
+  margin: 0;
+}
+
+.quality-gate__rule + .quality-gate__rule {
+  margin-top: var(--space-1);
+}
+
+.quality-gate__message {
+  color: var(--color-text);
+}
+
+.quality-gate__rule-id {
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+}
+
+.quality-gate__rule-id::before {
+  content: "·";
+  margin: 0 0.35em;
+}

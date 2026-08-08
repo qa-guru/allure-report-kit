@@ -16,6 +16,7 @@
 
 @import url("vendor/design-system/css/widget-tile.css");
 @import url("vendor/design-system/css/indicator.css");
+@import url("vendor/design-system/css/quality-gate.css");
 
 /* Chrome defaults live in a cascade layer so an unlayered design-system
  * `tokens.css` (loaded only by `theme/standalone.css`) overrides them: unlayered

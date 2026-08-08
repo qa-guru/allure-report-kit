@@ -6,6 +6,7 @@
  * possible without per-pair adapters.
  */
 import type { KitThemeConfig, ResolvedTile, StatusFamily, TileType } from "../types.js";
+import type { KitQualityGateData } from "../types.js";
 
 export type ChartModelKind =
   | "pie"
@@ -15,7 +16,8 @@ export type ChartModelKind =
   | "treemap"
   | "heatmap"
   | "gauge"
-  | "table";
+  | "table"
+  | "qualityGate";
 
 /**
  * Hierarchy for treemap charts. `colorValue` is a 0..1 quality score — the
@@ -72,6 +74,8 @@ export interface ChartModel {
   percentage?: number;
   /** Hierarchy for `treemap`; `series` stays empty for that kind. */
   tree?: ChartTreeNode;
+  /** Payload for `qualityGate` panels. */
+  qualityGate?: KitQualityGateData;
   /** Formats a cell/leaf value for tooltips and labels. */
   formatValue?: (value: number) => string;
   meta?: Record<string, unknown>;

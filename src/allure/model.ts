@@ -9,7 +9,7 @@
  * `@allurereport/web-commons`: the kit reads four fields and should not gain a
  * dependency on the report's internals for that.
  */
-import type { KitCustomPanel, KitPanelData, StatusFamily } from "../types.js";
+import type { KitCustomPanel, KitPanelData, KitQualityGateData, StatusFamily } from "../types.js";
 import type { ChartModel, ChartSeries, ChartTreeNode } from "../runtime/model.js";
 
 export interface AllureChartData {
@@ -373,23 +373,53 @@ export function toChartModel(chartData: AllureChartData): ChartModel | undefined
 
 /** Panel kind → model kind. Only `donut` is renamed; the rest map through. */
 function panelModelKind(panel: KitCustomPanel): ChartModel["kind"] {
+  if (panel.kind === "qualityGate") {
+    return "qualityGate";
+  }
   return panel.kind === "donut" || panel.kind === undefined
     ? "pie"
     : (panel.kind as ChartModel["kind"]);
 }
 
-function panelModel(panel: KitCustomPanel, data: KitPanelData | undefined): ChartModel {
+function asQualityGateData(
+  panel: KitCustomPanel,
+  payload: KitPanelData | KitQualityGateData | undefined,
+): KitQualityGateData | undefined {
+  if (!payload || !("rules" in payload)) {
+    return undefined;
+  }
+  const labels = (panel.labels as KitQualityGateData["labels"]) ?? undefined;
+  const lang = (panel.lang as KitQualityGateData["lang"]) ?? undefined;
+  return {
+    passed: Boolean((payload as KitQualityGateData).passed),
+    rules: (payload as KitQualityGateData).rules ?? [],
+    ...(labels ? { labels } : {}),
+    ...(lang ? { lang } : {}),
+  };
+}
+
+function panelModel(panel: KitCustomPanel, data: KitPanelData | KitQualityGateData | undefined): ChartModel {
+  if (panel.kind === "qualityGate") {
+    return {
+      kind: "qualityGate",
+      type: "custom",
+      title: panel.title,
+      series: [],
+      qualityGate: asQualityGateData(panel, data),
+    };
+  }
+  const panelData = data as KitPanelData | undefined;
   return {
     kind: panelModelKind(panel),
     type: "custom",
     title: panel.title,
-    total: data?.total,
-    unit: data?.unit,
-    columns: data?.columns,
+    total: panelData?.total,
+    unit: panelData?.unit,
+    columns: panelData?.columns,
     // Panels over runs carry points instead of a scalar, and a bar or line
     // without categories has no axis to hang them on.
-    categories: data?.categories,
-    series: data?.series ?? [],
+    categories: panelData?.categories,
+    series: panelData?.series ?? [],
   };
 }
 
@@ -418,7 +448,8 @@ export async function loadPanelModel(panel: KitCustomPanel): Promise<ChartModel>
     if (!response.ok) {
       throw new Error(`${response.status} ${response.statusText}`);
     }
-    return panelModel(panel, (await response.json()) as KitPanelData);
+    const payload = (await response.json()) as KitPanelData | KitQualityGateData;
+    return panelModel(panel, payload);
   } catch (error) {
     console.warn(
       `allure-report-kit: panel "${panel.id}" could not load ${panel.dataUrl} (${error}) — using inline data`,

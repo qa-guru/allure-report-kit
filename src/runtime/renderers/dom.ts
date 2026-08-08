@@ -11,6 +11,7 @@
  */
 import type { StatusFamily } from "../../types.js";
 import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "../model.js";
+import { renderQualityGateHost } from "../quality-gate-render.js";
 import { familyForColor, orderFamilies } from "../palette.js";
 
 function cell(tag: "td" | "th", text: string, className?: string): HTMLElement {
@@ -77,9 +78,21 @@ function renderTable(context: RenderContext): RenderResult {
   return { families: orderFamilies(families), renderedBy: "dom" };
 }
 
+function renderQualityGate(context: RenderContext): RenderResult {
+  const { host, model } = context;
+  const data = model.qualityGate;
+  if (!data) {
+    host.replaceChildren();
+    return { families: [], renderedBy: "dom" };
+  }
+  renderQualityGateHost(host, data);
+  return { families: [], renderedBy: "dom" };
+}
+
 export const domRenderer: ChartRenderer = {
   id: "dom",
-  supports: (model: ChartModel) => model.kind === "table",
-  render: async (context) => renderTable(context),
+  supports: (model: ChartModel) => model.kind === "table" || model.kind === "qualityGate",
+  render: async (context) =>
+    context.model.kind === "qualityGate" ? renderQualityGate(context) : renderTable(context),
   destroy: (host) => host.replaceChildren(),
 };
