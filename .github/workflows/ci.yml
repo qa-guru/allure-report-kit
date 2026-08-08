@@ -29,7 +29,33 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npm run typecheck
-      - run: npm test
+
+      - name: Unit tests → Allure results
+        env:
+          CI: true
+          ALLURE_RESULTS_DIR: ${{ github.workspace }}/allure-results
+        run: npm test
+
+      - name: Allure generate (unit)
+        run: npm run allure:generate
+
+      - name: Upload allure-results (unit)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-unit
+          path: allure-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload allure-report (unit)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-unit
+          path: allure-report/
+          if-no-files-found: warn
+          retention-days: 7
 
       # The vendored design-system copy must match its source. Without the
       # monorepo checked out there is nothing to compare against, and the script
@@ -59,7 +85,16 @@ jobs:
 
       # Dogfood proves the manifest and the runtime; the reports prove the fork.
       - run: npm run report
-      - run: npm run smoke:ci
+
+      - name: Playwright smoke → Allure results
+        env:
+          CI: true
+          ALLURE_RESULTS_DIR: ${{ github.workspace }}/allure-results-e2e
+          ALLURE_RESULTS_CLEAN: "1"
+        run: npm run smoke:allure
+
+      - name: Allure generate (e2e)
+        run: npx allure generate ./allure-results-e2e -o allure-report-e2e
 
       - name: upload the generated reports
         if: always()
@@ -68,3 +103,121 @@ jobs:
           name: allure-reports
           path: e2e/allure-report
           retention-days: 7
+
+      - name: Upload allure-results (e2e)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-e2e
+          path: allure-results-e2e/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload allure-report (e2e)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report-e2e
+          path: allure-report-e2e/
+          if-no-files-found: warn
+          retention-days: 7
+
+  testops:
+    name: TestOps (informational)
+    needs: [unit, report]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Informational — never a merge blocker. Forks / missing ALLURE_* → soft-skip.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download allure-results (unit)
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-results-unit
+          path: allure-results-unit/
+
+      - name: Download allure-results (e2e)
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-results-e2e
+          path: allure-results-e2e/
+
+      - name: Merge results for upload
+        run: |
+          mkdir -p allure-results
+          cp -R allure-results-unit/. allure-results/ 2>/dev/null || true
+          cp -R allure-results-e2e/. allure-results/ 2>/dev/null || true
+
+      - name: Gate (forks / secrets / results)
+        id: gate
+        env:
+          IS_FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+          ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
+          ALLURE_TOKEN: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.ALLURE_TOKEN || '' }}
+        run: |
+          if [[ "$IS_FORK" == "true" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "reason=fork" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -z "${ALLURE_PROJECT_ID}" || -z "${ALLURE_TOKEN}" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "reason=missing-secrets" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ ! -d allure-results ]] || [[ -z "$(ls -A allure-results 2>/dev/null)" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "reason=no-results" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "reason=upload" >> "$GITHUB_OUTPUT"
+
+      - name: Install allurectl
+        if: steps.gate.outputs.skip == 'false'
+        continue-on-error: true
+        id: setup-allurectl
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allure-endpoint: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: ${{ vars.ALLURE_PROJECT_ID }}
+
+      - name: Upload results to Allure TestOps
+        if: steps.gate.outputs.skip == 'false' && steps.setup-allurectl.outcome == 'success'
+        continue-on-error: true
+        id: testops-upload
+        env:
+          ALLURE_ENDPOINT: ${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}
+          ALLURE_PROJECT_ID: ${{ vars.ALLURE_PROJECT_ID }}
+        run: |
+          set +e
+          export ALLURE_LAUNCH_NAME="allure-report-kit · ${{ github.ref_name }} · ${{ github.sha }}"
+          allurectl upload allure-results 2>&1 | tee allurectl-upload.log
+          UPLOAD_EXIT=${PIPESTATUS[0]}
+          echo "upload_exit=${UPLOAD_EXIT}" >> "$GITHUB_OUTPUT"
+          if [[ "$UPLOAD_EXIT" -eq 0 ]]; then
+            LAUNCH_URL=$(grep -Eo 'https://[^ ]+/launch/[0-9]+' allurectl-upload.log | head -1 || true)
+            if [[ -n "$LAUNCH_URL" ]]; then
+              echo "launch_url=${LAUNCH_URL}" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+          set -e
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## TestOps (informational / Q1)"
+            echo ""
+            echo "- skip: \`${{ steps.gate.outputs.skip || 'n/a' }}\` (${{ steps.gate.outputs.reason || 'n/a' }})"
+            echo "- endpoint: \`${{ vars.ALLURE_ENDPOINT || 'https://allure.qa.guru' }}\`"
+            echo "- project id: set \`vars.ALLURE_PROJECT_ID\` after creating the project on TestOps"
+            if [[ -n "${{ steps.testops-upload.outputs.launch_url }}" ]]; then
+              echo "- launch: ${{ steps.testops-upload.outputs.launch_url }}"
+            fi
+            echo "- commit: \`${GITHUB_SHA:0:7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

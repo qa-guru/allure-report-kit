@@ -8,6 +8,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { declareSuite } from "./test-meta.mjs";
+
+declareSuite({
+  feature: "plugin-core",
+  story: "Plugin machinery",
+  layer: "unit",
+  severity: "normal",
+});
+
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
 const { kitDisabledReason, rekeyChartSection, seriesFromRun } = await import(

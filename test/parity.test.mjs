@@ -18,6 +18,15 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+import { declareSuite } from "./test-meta.mjs";
+
+declareSuite({
+  feature: "models",
+  story: "Chart model parity",
+  layer: "unit",
+  severity: "normal",
+});
+
 const CHARTS = JSON.parse(
   readFileSync(new URL("./fixtures/allure-charts.json", import.meta.url), "utf8"),
 );

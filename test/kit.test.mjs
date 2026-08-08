@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { declareSuite } from "./test-meta.mjs";
+
+declareSuite({
+  feature: "config",
+  story: "Kit config API",
+  layer: "unit",
+  severity: "normal",
+});
+
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
 const { charts, panels, presets, renderers, theme, withKit, isLockedQuad, themeToCss } =
