@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit-web-awesome",
-  "version": "3.14.3",
+  "version": "3.14.4",
   "allureUpstream": "3.14.3",
   "description": "Soft-fork of @allurereport/web-awesome with the allure-report-kit renderer registry",
   "keywords": [
