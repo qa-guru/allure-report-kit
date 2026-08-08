@@ -65,6 +65,7 @@ fi
 set +e
 "$PY" scripts/sonar-gate-wait.py \
   --url "${SONAR_HOST_URL}" \
+  --report-task .scannerwork/report-task.txt \
   --project-key "${SONAR_PROJECT_KEY}"
 gate_ec=$?
 set -e
