@@ -262,7 +262,8 @@ jobs:
           mkdir -p allure-results
           cp -R allure-results-unit/. allure-results/ 2>/dev/null || true
           cp -R allure-results-e2e/. allure-results/ 2>/dev/null || true
-          npx --yes allure@3.14.3 generate ./allure-results -o allure-report --clean
+          rm -rf allure-report
+          npx --yes allure@3.14.3 generate ./allure-results -o allure-report
           test -f allure-report/summary.json
 
       - name: Gate (mode)
