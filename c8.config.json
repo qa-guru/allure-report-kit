@@ -1,0 +1,28 @@
+{
+  "reporter": ["lcov", "text"],
+  "reports-dir": "coverage",
+  "include": ["src/**/*.ts", "dist/**/*.js"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/test/fixtures/**",
+    "**/*.test.*",
+    "**/packages/**",
+    "**/dist/test/**",
+    "**/src/runtime/**",
+    "**/dist/runtime/**",
+    "**/src/theme/vendor/**",
+    "**/dist/theme/vendor/**",
+    "**/scripts/**",
+    "**/coverage/**",
+    "**/allure-results/**",
+    "**/allure-report/**"
+  ],
+  "extension": [".js", ".ts"],
+  "all": false,
+  "skip-full": false,
+  "check-coverage": true,
+  "lines": 82,
+  "statements": 82,
+  "branches": 70,
+  "functions": 45
+}

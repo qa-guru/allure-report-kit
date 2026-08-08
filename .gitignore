@@ -7,6 +7,8 @@ dist/
 allure-results/
 allure-results-e2e/
 allure-report/
+coverage/
+.coverage-allure-tmp/
 out/
 config/*.runtime.json
 /collage-telegram.png

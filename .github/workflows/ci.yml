@@ -36,6 +36,12 @@ jobs:
           ALLURE_RESULTS_DIR: ${{ github.workspace }}/allure-results
         run: npm test
 
+      - name: Coverage (unit, hard — lines/statements on src/)
+        env:
+          CI: true
+          ALLURE_RESULTS_DIR: ${{ github.workspace }}/.coverage-allure-tmp
+        run: npm run coverage
+
       - name: Allure generate (unit)
         run: npm run allure:generate
 
@@ -54,6 +60,15 @@ jobs:
         with:
           name: allure-report-unit
           path: allure-report/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload coverage
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/
           if-no-files-found: warn
           retention-days: 7
 
@@ -124,6 +139,61 @@ jobs:
           path: allure-report-e2e/
           if-no-files-found: warn
           retention-days: 7
+
+  sonar:
+    name: Sonar (hard)
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Same-repo + SONAR_TOKEN: gate FAILED → fail job when SONAR_REQUIRED=true.
+    # Forks / no token: soft-skip (script exits 0 even if SONAR_REQUIRED=true).
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 26
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Download coverage
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage
+          path: coverage/
+
+      - name: Sonar scan + gate
+        env:
+          SONAR_TOKEN: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.SONAR_TOKEN || '' }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
+          SONAR_REQUIRED: ${{ vars.SONAR_REQUIRED || 'true' }}
+          SONAR_PROJECT_KEY: allure-report-kit
+          IS_FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: bash scripts/ci-sonar.sh
+
+      - name: Job summary
+        if: always()
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonar.qa.guru' }}
+        run: |
+          {
+            echo "## Sonar (Q2 + Q5)"
+            echo ""
+            echo "- projectKey: \`allure-report-kit\`"
+            echo "- host: \`${SONAR_HOST_URL}\`"
+            echo "- dashboard: ${SONAR_HOST_URL%/}/dashboard?id=allure-report-kit"
+            echo "- SONAR_REQUIRED: \`${{ vars.SONAR_REQUIRED || 'true' }}\`"
+            echo "- forks / no token: soft-skip"
+            echo "- commit: \`${GITHUB_SHA:0:7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   testops:
     name: TestOps (informational)

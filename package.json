@@ -61,6 +61,7 @@
     "sync:ds:check": "node scripts/sync-ds.mjs --check",
     "test": "node scripts/run-tests.mjs",
     "test:plain": "node --test test/*.test.mjs",
+    "coverage": "node scripts/run-coverage.mjs",
     "allure:generate": "npx allure generate ./allure-results -o allure-report",
     "smoke": "node scripts/smoke-dogfood.mjs",
     "smoke:ci": "node scripts/smoke-ci.mjs",
@@ -94,6 +95,7 @@
     }
   },
   "devDependencies": {
+    "c8": "^10.1.3",
     "allure": "3.14.3",
     "allure-js-commons": "3.10.2",
     "allure-node-test": "3.10.2",
