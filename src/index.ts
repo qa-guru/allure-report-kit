@@ -30,6 +30,12 @@ export type {
 } from "./presets.js";
 export { themeToCss } from "./theme.js";
 export { STATUS_FAMILIES } from "./types.js";
+export {
+  QUALITY_GATE_FIXTURE_IDS,
+  isKitQualityGateData,
+  parseKitQualityGateData,
+} from "./quality-gate/parse.js";
+export type { QualityGateFixtureId } from "./quality-gate/parse.js";
 
 export type {
   AllureChartType,

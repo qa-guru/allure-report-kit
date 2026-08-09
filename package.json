@@ -40,11 +40,13 @@
     "./theme.css": "./src/theme/kit.css",
     "./theme/*": "./src/theme/*",
     "./presets/overview-preset": "./presets/overview-preset.mjs",
+    "./fixtures/quality-gate/*": "./fixtures/quality-gate/*",
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
     "presets",
+    "fixtures",
     "src/theme",
     "README.md",
     "LICENSE"

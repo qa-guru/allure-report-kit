@@ -267,6 +267,12 @@ export {
   renderSonarQualityGate,
   sonarProjectStatusToQualityGateOptions,
 } from "./sonar-quality-gate.js";
+export {
+  QUALITY_GATE_FIXTURE_IDS,
+  isKitQualityGateData,
+  parseKitQualityGateData,
+} from "../quality-gate/parse.js";
+export type { QualityGateFixtureId } from "../quality-gate/parse.js";
 export { createQgInfo, collectQgInfoDeviationLiterals } from "./qg-info.js";
 export { stockRenderer, createStockRenderer } from "./renderers/stock.js";
 export { svgRenderer } from "./renderers/svg.js";

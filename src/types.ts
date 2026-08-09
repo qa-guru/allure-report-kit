@@ -161,6 +161,17 @@ export interface KitPanelHistorySource {
   splitBy?: "status";
 }
 
+/**
+ * One rule row in a quality-gate panel.
+ *
+ * Required: `id`, `message`, `passed`.
+ * Optional: `actual`, `expected` (Allure canon), `threshold` (legacy / Sonar
+ * mapper alias — resolved by `resolveQualityGateRuleExpected`), `comparator`,
+ * `knownExcluded`.
+ *
+ * Sources: AQG — `evaluateQualityGate` (plugin-core); SQG —
+ * `mapSonarConditionToRule` / `sonarProjectStatusToQualityGateOptions`.
+ */
 export interface KitQualityGateRule {
   id: string;
   message: string;
@@ -174,6 +185,20 @@ export interface KitQualityGateRule {
   comparator?: "LT" | "GT" | "EQ" | "NE" | "LTE" | "GTE";
 }
 
+/**
+ * Shared quality-gate panel payload (AQG + SQG).
+ *
+ * Required: `passed`, `rules` (non-empty for a visible tile).
+ * Optional: `kind`, `testId`, `title`, `barTitle`, `config`, `infoPayload`,
+ * `labels`, `lang`.
+ *
+ * This is the widget JSON under `widgets/kit-panels/<id>.json` and the
+ * `ChartModel.qualityGate` object. Fixtures:
+ * `fixtures/quality-gate/*.json`. Parse with `parseKitQualityGateData`.
+ *
+ * Sources: AQG — plugin `evaluateQualityGate`; SQG —
+ * `sonarProjectStatusToQualityGateOptions` (runtime).
+ */
 export interface KitQualityGateData {
   passed: boolean;
   rules: KitQualityGateRule[];
