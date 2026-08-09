@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "hidden": false,
+  "passed": true,
+  "kind": "allure",
+  "testId": "quality-gate",
+  "ariaLabel": "Allure Quality Gate пройден",
+  "metrics": {
+    "barHeight": 28,
+    "indicatorSize": 10,
+    "barInset": 9,
+    "barGap": 6,
+    "barTitleSizeRem": 0.75,
+    "bodyFontSizeRem": 0.875,
+    "bodyPaddingPassed": 12,
+    "bodyMinHeightPassedRem": 4.5,
+    "verdictFontSizeRem": 1,
+    "ruleGridIdMaxRem": 19.5,
+    "ruleIdMinWidthRem": 6.5,
+    "ruleIdFontSizeEm": 0.8,
+    "ruleIdPaddingY": 8,
+    "ruleIdPaddingX": 12,
+    "ruleDetailPaddingY": 8,
+    "ruleDetailPaddingX": 12,
+    "formulaMarginTop": 4,
+    "borderRadiusMd": 12
+  },
+  "tokens": {
+    "surface": "--color-surface",
+    "surfaceSoft": "--color-surface-soft",
+    "text": "--color-text",
+    "textMuted": "--color-text-muted",
+    "border": "--color-border",
+    "success": "--color-success",
+    "danger": "--color-danger",
+    "indicator": {
+      "passed": "--color-status-passed-chart",
+      "failed": "--color-danger"
+    },
+    "rootBorder": {
+      "passed": {
+        "kind": "color-mix",
+        "base": "--color-success",
+        "percent": 40,
+        "with": "--color-border"
+      },
+      "failed": {
+        "kind": "color-mix",
+        "base": "--color-danger",
+        "percent": 40,
+        "with": "--color-border"
+      }
+    },
+    "barBackground": {
+      "kind": "color-mix",
+      "base": "--color-text",
+      "percent": 3,
+      "with": "transparent"
+    },
+    "barBorderBottom": {
+      "passed": {
+        "kind": "color-mix",
+        "base": "--color-success",
+        "percent": 25,
+        "with": "--color-border"
+      },
+      "failed": {
+        "kind": "color-mix",
+        "base": "--color-danger",
+        "percent": 25,
+        "with": "--color-border"
+      }
+    },
+    "verdictOk": "--color-success",
+    "ruleId": {
+      "color": {
+        "passed": "--color-success",
+        "failed": "--color-danger"
+      },
+      "background": {
+        "passed": {
+          "kind": "color-mix",
+          "base": "--color-success",
+          "percent": 12,
+          "with": "--color-surface-soft"
+        },
+        "failed": {
+          "kind": "color-mix",
+          "base": "--color-danger",
+          "percent": 12,
+          "with": "--color-surface-soft"
+        }
+      }
+    },
+    "ruleMessage": "--color-text",
+    "ruleFormula": "--color-danger"
+  },
+  "bar": {
+    "title": "Allure Quality Gate",
+    "indicatorStatus": "passed",
+    "info": {
+      "enabled": true
+    }
+  },
+  "body": {
+    "mode": "passed",
+    "verdict": "Пройден"
+  }
+}

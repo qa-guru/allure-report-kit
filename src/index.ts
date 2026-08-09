@@ -36,6 +36,26 @@ export {
   parseKitQualityGateData,
 } from "./quality-gate/parse.js";
 export type { QualityGateFixtureId } from "./quality-gate/parse.js";
+export {
+  buildQualityGateLayout,
+  QUALITY_GATE_LAYOUT_METRICS,
+  QUALITY_GATE_LAYOUT_TOKENS,
+} from "./quality-gate/layout/index.js";
+export type {
+  BuildQualityGateLayoutOptions,
+  QualityGateColorMix,
+  QualityGateLayout,
+  QualityGateLayoutBar,
+  QualityGateLayoutBody,
+  QualityGateLayoutFailedBody,
+  QualityGateLayoutInput,
+  QualityGateLayoutMetrics,
+  QualityGateLayoutPassedBody,
+  QualityGateLayoutRuleRow,
+  QualityGateLayoutTokens,
+  QualityGatePaintColor,
+  QualityGateTokenRef,
+} from "./quality-gate/layout/index.js";
 
 export type {
   AllureChartType,
