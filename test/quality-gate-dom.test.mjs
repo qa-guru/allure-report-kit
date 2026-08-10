@@ -174,6 +174,24 @@ test("dogfood-like data without config still paints info chrome", async () => {
   });
 });
 
+test("config.source → qg-info paths block in popover", async () => {
+  await withDomWindow(async (window) => {
+    const { parseKitQualityGateData } = await import("../dist/quality-gate/parse.js");
+    const { buildQualityGateLayout } = await import("../dist/quality-gate/layout/index.js");
+    const { paintQualityGateLayout } = await import("../dist/runtime/quality-gate-render.js");
+
+    const data = parseKitQualityGateData(loadFixture("aqg-failed"));
+    const layout = buildQualityGateLayout(data);
+    const host = window.document.createElement("div");
+    paintQualityGateLayout(host, layout);
+
+    const paths = host.querySelector(".qg-info__paths");
+    assert.ok(paths);
+    assert.ok(host.querySelector(".qg-info__path-link[href*='allurerc.mjs']"));
+    assert.ok(host.querySelector(".qg-info__path-link[href*='quality-gate.mjs']"));
+  });
+});
+
 test("empty rules → hidden host", async () => {
   await withDomWindow(async (window) => {
     const { renderQualityGateHost } = await import("../dist/runtime/quality-gate-render.js");

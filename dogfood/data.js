@@ -23,6 +23,18 @@ export const allureQualityGateModel = {
     ],
     barTitle: "Allure Quality Gate",
     lang: "ru",
+    labels: {
+      passed: { ru: "Allure Quality Gate пройден", en: "Allure Quality Gate passed" },
+      failed: { ru: "Allure Quality Gate не пройден", en: "Allure Quality Gate failed" },
+    },
+    config: {
+      rules: [{ maxFailures: 0 }],
+      source: {
+        configFile: "allurerc.mjs",
+        rulesFile: "allure/quality-gate.mjs",
+        hrefBase: "https://github.com/qa-guru/zero-design-system/blob/master/stacks/java-spring/tests/",
+      },
+    },
   },
 };
 
@@ -47,6 +59,30 @@ export const sonarQualityGateModel = {
     ],
     barTitle: "Sonar Quality Gate",
     lang: "ru",
+    labels: {
+      passed: { ru: "Sonar Quality Gate пройден", en: "Sonar Quality Gate passed" },
+      failed: { ru: "Sonar Quality Gate не пройден", en: "Sonar Quality Gate failed" },
+    },
+    config: {
+      profile: "qa-guru-canon",
+      projectKey: "reference-app-backend",
+      conditions: [
+        {
+          metric: "coverage",
+          op: "LT",
+          error: 80,
+          label: "Coverage on Overall Code ≥ 80%",
+        },
+      ],
+      source: {
+        configFile: "docs/sonar/quality-gate-profile.json",
+        profile: "qa-guru-canon",
+        projectKey: "reference-app-backend",
+        hrefBase: "https://github.com/qa-guru/zero-design-system/blob/master/",
+        profileHref: "https://sonar.qa.guru/profiles/show?name=qa-guru-canon",
+        projectHref: "https://sonar.qa.guru/dashboard?id=reference-app-backend",
+      },
+    },
   },
 };
 
