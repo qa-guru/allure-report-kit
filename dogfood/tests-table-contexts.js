@@ -177,11 +177,13 @@ function editorBodyHeight(rect) {
   return Math.max(1, rect.height - CANVAS.headerHeight - CANVAS.tilePad * 2);
 }
 
-function createEditorPanel(rect, tier) {
+function createEditorPanel(rect, tier, { onCanvas = false } = {}) {
   const panel = document.createElement("div");
-  panel.className = "ttc-editor-panel";
-  panel.style.width = `${rect.width}px`;
-  panel.style.height = `${rect.height}px`;
+  panel.className = onCanvas ? "ttc-editor-panel ttc-editor-panel--on-canvas" : "ttc-editor-panel";
+  if (!onCanvas) {
+    panel.style.width = `${rect.width}px`;
+    panel.style.height = `${rect.height}px`;
+  }
 
   const bar = document.createElement("div");
   bar.className = "ttc-editor-panel__bar";
@@ -192,7 +194,9 @@ function createEditorPanel(rect, tier) {
 
   const host = document.createElement("div");
   host.className = `ttc-editor-panel__host tests-table-host--tier-${tier}`;
-  host.style.height = `${editorBodyHeight(rect)}px`;
+  if (!onCanvas) {
+    host.style.height = `${editorBodyHeight(rect)}px`;
+  }
 
   bodyWrap.append(host);
   panel.append(bar, bodyWrap);
@@ -200,11 +204,15 @@ function createEditorPanel(rect, tier) {
   return { panel, host };
 }
 
-function createPreviewTile(rect, tier) {
+function createPreviewTile(rect, tier, { onCanvas = false } = {}) {
   const tile = document.createElement("figure");
-  tile.className = `widget-tile widget-tile--tier-${tier} ttc-footprint-tile`;
-  tile.style.width = `${rect.width}px`;
-  tile.style.height = `${rect.height}px`;
+  tile.className = `widget-tile widget-tile--tier-${tier} ttc-footprint-tile${
+    onCanvas ? " ttc-canvas-chrome" : ""
+  }`;
+  if (!onCanvas) {
+    tile.style.width = `${rect.width}px`;
+    tile.style.height = `${rect.height}px`;
+  }
   tile.style.setProperty("--wt-bar-height", `${CANVAS.headerHeight}px`);
   tile.style.setProperty("--wt-pad", `${CANVAS.tilePad}px`);
 
@@ -217,7 +225,9 @@ function createPreviewTile(rect, tier) {
 
   const body = document.createElement("div");
   body.className = "widget-tile__body";
-  body.style.height = `${rect.height - CANVAS.headerHeight}px`;
+  if (!onCanvas) {
+    body.style.height = `${rect.height - CANVAS.headerHeight}px`;
+  }
 
   tile.append(bar, body);
   mountTestsTable(body);
@@ -289,8 +299,8 @@ function mountCanvasHero(root, item, mode) {
   slot.style.height = `${rect.height}px`;
 
   const built = mode === "editor"
-    ? createEditorPanel(rect, tier)
-    : createPreviewTile(rect, tier);
+    ? createEditorPanel(rect, tier, { onCanvas: true })
+    : createPreviewTile(rect, tier, { onCanvas: true });
   slot.append(mode === "editor" ? built.panel : built.tile);
 
   canvas.append(grid, badge, slot);
