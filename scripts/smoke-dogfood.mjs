@@ -3,7 +3,7 @@
  * Headless smoke of the dogfood stand.
  *
  * Fails on any console error or page error, and asserts the vertical slice is
- * actually on screen: locked 2×2 order, one renderer per tile, indicator dots
+ * actually on screen: manifest tile order, one renderer per tile, indicator dots
  * derived from the drawn series, DS header mounted.
  *
  * Usage: node scripts/smoke-dogfood.mjs [url]
@@ -94,7 +94,7 @@ EXPECTED_TILES.forEach((expected, index) => {
   }
   check(
     tile.key?.includes(`:${index}:`),
-    `tile ${index}: key "${tile.key}" does not carry index ${index} (locked order)`,
+    `tile ${index}: key "${tile.key}" does not carry index ${index} (manifest order)`,
   );
   check(
     tile.renderer === expected.renderer,
@@ -112,12 +112,12 @@ EXPECTED_TILES.forEach((expected, index) => {
   check(tile.bodyChildren > 0, `tile ${index}: empty body`);
 });
 
-// Locked 2×2 keys carry the Allure chart type — ADR 006 order must hold (after QG lead).
+// Overview preset chart keys — ADR 006 order after the QG lead.
 ["currentStatus", "durationDynamics", "testingPyramid", "durations"].forEach((type, index) => {
   const tileIndex = index + 2;
   check(
     tiles[tileIndex]?.key?.endsWith(type),
-    `locked quad [${tileIndex}]: expected ${type}, key is "${tiles[tileIndex]?.key}"`,
+    `overview preset [${tileIndex}]: expected ${type}, key is "${tiles[tileIndex]?.key}"`,
   );
 });
 

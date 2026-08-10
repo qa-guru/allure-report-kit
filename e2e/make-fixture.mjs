@@ -4,7 +4,7 @@
  *
  * The e2e must not depend on somebody's build output, so it generates its own
  * run: 18 tests spread over the six canon layers with a realistic status mix,
- * enough to populate the locked 2×2 (donut, pyramid, durations by layer) and,
+ * enough to populate the overview preset charts (donut, pyramid, durations by layer) and,
  * after a few runs, the duration trend.
  */
 import { mkdir, rm, writeFile } from "node:fs/promises";

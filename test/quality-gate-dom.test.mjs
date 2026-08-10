@@ -212,6 +212,7 @@ test("light theme → qg-info JSON uses surface-soft, not terminal-dark bg", asy
     const layout = buildQualityGateLayout(parseKitQualityGateData(loadFixture("aqg-failed")));
     const host = window.document.createElement("div");
     paintQualityGateLayout(host, layout);
+    window.document.body.append(host);
 
     const code = host.querySelector(".qg-info__code.ch-code");
     assert.ok(code);

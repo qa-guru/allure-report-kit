@@ -36,7 +36,7 @@ export interface CurrentStatusOptions extends CommonOptions {
   metric?: TestStatus;
 }
 
-/** Donut of the latest run. Locked 2×2 index 0. */
+/** Donut of the latest run (`currentStatus`). */
 export function currentStatus(options: CurrentStatusOptions = {}): KitChartTile {
   return tile("currentStatus", { ...options });
 }
@@ -45,7 +45,7 @@ export interface DurationDynamicsOptions extends CommonOptions {
   limit?: number;
 }
 
-/** Wall-clock vs sequential duration across runs. Locked 2×2 index 1. */
+/** Wall-clock vs sequential duration across runs (`durationDynamics`). */
 export function durationDynamics(options: DurationDynamicsOptions = {}): KitChartTile {
   return tile("durationDynamics", { ...options });
 }
@@ -55,7 +55,7 @@ export interface TestingPyramidOptions extends CommonOptions {
   layers?: string[];
 }
 
-/** Testing pyramid. Locked 2×2 index 2. Default renderer is the SVG canon. */
+/** Testing pyramid. Default renderer is the SVG canon. */
 export function testingPyramid(options: TestingPyramidOptions = {}): KitChartTile {
   return tile("testingPyramid", { renderer: "svg", ...options });
 }
@@ -64,7 +64,7 @@ export interface DurationsOptions extends CommonOptions {
   groupBy?: "layer" | "none";
 }
 
-/** Duration histogram. Locked 2×2 index 3 requires `groupBy: "layer"`. */
+/** Duration histogram; overview preset uses `groupBy: "layer"`. */
 export function durations(options: DurationsOptions = {}): KitChartTile {
   return tile("durations", { ...options });
 }

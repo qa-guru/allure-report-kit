@@ -146,10 +146,10 @@ function checkKitTiles(label, actual, expected) {
 }
 
 /**
- * Locked 2×2 slots [0–1] use page default `stock` — upstream nivo, not kit tiles.
+ * Overview preset slots [2–3] use page default `stock` — upstream nivo, not kit tiles.
  * Assert on the stock widget DOM (ResponsivePie centre label, arc fills).
  */
-async function checkStockLockedQuad(page, label) {
+async function checkOverviewStockCharts(page, label) {
   const stock = await page.evaluate(() => {
     const widgets = [...document.querySelectorAll('[class*="styles_widget"]')];
     const texts = (widget) =>
@@ -173,7 +173,7 @@ async function checkStockLockedQuad(page, label) {
     };
   });
 
-  check(stock.count >= 2, `${label} locked quad: expected at least 2 stock widgets, got ${stock.count}`);
+  check(stock.count >= 2, `${label} overview stock charts: expected at least 2 stock widgets, got ${stock.count}`);
   check(
     stock.currentStatus?.texts.includes("88.24%"),
     `${label} current status (nivo): centre label ${JSON.stringify(stock.currentStatus?.texts)}`,
@@ -309,7 +309,7 @@ await awesome.page.waitForFunction(
   { timeout: 15_000 },
 );
 
-await checkStockLockedQuad(awesome.page, "awesome");
+await checkOverviewStockCharts(awesome.page, "awesome");
 
 const awesomeTiles = await readKitTiles(awesome.page);
 checkKitTiles("awesome", awesomeTiles, [
@@ -360,7 +360,7 @@ const dashboard = await openReport("/dashboard/");
 await checkHeader(dashboard.page, "dashboard", { expectSwitcher: false });
 await dashboard.page.waitForSelector(".widget-tile[data-ark-rendered-by]");
 
-await checkStockLockedQuad(dashboard.page, "dashboard");
+await checkOverviewStockCharts(dashboard.page, "dashboard");
 
 const dashboardTiles = await readKitTiles(dashboard.page);
 checkKitTiles("dashboard", dashboardTiles, [
