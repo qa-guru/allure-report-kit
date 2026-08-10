@@ -192,6 +192,35 @@ test("config.source → qg-info paths block in popover", async () => {
   });
 });
 
+test("light theme → qg-info JSON uses surface-soft, not terminal-dark bg", async () => {
+  await withDomWindow(async (window) => {
+    const vendor = join(ROOT, "src/theme/vendor/design-system/css");
+    const style = window.document.createElement("style");
+    style.textContent = [
+      readFileSync(join(vendor, "tokens.css"), "utf8"),
+      readFileSync(join(vendor, "code-highlight.css"), "utf8"),
+      readFileSync(join(vendor, "qg-info.css"), "utf8"),
+    ].join("\n");
+    window.document.head.append(style);
+    window.document.documentElement.classList.add("theme-light");
+    window.document.documentElement.dataset.theme = "light";
+
+    const { parseKitQualityGateData } = await import("../dist/quality-gate/parse.js");
+    const { buildQualityGateLayout } = await import("../dist/quality-gate/layout/index.js");
+    const { paintQualityGateLayout } = await import("../dist/runtime/quality-gate-render.js");
+
+    const layout = buildQualityGateLayout(parseKitQualityGateData(loadFixture("aqg-failed")));
+    const host = window.document.createElement("div");
+    paintQualityGateLayout(host, layout);
+
+    const code = host.querySelector(".qg-info__code.ch-code");
+    assert.ok(code);
+    const bg = window.getComputedStyle(code).backgroundColor;
+    assert.notEqual(bg, "rgb(26, 25, 23)");
+    assert.notEqual(bg, "");
+  });
+});
+
 test("empty rules → hidden host", async () => {
   await withDomWindow(async (window) => {
     const { renderQualityGateHost } = await import("../dist/runtime/quality-gate-render.js");

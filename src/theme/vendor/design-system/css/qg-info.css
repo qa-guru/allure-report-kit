@@ -140,3 +140,50 @@
   word-break: break-word;
   color: var(--color-text);
 }
+
+/* Light report / standalone — JSON block follows surface, not terminal-dark default */
+html.theme-light .qg-info__popover.ch-theme--vscode .qg-info__code.ch-code,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .qg-info__code.ch-code {
+  --ch-code-bg: var(--color-surface-soft);
+  --ch-code-fg: var(--color-text);
+  background: var(--ch-code-bg);
+  color: var(--ch-code-fg);
+}
+
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-key,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-key {
+  color: #0451a5;
+}
+
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-str,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-str {
+  color: #a31515;
+}
+
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-num,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-num {
+  color: #098658;
+}
+
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-bool,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-bool,
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-null,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-null {
+  color: #0000ff;
+}
+
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-punct,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-punct {
+  color: #393a34;
+  opacity: 0.55;
+}
+
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-comment,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-comment {
+  color: #008000;
+}
+
+html.theme-light .qg-info__popover.ch-theme--vscode .ch-tok-cmd,
+html[data-theme="light"] .qg-info__popover.ch-theme--vscode .ch-tok-cmd {
+  color: #795e26;
+}
