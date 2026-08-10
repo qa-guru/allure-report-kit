@@ -5,14 +5,14 @@
 #   MODE=dry-run|live|skip
 #   TELEGRAM_BOT_TOKEN | TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_TOPIC_ID (live)
 #   BUILD_URL, REF_NAME, SHORT_SHA (optional links / project label)
-# Pin: npx @qa-guru/allure-notifications@6.1.0 (kit profile dogfood collage).
+# Pin: npx @qa-guru/allure-notifications@6.1.1 (kit profile dogfood collage).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 MODE="${MODE:-dry-run}"
-CLI_PIN="${CLI_PIN:-6.1.0}"
+CLI_PIN="${CLI_PIN:-6.1.1}"
 OUT_PNG="${OUT_PNG:-collage-telegram.png}"
 RUNTIME_CONFIG="${RUNTIME_CONFIG:-config/ci-telegram.runtime.json}"
 
