@@ -152,7 +152,6 @@ function mountPalette(root) {
 
   const body = document.createElement("div");
   body.className = "widget-tile__body";
-  body.style.height = "106px";
 
   fig.append(bar, body);
   slot.append(fig);

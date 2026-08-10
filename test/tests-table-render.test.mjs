@@ -36,6 +36,6 @@ test("resolveTestsTableMetrics shrinks rows for micro footprint", () => {
   };
   const metrics = resolveTestsTableMetrics(host);
   assert.equal(metrics.headerH, 0);
-  assert.equal(metrics.rowH, 11);
-  assert.equal(testsTableMaxRows(44, metrics), 4);
+  assert.equal(metrics.rowH, 7);
+  assert.equal(testsTableMaxRows(44, metrics), 6);
 });

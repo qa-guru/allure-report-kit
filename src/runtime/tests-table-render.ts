@@ -41,7 +41,7 @@ export interface TestsTableMetrics {
 /** Row/header metrics from footprint tier on the host or ancestor tile. */
 export function resolveTestsTableMetrics(host: HTMLElement): TestsTableMetrics {
   if (host.closest(".widget-tile--tier-micro, .tests-table-host--tier-micro")) {
-    return { headerH: 0, rowH: 11 };
+    return { headerH: 0, rowH: 7 };
   }
   if (host.closest(".widget-tile--tier-compact, .tests-table-host--tier-compact")) {
     return { headerH: 18, rowH: 20 };

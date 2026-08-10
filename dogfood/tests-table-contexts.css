@@ -76,16 +76,13 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  --wt-pad: 0;
-  --wt-bar-height: 22px;
 }
 
 .ttc-palette-slot .widget-tile__body {
   flex: 1;
   min-height: 0;
   width: 100%;
-  aspect-ratio: auto;
-  padding: 0;
+  aspect-ratio: 1;
   overflow: hidden;
 }
 
