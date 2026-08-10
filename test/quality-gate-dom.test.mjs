@@ -143,6 +143,37 @@ test("renderQualityGateHost matches paintQualityGateLayout path", async () => {
   });
 });
 
+test("dogfood-like data without config still paints info chrome", async () => {
+  await withDomWindow(async (window) => {
+    const { buildQualityGateLayout } = await import("../dist/quality-gate/layout/index.js");
+    const { paintQualityGateLayout } = await import("../dist/runtime/quality-gate-render.js");
+
+    const layout = buildQualityGateLayout({
+      passed: false,
+      rules: [
+        {
+          id: "maxFailures",
+          message: "The number of failed tests 3 exceeds the allowed threshold value 0",
+          passed: false,
+          actual: 3,
+          expected: 0,
+        },
+      ],
+      barTitle: "Allure Quality Gate",
+      lang: "ru",
+    });
+    const host = window.document.createElement("div");
+    paintQualityGateLayout(host, layout);
+
+    const root = host.querySelector(".quality-gate");
+    assert.ok(root?.querySelector('[data-testid="qg-info"]'));
+    const title = root?.querySelector(".quality-gate__bar-title");
+    const info = root?.querySelector(".qg-info");
+    assert.ok(title && info);
+    assert.ok(title.getBoundingClientRect().right <= info.getBoundingClientRect().left);
+  });
+});
+
 test("empty rules → hidden host", async () => {
   await withDomWindow(async (window) => {
     const { renderQualityGateHost } = await import("../dist/runtime/quality-gate-render.js");

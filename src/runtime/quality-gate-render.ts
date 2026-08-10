@@ -141,9 +141,22 @@ export function paintQualityGateLayout(
   // Same chrome order as widget-tile: status left, title flexes right, trailing action.
   bar.append(indicator, barTitleEl);
 
-  if (layout.bar.info.enabled && layout.bar.info.payload) {
+  if (layout.bar.info.enabled) {
+    const payload =
+      layout.bar.info.payload ??
+      buildQualityGateInfoPayload({
+        passed: layout.passed,
+        rules:
+          layout.body.mode === "failed"
+            ? layout.body.rows.map((row) => ({
+                id: row.id,
+                message: row.message,
+                passed: false,
+              }))
+            : [],
+      });
     const fileSource = layout.bar.info.fileSource as QgInfoFileSource | undefined;
-    bar.append(createQgInfo(layout.bar.info.payload, fileSource));
+    bar.append(createQgInfo(payload, fileSource));
   }
 
   root.append(bar, paintQualityGateBody(layout.body));

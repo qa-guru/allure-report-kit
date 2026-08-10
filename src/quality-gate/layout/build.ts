@@ -65,10 +65,6 @@ function buildRuleRow(rule: KitQualityGateRule): QualityGateLayoutRuleRow {
 }
 
 function buildBarInfo(data: KitQualityGateData): QualityGateLayout["bar"]["info"] {
-  const enabled = Boolean(data.config ?? data.infoPayload);
-  if (!enabled) {
-    return { enabled: false };
-  }
   const fileSource = resolveQualityGateFileSource(data.config);
   return {
     enabled: true,
