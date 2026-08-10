@@ -4,7 +4,7 @@
   "rows": [
     {
       "id": "mock-001",
-      "name": "shouldLoginWithValid…",
+      "name": "shouldLoginWithValidCredentials",
       "fullName": "auth.LoginTests.shouldLoginWithValidCredentials",
       "status": "passed",
       "history": [
@@ -18,7 +18,7 @@
     },
     {
       "id": "mock-002",
-      "name": "shouldRejectInvalid…",
+      "name": "shouldRejectInvalidPassword",
       "fullName": "auth.LoginTests.shouldRejectInvalidPassword",
       "status": "passed",
       "history": [
@@ -59,8 +59,215 @@
       "name": "legacyImportSkipped",
       "fullName": "unit.LegacyTests.legacyImportSkipped",
       "status": "skipped",
+      "history": [{ "status": "skipped", "durationSec": 0.01 }],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-006",
+      "name": "shouldCreateUserWithValidEmail",
+      "fullName": "api.UserTests.shouldCreateUserWithValidEmail",
+      "status": "passed",
       "history": [
-        { "status": "skipped", "durationSec": 0.01 }
+        { "status": "passed", "durationSec": 0.64 },
+        { "status": "passed", "durationSec": 0.58 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-007",
+      "name": "shouldDeleteUserById",
+      "fullName": "api.UserTests.shouldDeleteUserById",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.41 },
+        { "status": "passed", "durationSec": 0.39 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-008",
+      "name": "shouldReturn404ForMissingResource",
+      "fullName": "api.ResourceTests.shouldReturn404ForMissingResource",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.22 },
+        { "status": "passed", "durationSec": 0.19 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-009",
+      "name": "shouldPaginateSearchResults",
+      "fullName": "api.SearchTests.shouldPaginateSearchResults",
+      "status": "failed",
+      "history": [
+        { "status": "passed", "durationSec": 1.05 },
+        { "status": "failed", "durationSec": 1.12 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-010",
+      "name": "shouldFilterByCategory",
+      "fullName": "api.SearchTests.shouldFilterByCategory",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.88 },
+        { "status": "passed", "durationSec": 0.91 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-011",
+      "name": "shouldUploadAttachment",
+      "fullName": "api.AttachmentTests.shouldUploadAttachment",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 2.14 },
+        { "status": "passed", "durationSec": 2.02 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-012",
+      "name": "shouldRejectOversizedFile",
+      "fullName": "api.AttachmentTests.shouldRejectOversizedFile",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.33 },
+        { "status": "passed", "durationSec": 0.31 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-013",
+      "name": "shouldRenderDashboardWidgets",
+      "fullName": "e2e.DashboardTests.shouldRenderDashboardWidgets",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 3.44 },
+        { "status": "passed", "durationSec": 3.21 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-014",
+      "name": "shouldToggleDarkTheme",
+      "fullName": "e2e.ThemeTests.shouldToggleDarkTheme",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.77 },
+        { "status": "passed", "durationSec": 0.74 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-015",
+      "name": "shouldExportReportPdf",
+      "fullName": "e2e.ExportTests.shouldExportReportPdf",
+      "status": "broken",
+      "history": [
+        { "status": "passed", "durationSec": 6.1 },
+        { "status": "broken", "durationSec": 6.4 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-016",
+      "name": "shouldValidateJwtToken",
+      "fullName": "unit.AuthTests.shouldValidateJwtToken",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.08 },
+        { "status": "passed", "durationSec": 0.07 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-017",
+      "name": "shouldRefreshExpiredToken",
+      "fullName": "unit.AuthTests.shouldRefreshExpiredToken",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.15 },
+        { "status": "passed", "durationSec": 0.14 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-018",
+      "name": "shouldComputeLayerTotals",
+      "fullName": "unit.PyramidTests.shouldComputeLayerTotals",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.05 },
+        { "status": "passed", "durationSec": 0.05 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-019",
+      "name": "shouldMatchSnapshotLayout",
+      "fullName": "component.LayoutTests.shouldMatchSnapshotLayout",
+      "status": "failed",
+      "history": [
+        { "status": "passed", "durationSec": 0.52 },
+        { "status": "failed", "durationSec": 0.49 }
+      ],
+      "flakyFlips": 1
+    },
+    {
+      "id": "mock-020",
+      "name": "shouldOpenUserMenu",
+      "fullName": "component.HeaderTests.shouldOpenUserMenu",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.29 },
+        { "status": "passed", "durationSec": 0.27 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-021",
+      "name": "shouldNavigateToSettings",
+      "fullName": "e2e.NavigationTests.shouldNavigateToSettings",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 1.66 },
+        { "status": "passed", "durationSec": 1.58 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-022",
+      "name": "shouldPersistFormDraft",
+      "fullName": "e2e.FormTests.shouldPersistFormDraft",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 2.31 },
+        { "status": "passed", "durationSec": 2.28 }
+      ],
+      "flakyFlips": 0
+    },
+    {
+      "id": "mock-023",
+      "name": "shouldRetryOnTransientError",
+      "fullName": "integration.RetryTests.shouldRetryOnTransientError",
+      "status": "passed",
+      "history": [
+        { "status": "failed", "durationSec": 1.01 },
+        { "status": "passed", "durationSec": 0.95 }
+      ],
+      "flakyFlips": 1
+    },
+    {
+      "id": "mock-024",
+      "name": "shouldHonorRateLimitHeaders",
+      "fullName": "integration.RateLimitTests.shouldHonorRateLimitHeaders",
+      "status": "passed",
+      "history": [
+        { "status": "passed", "durationSec": 0.67 },
+        { "status": "passed", "durationSec": 0.65 }
       ],
       "flakyFlips": 0
     }

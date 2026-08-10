@@ -175,18 +175,85 @@ const testsTablePanel = await page.$eval(
   `.widget-tile[data-ark-tile$=":${TESTS_TABLE_INDEX}:testsTable"] .widget-tile__body`,
   (body) => ({
     rows: body.querySelectorAll("tbody tr").length,
+    maxRows: Number(body.querySelector("tbody")?.dataset.maxRows ?? 0),
     sparklines: body.querySelectorAll(".sparkline--duration").length,
     flakyBadges: body.querySelectorAll(".badge--flaky").length,
     header: [...body.querySelectorAll("thead th")].map((cell) => cell.textContent.trim()),
+    columnShift: [...body.querySelectorAll("thead th")].map((th, index) => {
+      const td = body.querySelector(`tbody tr:first-child td:nth-child(${index + 1})`);
+      if (!td) {
+        return 999;
+      }
+      return Math.abs(th.getBoundingClientRect().left - td.getBoundingClientRect().left);
+    }),
+    firstName: body.querySelector("tbody tr:first-child td.tests-table-panel__name")?.textContent?.trim() ?? "",
+    firstNameOverflow: (() => {
+      const cell = body.querySelector("tbody tr:first-child td.tests-table-panel__name");
+      if (!cell) {
+        return true;
+      }
+      return cell.scrollWidth > cell.clientWidth + 1;
+    })(),
+    hostHeight: body.clientHeight,
   }),
-).catch(() => ({ rows: 0, sparklines: 0, flakyBadges: 0, header: [] }));
-check(testsTablePanel.rows === 3, `tests table: expected 3 rows, got ${testsTablePanel.rows}`);
+).catch(() => ({
+  rows: 0,
+  maxRows: 0,
+  sparklines: 0,
+  flakyBadges: 0,
+  header: [],
+  columnShift: [999],
+  firstName: "",
+  firstNameOverflow: true,
+  hostHeight: 0,
+}));
+check(testsTablePanel.rows >= 4, `tests table: expected height-sliced rows, got ${testsTablePanel.rows}`);
+check(
+  testsTablePanel.rows === Math.min(24, testsTablePanel.maxRows),
+  `tests table: expected ${Math.min(24, testsTablePanel.maxRows)} rows, got ${testsTablePanel.rows}`,
+);
 check(testsTablePanel.sparklines >= 2, `tests table: expected sparklines, got ${testsTablePanel.sparklines}`);
 check(testsTablePanel.flakyBadges >= 1, `tests table: expected flaky badge, got ${testsTablePanel.flakyBadges}`);
 check(
   JSON.stringify(testsTablePanel.header) ===
     JSON.stringify(["Тест", "Статус", "Тренд", "Стабильность"]),
   `tests table header: got ${JSON.stringify(testsTablePanel.header)}`,
+);
+check(
+  testsTablePanel.columnShift.every((shift) => shift <= 2),
+  `tests table column alignment: shifts ${testsTablePanel.columnShift.join(", ")}`,
+);
+check(
+  testsTablePanel.firstName === "shouldLoginWithValidCredentials",
+  `tests table name: got "${testsTablePanel.firstName}"`,
+);
+check(
+  !testsTablePanel.firstNameOverflow,
+  "tests table name: ellipsis while column has free width",
+);
+
+const testsTableRowsBeforeResize = testsTablePanel.rows;
+await page.$eval(
+  `.widget-tile[data-ark-tile$=":${TESTS_TABLE_INDEX}:testsTable"]`,
+  (tile) => {
+    const body = tile.querySelector(".widget-tile__body");
+    const base = body?.clientHeight || 200;
+    const next = base * 2 + 48;
+    tile.style.height = `${next + 40}px`;
+    if (body) {
+      body.style.height = `${next}px`;
+      body.style.flex = "1 1 auto";
+    }
+  },
+);
+await page.waitForTimeout(50);
+const testsTableRowsAfterResize = await page.$eval(
+  `.widget-tile[data-ark-tile$=":${TESTS_TABLE_INDEX}:testsTable"] .widget-tile__body`,
+  (body) => body.querySelectorAll("tbody tr").length,
+).catch(() => 0);
+check(
+  testsTableRowsAfterResize > testsTableRowsBeforeResize,
+  `tests table resize: expected more rows after height bump (${testsTableRowsBeforeResize} → ${testsTableRowsAfterResize})`,
 );
 
 // Pyramid keeps the six canon tiers as rounded rects.

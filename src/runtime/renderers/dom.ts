@@ -12,7 +12,7 @@
 import type { StatusFamily } from "../../types.js";
 import type { ChartModel, ChartRenderer, RenderContext, RenderResult } from "../model.js";
 import { renderQualityGateHost } from "../quality-gate-render.js";
-import { renderTestsTableHost } from "../tests-table-render.js";
+import { disconnectTestsTableHost, renderTestsTableHost } from "../tests-table-render.js";
 import { familyForColor, orderFamilies } from "../palette.js";
 
 function cell(tag: "td" | "th", text: string, className?: string): HTMLElement {
@@ -114,5 +114,8 @@ export const domRenderer: ChartRenderer = {
     }
     return renderTable(context);
   },
-  destroy: (host) => host.replaceChildren(),
+  destroy: (host) => {
+    disconnectTestsTableHost(host);
+    host.replaceChildren();
+  },
 };

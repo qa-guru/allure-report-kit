@@ -4,6 +4,7 @@
  * Numbers mirror the design-system widget-tile mocks (34 tests, 6 pyramid
  * layers) so the page can be compared side by side with the dashboard canon.
  */
+import testsTableFixture from "../test/fixtures/tests-table-panel.json" with { type: "json" };
 
 /** Allure quality gate — dogfood sample (failed). */
 export const allureQualityGateModel = {
@@ -255,47 +256,5 @@ export const testsTableModel = {
   type: "custom",
   series: [],
   columns: ["Тест", "Статус", "Тренд", "Стабильность"],
-  testsTable: {
-    columns: ["Тест", "Статус", "Тренд", "Стабильность"],
-    lang: "ru",
-    rows: [
-      {
-        id: "login",
-        name: "shouldLoginWithValid…",
-        fullName: "auth.LoginTests.shouldLoginWithValidCredentials",
-        status: "passed",
-        history: [
-          { status: "passed", durationSec: 1.32 },
-          { status: "passed", durationSec: 1.18 },
-          { status: "passed", durationSec: 1.05 },
-          { status: "passed", durationSec: 1.24 },
-        ],
-        flakyFlips: 0,
-      },
-      {
-        id: "reject",
-        name: "shouldRejectInvalid…",
-        fullName: "auth.LoginTests.shouldRejectInvalidPassword",
-        status: "passed",
-        history: [
-          { status: "failed", durationSec: 0.95 },
-          { status: "passed", durationSec: 0.82 },
-          { status: "failed", durationSec: 0.91 },
-          { status: "passed", durationSec: 0.88 },
-        ],
-        flakyFlips: 2,
-      },
-      {
-        id: "checkout",
-        name: "checkoutFlowCompletes",
-        status: "failed",
-        history: [
-          { status: "passed", durationSec: 4.2 },
-          { status: "failed", durationSec: 5.1 },
-          { status: "failed", durationSec: 4.8 },
-        ],
-        flakyFlips: 1,
-      },
-    ],
-  },
+  testsTable: testsTableFixture,
 };
