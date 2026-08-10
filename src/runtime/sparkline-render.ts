@@ -95,17 +95,19 @@ export function buildSparkline(
   const values = points.map((point) => point.durationSec as number);
   const width = options.width ?? 88;
   const height = options.height ?? 28;
-  const pad = 2;
+  /* padX=0 so the stroke starts at the content-box left (matches th). */
+  const padX = 0;
+  const padY = 2;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
   const coords = values.map((value, index) => {
-    const x = pad + (index / (values.length - 1)) * (width - pad * 2);
-    const y = pad + (1 - (value - min) / range) * (height - pad * 2);
+    const x = padX + (index / (values.length - 1)) * (width - padX * 2);
+    const y = padY + (1 - (value - min) / range) * (height - padY * 2);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
   const polyline = coords.join(" ");
-  const area = `${pad},${height - pad} ${polyline} ${width - pad},${height - pad}`;
+  const area = `${padX},${height - padY} ${polyline} ${width - padX},${height - padY}`;
   const label = values.map((value, index) => `R${index + 1}: ${value.toFixed(2)}s`).join(" · ");
   const stroke = options.stroke ?? theme.accent;
 
@@ -114,6 +116,8 @@ export function buildSparkline(
   svg.setAttribute("width", String(width));
   svg.setAttribute("height", String(height));
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  /* Stretch into fluid table cells — default meet centers and desyncs from th. */
+  svg.setAttribute("preserveAspectRatio", "none");
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", label);
 
