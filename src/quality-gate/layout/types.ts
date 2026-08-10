@@ -61,10 +61,28 @@ export interface QualityGateLayoutTokens {
   ruleFormula: QualityGateTokenRef;
 }
 
+/** Serialized file-source links for the info popover (T3 DOM / T4 canvas). */
+export interface QualityGateLayoutInfoFileSource {
+  configFile?: string;
+  rulesFile?: string;
+  knownIssuesFile?: string;
+  profile?: string;
+  projectKey?: string;
+  hrefBase?: string;
+  profileHref?: string;
+  projectHref?: string;
+}
+
+export interface QualityGateLayoutInfoPopover {
+  enabled: boolean;
+  payload?: Record<string, unknown>;
+  fileSource?: QualityGateLayoutInfoFileSource;
+}
+
 export interface QualityGateLayoutBar {
   title: string;
   indicatorStatus: "passed" | "failed";
-  info: { enabled: boolean };
+  info: QualityGateLayoutInfoPopover;
 }
 
 export interface QualityGateLayoutRuleRow {

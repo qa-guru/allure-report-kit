@@ -2,24 +2,33 @@
  * DS `quality-gate` primitive in TypeScript — kept in sync with
  * design-system/js/quality-gate.js (vendored CSS via sync:ds).
  *
- * Popover UX (links, JSON highlight, deviation literals) lives in qg-info.ts —
- * both Allure and Sonar paths call createQgInfo() from here.
+ * Data → layout IR → DOM paint. Popover UX lives in qg-info.ts.
  */
+import { buildQualityGateLayout } from "../quality-gate/layout/build.js";
+import type { QualityGateLayout } from "../quality-gate/layout/types.js";
+import {
+  buildQualityGateInfoPayload,
+  resolveQualityGateFileSource,
+} from "../quality-gate/info-payload.js";
+import {
+  formatQualityGateRuleFormula,
+  resolveQualityGateRuleExpected,
+} from "../quality-gate/rule-format.js";
 import type {
-  KitQualityGateConfig,
   KitQualityGateData,
   KitQualityGateRule,
-  QualityGateLabel,
   QualityGateLabels,
 } from "../types.js";
 import { createQgInfo, type QgInfoFileSource } from "./qg-info.js";
 
-const DEFAULT_LABELS = {
-  passed: { en: "Quality gate passed", ru: "Quality gate пройден" },
-  failed: { en: "Quality gate failed", ru: "Quality gate не пройден" },
-} as const;
-
-const DEFAULT_BAR_TITLE = "Quality gate";
+export {
+  buildQualityGateInfoPayload,
+  resolveQualityGateFileSource,
+} from "../quality-gate/info-payload.js";
+export {
+  formatQualityGateRuleFormula,
+  resolveQualityGateRuleExpected,
+} from "../quality-gate/rule-format.js";
 
 export interface QualityGateRenderOptions {
   passed?: boolean;
@@ -28,219 +37,126 @@ export interface QualityGateRenderOptions {
   kind?: "allure" | "sonar";
   testId?: string;
   rules?: KitQualityGateRule[];
-  config?: KitQualityGateConfig;
+  config?: KitQualityGateData["config"];
   infoPayload?: Record<string, unknown>;
   labels?: QualityGateLabels;
   lang?: "ru" | "en";
 }
 
-function resolveLabel(
-  entry: QualityGateLabel | undefined,
-  key: "passed" | "failed",
-  lang: "ru" | "en",
-): string {
-  if (!entry) {
-    return DEFAULT_LABELS[key][lang] ?? DEFAULT_LABELS[key].en;
-  }
-  if (typeof entry === "string") {
-    return entry;
-  }
-  return entry[lang] ?? entry.en ?? entry.ru ?? DEFAULT_LABELS[key].en;
-}
-
-export function resolveQualityGateRuleExpected(rule: KitQualityGateRule): number | string | undefined {
-  if (rule.expected !== undefined && rule.expected !== null) {
-    return rule.expected;
-  }
-  if (rule.threshold !== undefined && rule.threshold !== null) {
-    return rule.threshold;
-  }
-  return undefined;
-}
-
-export function formatQualityGateRuleFormula(rule: KitQualityGateRule): string {
-  const { id, actual, comparator } = rule;
-  const expected = resolveQualityGateRuleExpected(rule);
-  if (actual === undefined || expected === undefined) {
-    return "";
-  }
-
-  if (comparator) {
-    const op =
-      comparator === "LT"
-        ? "<"
-        : comparator === "LTE"
-          ? "≤"
-          : comparator === "GT"
-            ? ">"
-            : comparator === "GTE"
-              ? "≥"
-              : comparator === "EQ"
-                ? "="
-                : "≠";
-    return `FAIL: ${actual} ${op} ${expected}`;
-  }
-
-  switch (id) {
-    case "maxFailures":
-      return `FAIL: ${actual} > ${expected}`;
-    case "minTestsCount":
-      return `FAIL: ${actual} < ${expected}`;
-    case "successRate":
-      return `FAIL: ${actual}% < ${expected}%`;
-    case "maxDuration":
-      return `FAIL: ${actual}s > ${expected}s`;
-    default:
-      return `FAIL: ${actual} vs ${expected}`;
-  }
-}
-
-export function resolveQualityGateFileSource(config?: KitQualityGateConfig): QgInfoFileSource | undefined {
-  if (!config) {
-    return undefined;
-  }
-
-  const fileSource = config.source ?? {};
-  const resolved: QgInfoFileSource = {};
-
-  if (fileSource.configFile) {
-    resolved.configFile = fileSource.configFile;
-  }
-  if (fileSource.rulesFile) {
-    resolved.rulesFile = fileSource.rulesFile;
-  }
-  const knownIssuesFile = fileSource.knownIssuesFile ?? config.knownIssuesPath;
-  if (knownIssuesFile) {
-    resolved.knownIssuesFile = knownIssuesFile;
-  }
-  const profile = fileSource.profile ?? config.profile;
-  if (profile) {
-    resolved.profile = profile;
-  }
-  const projectKey = fileSource.projectKey ?? config.projectKey;
-  if (projectKey) {
-    resolved.projectKey = projectKey;
-  }
-  if (fileSource.hrefBase) {
-    resolved.hrefBase = fileSource.hrefBase;
-  }
-  if (fileSource.profileHref) {
-    resolved.profileHref = fileSource.profileHref;
-  }
-  if (fileSource.projectHref) {
-    resolved.projectHref = fileSource.projectHref;
-  }
-
-  return Object.keys(resolved).length ? resolved : undefined;
-}
-
-export function buildQualityGateInfoPayload(options: QualityGateRenderOptions): Record<string, unknown> {
-  const config = options.config ?? { rules: [] };
-
+function optionsToQualityGateData(options: QualityGateRenderOptions): KitQualityGateData {
   return {
-    qualityGate: {
-      rules: config.rules ?? [],
-    },
-    result: {
-      passed: Boolean(options.passed),
-      rules: options.rules ?? [],
-    },
+    passed: Boolean(options.passed),
+    rules: options.rules ?? [],
+    kind: options.kind,
+    testId: options.testId,
+    title: options.title,
+    barTitle: options.barTitle ?? options.title,
+    config: options.config,
+    infoPayload: options.infoPayload,
+    labels: options.labels,
+    lang: options.lang,
   };
+}
+
+function paintQualityGateBody(body: QualityGateLayout["body"]): HTMLElement {
+  const node = document.createElement("div");
+  node.className = "quality-gate__body";
+
+  if (body.mode === "passed") {
+    const verdict = document.createElement("p");
+    verdict.className = "quality-gate__verdict quality-gate__verdict--ok";
+    verdict.textContent = body.verdict;
+    node.append(verdict);
+    return node;
+  }
+
+  if (!body.rows.length) {
+    return node;
+  }
+
+  const list = document.createElement("ul");
+  list.className = "quality-gate__rules";
+  for (const row of body.rows) {
+    const item = document.createElement("li");
+    item.className = "quality-gate__rule";
+
+    const idCell = document.createElement("div");
+    idCell.className = "quality-gate__rule-id";
+    idCell.textContent = row.id;
+
+    const detail = document.createElement("div");
+    detail.className = "quality-gate__rule-detail";
+
+    const message = document.createElement("p");
+    message.className = "quality-gate__message";
+    message.textContent = row.message;
+    detail.append(message);
+
+    if (row.formula) {
+      const formulaEl = document.createElement("p");
+      formulaEl.className = "quality-gate__formula";
+      formulaEl.textContent = row.formula;
+      detail.append(formulaEl);
+    }
+
+    item.append(idCell, detail);
+    list.append(item);
+  }
+  node.append(list);
+  return node;
+}
+
+/**
+ * Paint a quality-gate scene into a host element (T3 DOM adapter).
+ */
+export function paintQualityGateLayout(
+  host: HTMLElement,
+  layout: QualityGateLayout,
+): { hidden: boolean; passed?: boolean } {
+  if (layout.hidden) {
+    host.replaceChildren();
+    host.hidden = true;
+    return { hidden: true };
+  }
+
+  host.hidden = false;
+
+  const root = document.createElement("div");
+  root.className = `quality-gate quality-gate--${layout.kind} quality-gate--${layout.passed ? "passed" : "failed"}`;
+  root.setAttribute("role", "status");
+  root.dataset.testid = layout.testId;
+  root.setAttribute("aria-label", layout.ariaLabel);
+
+  const bar = document.createElement("div");
+  bar.className = "quality-gate__bar";
+
+  const indicator = document.createElement("span");
+  indicator.className = `indicator indicator--${layout.bar.indicatorStatus} indicator--solid`;
+  indicator.setAttribute("aria-hidden", "true");
+
+  const barTitleEl = document.createElement("span");
+  barTitleEl.className = "quality-gate__bar-title";
+  barTitleEl.textContent = layout.bar.title;
+
+  // Same chrome order as widget-tile: status left, title flexes right, trailing action.
+  bar.append(indicator, barTitleEl);
+
+  if (layout.bar.info.enabled && layout.bar.info.payload) {
+    const fileSource = layout.bar.info.fileSource as QgInfoFileSource | undefined;
+    bar.append(createQgInfo(layout.bar.info.payload, fileSource));
+  }
+
+  root.append(bar, paintQualityGateBody(layout.body));
+  host.replaceChildren(root);
+  return { hidden: false, passed: layout.passed };
 }
 
 export function renderQualityGate(
   host: HTMLElement,
   options: QualityGateRenderOptions = {},
 ): { hidden: boolean; passed?: boolean } {
-  const rules = options.rules ?? [];
-  if (!rules.length) {
-    host.replaceChildren();
-    host.hidden = true;
-    return { hidden: true };
-  }
-
-  const passed = Boolean(options.passed);
-  const lang = options.lang ?? "ru";
-  const kind = options.kind ?? "allure";
-  const barTitle = options.barTitle ?? options.title ?? DEFAULT_BAR_TITLE;
-  const passedLabel = resolveLabel(options.labels?.passed, "passed", lang);
-  const testId = options.testId ?? (kind === "sonar" ? "sonar-quality-gate" : "quality-gate");
-
-  host.hidden = false;
-
-  const root = document.createElement("div");
-  root.className = `quality-gate quality-gate--${kind} quality-gate--${passed ? "passed" : "failed"}`;
-  root.setAttribute("role", "status");
-  root.dataset.testid = testId;
-  root.setAttribute(
-    "aria-label",
-    passed ? passedLabel : resolveLabel(options.labels?.failed, "failed", lang),
-  );
-
-  const bar = document.createElement("div");
-  bar.className = "quality-gate__bar";
-
-  const indicator = document.createElement("span");
-  indicator.className = `indicator indicator--${passed ? "passed" : "failed"} indicator--solid`;
-  indicator.setAttribute("aria-hidden", "true");
-
-  const barTitleEl = document.createElement("span");
-  barTitleEl.className = "quality-gate__bar-title";
-  barTitleEl.textContent = barTitle;
-
-  const infoPayload =
-    options.infoPayload ?? buildQualityGateInfoPayload({ ...options, rules, passed });
-  // Same chrome order as widget-tile: status left, title flexes right, trailing action.
-  bar.append(indicator, barTitleEl, createQgInfo(infoPayload, resolveQualityGateFileSource(options.config)));
-
-  const body = document.createElement("div");
-  body.className = "quality-gate__body";
-
-  if (passed) {
-    const verdict = document.createElement("p");
-    verdict.className = "quality-gate__verdict quality-gate__verdict--ok";
-    // Bar already names the gate — body stays a short status, not a repeated sentence.
-    verdict.textContent = lang === "en" ? "Passed" : "Пройден";
-    body.append(verdict);
-  } else {
-    const failedRules = rules.filter((rule) => !rule.passed);
-    if (failedRules.length) {
-      const list = document.createElement("ul");
-      list.className = "quality-gate__rules";
-      for (const rule of failedRules) {
-        const item = document.createElement("li");
-        item.className = "quality-gate__rule";
-
-        const idCell = document.createElement("div");
-        idCell.className = "quality-gate__rule-id";
-        idCell.textContent = rule.id;
-
-        const detail = document.createElement("div");
-        detail.className = "quality-gate__rule-detail";
-
-        const message = document.createElement("p");
-        message.className = "quality-gate__message";
-        message.textContent = rule.message;
-
-        detail.append(message);
-        const formula = formatQualityGateRuleFormula(rule);
-        if (formula) {
-          const formulaEl = document.createElement("p");
-          formulaEl.className = "quality-gate__formula";
-          formulaEl.textContent = formula;
-          detail.append(formulaEl);
-        }
-
-        item.append(idCell, detail);
-        list.append(item);
-      }
-      body.append(list);
-    }
-  }
-
-  root.append(bar, body);
-  host.replaceChildren(root);
-  return { hidden: false, passed };
+  const layout = buildQualityGateLayout(optionsToQualityGateData(options));
+  return paintQualityGateLayout(host, layout);
 }
 
 export function renderQualityGateHost(host: HTMLElement, data: KitQualityGateData): boolean {
@@ -259,16 +175,7 @@ export function renderQualityGateHost(host: HTMLElement, data: KitQualityGateDat
     tile.hidden = false;
   }
 
-  const result = renderQualityGate(host, {
-    passed: data.passed,
-    rules: data.rules,
-    kind: data.kind,
-    testId: data.testId,
-    barTitle: data.barTitle ?? data.title,
-    config: data.config,
-    infoPayload: data.infoPayload,
-    labels: data.labels,
-    lang: data.lang,
-  });
+  const layout = buildQualityGateLayout(data);
+  const result = paintQualityGateLayout(host, layout);
   return !result.hidden;
 }

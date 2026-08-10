@@ -257,6 +257,7 @@ export { mountReportHeader } from "./header.js";
 export {
   buildQualityGateInfoPayload,
   formatQualityGateRuleFormula,
+  paintQualityGateLayout,
   resolveQualityGateRuleExpected,
   renderQualityGate,
   renderQualityGateHost,
@@ -285,6 +286,8 @@ export type {
   QualityGateLayoutBar,
   QualityGateLayoutBody,
   QualityGateLayoutFailedBody,
+  QualityGateLayoutInfoFileSource,
+  QualityGateLayoutInfoPopover,
   QualityGateLayoutInput,
   QualityGateLayoutMetrics,
   QualityGateLayoutPassedBody,

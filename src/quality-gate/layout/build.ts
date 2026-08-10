@@ -8,9 +8,10 @@ import type {
   QualityGateLabels,
 } from "../../types.js";
 import {
-  formatQualityGateRuleFormula,
-  resolveQualityGateRuleExpected,
-} from "../../runtime/quality-gate-render.js";
+  buildQualityGateInfoPayloadFromData,
+  resolveQualityGateFileSource,
+} from "../info-payload.js";
+import { formatQualityGateRuleFormula, resolveQualityGateRuleExpected } from "../rule-format.js";
 import { QUALITY_GATE_LAYOUT_METRICS } from "./metrics.js";
 import { QUALITY_GATE_LAYOUT_TOKENS } from "./tokens.js";
 import type {
@@ -61,6 +62,19 @@ function buildRuleRow(rule: KitQualityGateRule): QualityGateLayoutRuleRow {
     }
   }
   return row;
+}
+
+function buildBarInfo(data: KitQualityGateData): QualityGateLayout["bar"]["info"] {
+  const enabled = Boolean(data.config ?? data.infoPayload);
+  if (!enabled) {
+    return { enabled: false };
+  }
+  const fileSource = resolveQualityGateFileSource(data.config);
+  return {
+    enabled: true,
+    payload: buildQualityGateInfoPayloadFromData(data),
+    ...(fileSource ? { fileSource } : {}),
+  };
 }
 
 function buildBody(data: KitQualityGateData, passed: boolean, lang: "ru" | "en"): QualityGateLayoutBody {
@@ -124,7 +138,7 @@ export function buildQualityGateLayout(
     bar: {
       title: barTitle,
       indicatorStatus: passed ? "passed" : "failed",
-      info: { enabled: Boolean(data.config ?? data.infoPayload) },
+      info: buildBarInfo(data),
     },
     body: buildBody(data, passed, lang),
   };

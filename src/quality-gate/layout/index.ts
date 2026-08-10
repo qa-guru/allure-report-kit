@@ -8,6 +8,8 @@ export type {
   QualityGateLayoutBar,
   QualityGateLayoutBody,
   QualityGateLayoutFailedBody,
+  QualityGateLayoutInfoFileSource,
+  QualityGateLayoutInfoPopover,
   QualityGateLayoutInput,
   QualityGateLayoutMetrics,
   QualityGateLayoutPassedBody,

@@ -99,7 +99,161 @@
     "title": "Sonar Quality Gate",
     "indicatorStatus": "failed",
     "info": {
-      "enabled": true
+      "enabled": true,
+      "payload": {
+        "qualityGate": {
+          "profile": "qa-guru-canon-long",
+          "projectKey": "reference-app-backend",
+          "conditions": [
+            {
+              "metric": "coverage",
+              "op": "LT",
+              "error": 80,
+              "label": "coverage LT 80"
+            },
+            {
+              "metric": "bugs",
+              "op": "GT",
+              "error": 0,
+              "label": "bugs GT 0"
+            },
+            {
+              "metric": "vulnerabilities",
+              "op": "GT",
+              "error": 0,
+              "label": "vulnerabilities GT 0"
+            },
+            {
+              "metric": "code_smells",
+              "op": "GT",
+              "error": 50,
+              "label": "code_smells GT 50"
+            },
+            {
+              "metric": "duplicated_lines_density",
+              "op": "GT",
+              "error": 3,
+              "label": "duplicated_lines_density GT 3"
+            },
+            {
+              "metric": "sqale_rating",
+              "op": "GT",
+              "error": 1,
+              "label": "sqale_rating GT 1"
+            },
+            {
+              "metric": "reliability_rating",
+              "op": "GT",
+              "error": 1,
+              "label": "reliability_rating GT 1"
+            },
+            {
+              "metric": "security_rating",
+              "op": "GT",
+              "error": 1,
+              "label": "security_rating GT 1"
+            },
+            {
+              "metric": "new_coverage",
+              "op": "LT",
+              "error": 80,
+              "label": "new_coverage LT 80"
+            },
+            {
+              "metric": "new_bugs",
+              "op": "GT",
+              "error": 0,
+              "label": "new_bugs GT 0"
+            }
+          ]
+        },
+        "result": {
+          "status": "ERROR",
+          "passed": false,
+          "analysisId": "AXfixtureLongAnalysis",
+          "dashboardUrl": "https://sonar.qa.guru/dashboard?id=reference-app-backend",
+          "conditions": [
+            {
+              "status": "ERROR",
+              "metricKey": "coverage",
+              "comparator": "LT",
+              "errorThreshold": 80,
+              "actualValue": 71.2
+            },
+            {
+              "status": "OK",
+              "metricKey": "bugs",
+              "comparator": "GT",
+              "errorThreshold": 0,
+              "actualValue": 0
+            },
+            {
+              "status": "ERROR",
+              "metricKey": "vulnerabilities",
+              "comparator": "GT",
+              "errorThreshold": 0,
+              "actualValue": 2
+            },
+            {
+              "status": "OK",
+              "metricKey": "code_smells",
+              "comparator": "GT",
+              "errorThreshold": 50,
+              "actualValue": 12
+            },
+            {
+              "status": "ERROR",
+              "metricKey": "duplicated_lines_density",
+              "comparator": "GT",
+              "errorThreshold": 3,
+              "actualValue": 5.4
+            },
+            {
+              "status": "OK",
+              "metricKey": "sqale_rating",
+              "comparator": "GT",
+              "errorThreshold": 1,
+              "actualValue": 1
+            },
+            {
+              "status": "ERROR",
+              "metricKey": "reliability_rating",
+              "comparator": "GT",
+              "errorThreshold": 1,
+              "actualValue": 3
+            },
+            {
+              "status": "OK",
+              "metricKey": "security_rating",
+              "comparator": "GT",
+              "errorThreshold": 1,
+              "actualValue": 1
+            },
+            {
+              "status": "ERROR",
+              "metricKey": "new_coverage",
+              "comparator": "LT",
+              "errorThreshold": 80,
+              "actualValue": 45
+            },
+            {
+              "status": "OK",
+              "metricKey": "new_bugs",
+              "comparator": "GT",
+              "errorThreshold": 0,
+              "actualValue": 0
+            }
+          ]
+        }
+      },
+      "fileSource": {
+        "configFile": "docs/sonar/quality-gate-profile.json",
+        "profile": "qa-guru-canon-long",
+        "projectKey": "reference-app-backend",
+        "hrefBase": "https://github.com/qa-guru/zero-design-system/blob/master/",
+        "profileHref": "https://sonar.qa.guru/profiles/show?name=qa-guru-canon-long",
+        "projectHref": "https://sonar.qa.guru/dashboard?id=reference-app-backend"
+      }
     }
   },
   "body": {

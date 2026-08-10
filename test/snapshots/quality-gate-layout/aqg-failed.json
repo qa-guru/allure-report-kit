@@ -99,7 +99,44 @@
     "title": "Allure Quality Gate",
     "indicatorStatus": "failed",
     "info": {
-      "enabled": true
+      "enabled": true,
+      "payload": {
+        "qualityGate": {
+          "rules": [
+            {
+              "maxFailures": 0
+            },
+            {
+              "successRate": 95
+            }
+          ]
+        },
+        "result": {
+          "passed": false,
+          "rules": [
+            {
+              "id": "maxFailures",
+              "passed": false,
+              "message": "The number of failed tests 3 exceeds the allowed threshold value 0",
+              "actual": 3,
+              "expected": 0,
+              "knownExcluded": 0
+            },
+            {
+              "id": "successRate",
+              "passed": false,
+              "message": "Success rate 88.2% is below the minimum required 95%",
+              "actual": 88.2,
+              "expected": 95
+            }
+          ]
+        }
+      },
+      "fileSource": {
+        "configFile": "allurerc.mjs",
+        "rulesFile": "allure/quality-gate.mjs",
+        "hrefBase": "https://github.com/qa-guru/zero-design-system/blob/master/stacks/java-spring/tests/"
+      }
     }
   },
   "body": {

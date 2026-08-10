@@ -99,7 +99,34 @@
     "title": "Allure Quality Gate",
     "indicatorStatus": "passed",
     "info": {
-      "enabled": true
+      "enabled": true,
+      "payload": {
+        "qualityGate": {
+          "rules": [
+            {
+              "maxFailures": 0
+            }
+          ]
+        },
+        "result": {
+          "passed": true,
+          "rules": [
+            {
+              "id": "maxFailures",
+              "passed": true,
+              "message": "Failed tests 0 within threshold 0",
+              "actual": 0,
+              "expected": 0,
+              "knownExcluded": 0
+            }
+          ]
+        }
+      },
+      "fileSource": {
+        "configFile": "allurerc.mjs",
+        "rulesFile": "allure/quality-gate.mjs",
+        "hrefBase": "https://github.com/qa-guru/zero-design-system/blob/master/stacks/java-spring/tests/"
+      }
     }
   },
   "body": {
