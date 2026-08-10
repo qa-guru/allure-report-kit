@@ -5,14 +5,14 @@
 #   MODE=dry-run|live|skip
 #   TELEGRAM_BOT_TOKEN | TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, TELEGRAM_TOPIC_ID (live)
 #   BUILD_URL, REF_NAME, SHORT_SHA (optional links / project label)
-# Pin: npx allure-notifications@6.0.13 (docs/allure-notifications/VERSION).
+# Pin: npx @qa-guru/allure-notifications@6.1.0 (kit profile dogfood collage).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 MODE="${MODE:-dry-run}"
-CLI_PIN="${CLI_PIN:-6.0.13}"
+CLI_PIN="${CLI_PIN:-6.1.0}"
 OUT_PNG="${OUT_PNG:-collage-telegram.png}"
 RUNTIME_CONFIG="${RUNTIME_CONFIG:-config/ci-telegram.runtime.json}"
 
@@ -108,10 +108,18 @@ if [[ "$MODE" == "live" ]]; then
   export TELEGRAM_TOPIC_ID="${TELEGRAM_TOPIC_ID:-${TELEGRAM_ALLURE_REPORT_KIT_TOPIC_ID:-405}}"
 fi
 
-echo "==> npx allure-notifications@${CLI_PIN} send --config ${RUNTIME_CONFIG} ${FLAG}"
+if [[ -f node_modules/@qa-guru/allure-notifications/package.json ]]; then
+  SEND_BIN=(npx --no-install allure-notifications)
+  SEND_LABEL="@qa-guru/allure-notifications@${CLI_PIN} (local)"
+else
+  SEND_BIN=(npx --yes "@qa-guru/allure-notifications@${CLI_PIN}")
+  SEND_LABEL="@qa-guru/allure-notifications@${CLI_PIN} (npx)"
+fi
+
+echo "==> ${SEND_LABEL} send --config ${RUNTIME_CONFIG} ${FLAG}"
 set +e
 SEND_LOG="$(mktemp)"
-npx --yes "allure-notifications@${CLI_PIN}" send \
+"${SEND_BIN[@]}" send \
   --config "$RUNTIME_CONFIG" \
   $FLAG \
   --out "$OUT_PNG" 2>&1 | tee "$SEND_LOG"

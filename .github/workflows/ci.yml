@@ -316,6 +316,9 @@ jobs:
         with:
           node-version: 26
 
+      - name: Install collage CLI (pin 6.1.0)
+        run: npm install
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -374,7 +377,7 @@ jobs:
         if: steps.gate.outputs.mode != 'skip'
         env:
           MODE: ${{ steps.gate.outputs.mode }}
-          CLI_PIN: '6.0.13'
+          CLI_PIN: '6.1.0'
           REF_NAME: ${{ github.ref_name }}
           SHORT_SHA: ${{ github.sha }}
           BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -409,7 +412,7 @@ jobs:
             echo "## Telegram (Q4)"
             echo ""
             echo "- topic: slug \`allure-report-kit\` → id **405** (ADR 008)"
-            echo "- CLI pin: \`allure-notifications@6.0.13\`"
+            echo "- CLI pin: \`@qa-guru/allure-notifications@6.1.0\`"
             echo "- gate: \`${GATE_MODE}\` (\`${GATE_REASON}\`)"
             if [[ "${GATE_MODE}" == "skip" ]]; then
               echo "- status: soft-skip (missing TELEGRAM_* — not a merge blocker)"

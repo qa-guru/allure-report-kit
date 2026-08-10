@@ -1,0 +1,22 @@
+{
+  "status": "OK",
+  "project_key": "allure-report-kit",
+  "analysis_id": "AXdogfoodPassedAnalysis",
+  "dashboard_url": "https://sonar.qa.guru/dashboard?id=allure-report-kit",
+  "conditions": [
+    {
+      "status": "OK",
+      "metricKey": "coverage",
+      "comparator": "LT",
+      "errorThreshold": 80,
+      "actualValue": 100
+    },
+    {
+      "status": "OK",
+      "metricKey": "bugs",
+      "comparator": "GT",
+      "errorThreshold": 0,
+      "actualValue": 0
+    }
+  ]
+}
