@@ -6,7 +6,7 @@
  * viewport). ResizeObserver on the tile body recalculates maxRows on resize.
  */
 import type { KitTestsTableData, KitTestsTableHistoryPoint, KitTestsTableRow } from "../types.js";
-import { buildSparkline, readSparklineTheme, type SparklineTheme } from "./sparkline-render.js";
+import { buildSparkline, readSparklineTheme, trendSparkColor, type SparklineTheme } from "./sparkline-render.js";
 import { buildStabilityCell } from "./stability-cell-render.js";
 
 const DEFAULT_COLUMNS = {
@@ -125,7 +125,12 @@ function buildRow(
 
   const trendCell = document.createElement("td");
   trendCell.className = "tests-table-panel__trend";
-  trendCell.append(buildSparkline(row.history, theme, { lang }));
+  trendCell.append(
+    buildSparkline(row.history, theme, {
+      lang,
+      stroke: trendSparkColor(status, theme),
+    }),
+  );
 
   const stabilityCell = document.createElement("td");
   stabilityCell.className = "tests-table-panel__stability";

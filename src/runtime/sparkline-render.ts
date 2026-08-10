@@ -29,6 +29,18 @@ export function statusSparkColor(status: string | undefined, theme: SparklineThe
   return theme.skip;
 }
 
+/**
+ * Trend-line stroke by row status — passed keeps accent (info blue);
+ * failed / broken / skipped use status-family colors (palette + collage parity).
+ */
+export function trendSparkColor(status: string | undefined, theme: SparklineTheme): string {
+  const normalized = (status || "unknown").toLowerCase();
+  if (normalized === "failed") return theme.fail;
+  if (normalized === "broken") return theme.broken;
+  if (normalized === "skipped" || normalized === "unknown") return theme.skip;
+  return theme.accent;
+}
+
 export function sparklineThemeFromSite(siteTheme: "light" | "dark"): SparklineTheme {
   const isDark = siteTheme === "dark";
   return {
