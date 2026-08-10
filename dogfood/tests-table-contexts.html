@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru" class="theme-light" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tests table — contexts (palette · editor · preview)</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%2349cb68'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/src/theme/header.css" />
+    <link rel="stylesheet" href="/src/theme/standalone.css" />
+    <link rel="stylesheet" href="/dogfood/dogfood.css" />
+    <link rel="stylesheet" href="/dogfood/tests-table-contexts.css" />
+  </head>
+  <body>
+    <main class="ark-page ttc-page" data-testid="tests-table-contexts">
+      <header>
+        <p class="ttc-page__status">Kit dogfood · tests-table contexts</p>
+        <h1 class="ttc-page__title">Tests table — один виджет, три контекста</h1>
+        <p class="ttc-page__lead">
+          Реальный kit runtime (<code>renderTestsTableHost</code>), fixture 24 строки.
+          Размеры коллажа — <code>freeCellRect</code> @ CB-870 (870×1080, gap 14, grid 10×10),
+          как в allure-notifications-builder. Palette — thumb 2×2 (128px, tier micro).
+          Slice по высоте — как collage PNG.
+        </p>
+        <p class="ttc-page__lead">
+          <a class="link link--nav" href="/dogfood/">← dogfood grid</a>
+        </p>
+      </header>
+
+      <pre id="ttc-error" class="ttc-error" hidden></pre>
+
+      <section class="ttc-section" aria-labelledby="ttc-palette-title">
+        <h2 id="ttc-palette-title" class="ttc-section__title">1. Блок конфигурации (palette 2×2)</h2>
+        <p class="ttc-section__desc">
+          Отпечаток при добавлении из палитры: <code>widget-tile--tier-micro</code>,
+          квадратное body, индикаторы в bar — как в builder options.
+        </p>
+        <div id="ttc-palette" class="ttc-grid"></div>
+      </section>
+
+      <section class="ttc-section" aria-labelledby="ttc-editor-title">
+        <h2 id="ttc-editor-title" class="ttc-section__title">2. Коллаж-редактор (footprint на сетке)</h2>
+        <p class="ttc-section__desc">
+          <code>anb-panel</code> chrome: editor bar 31px + body pad 6px.
+          Footprints 1×2, 2×2, 3×4; 10×10 — scale 0.34.
+        </p>
+        <div id="ttc-editor" class="ttc-grid"></div>
+      </section>
+
+      <section class="ttc-section" aria-labelledby="ttc-preview-title">
+        <h2 id="ttc-preview-title" class="ttc-section__title">3. Превью (TG / export)</h2>
+        <p class="ttc-section__desc">
+          Product chrome: <code>widget-tile__bar</code> + title, body = kit table.
+          Те же logical px, что в <code>previewItemHtml</code>.
+        </p>
+        <div id="ttc-preview" class="ttc-grid"></div>
+      </section>
+    </main>
+
+    <script type="module" src="/dogfood/tests-table-contexts.js"></script>
+  </body>
+</html>
