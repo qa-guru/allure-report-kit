@@ -15,6 +15,8 @@
 .tests-table-panel {
   overflow: hidden;
   box-sizing: border-box;
+  container-type: inline-size;
+  container-name: tests-table;
 }
 
 .tests-table-panel__table {
@@ -29,6 +31,7 @@
   padding: 6px var(--space-2);
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
+  overflow: hidden;
 }
 
 .tests-table-panel__table thead tr {
@@ -46,18 +49,25 @@
   letter-spacing: 0.04em;
   color: var(--color-text-muted);
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Fluid name column — percentage widths; name keeps remainder of row width. */
+.tests-table-panel__table col.tests-table-panel__name {
+  width: 30%;
 }
 
 .tests-table-panel__table col.tests-table-panel__status {
-  width: 5.5rem;
+  width: 24%;
 }
 
 .tests-table-panel__table col.tests-table-panel__trend {
-  width: 6rem;
+  width: 26%;
 }
 
 .tests-table-panel__table col.tests-table-panel__stability {
-  width: 5.5rem;
+  width: 20%;
 }
 
 .tests-table-panel__table tbody tr:last-child td {
@@ -68,12 +78,80 @@
   background: color-mix(in srgb, var(--color-border) 35%, transparent);
 }
 
-/* Name column: fluid remainder; ellipsis only when text overflows the cell. */
-.tests-table-panel__name {
+/* Name column: ellipsis on overflow (no max-width:0 — collapses column in table-layout:fixed). */
+.tests-table-panel__table th.tests-table-panel__name,
+.tests-table-panel__table td.tests-table-panel__name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 0;
+  min-width: 0;
+}
+
+/* Trend sparkline must not exceed column width (default SVG width is 88px). */
+.tests-table-panel__trend .sparkline.sparkline--duration {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Cell content must stay inside its column (badge/sparkline were visually breaking the grid). */
+.tests-table-panel__status .badge {
+  display: inline-block;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.tests-table-panel__stability .stability-cell {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Narrow tile (e.g. collage 2×2 ~140px): widen status, shrink type — matches compact tier. */
+@container tests-table (max-width: 220px) {
+  .tests-table-panel__table col.tests-table-panel__name {
+    width: 14%;
+  }
+
+  .tests-table-panel__table col.tests-table-panel__status {
+    width: 42%;
+  }
+
+  .tests-table-panel__table col.tests-table-panel__trend {
+    width: 26%;
+  }
+
+  .tests-table-panel__table col.tests-table-panel__stability {
+    width: 18%;
+  }
+
+  .tests-table-panel__table {
+    font-size: 0.625rem;
+    line-height: 1.15;
+  }
+
+  .tests-table-panel__table thead tr {
+    height: 18px;
+  }
+
+  .tests-table-panel__table tbody tr {
+    height: 20px;
+  }
+
+  .tests-table-panel__table th,
+  .tests-table-panel__table td {
+    padding: 2px 4px;
+  }
+
+  .tests-table-panel .badge {
+    font-size: 0.55rem;
+    padding: 0 3px;
+    line-height: 1.1;
+    font-weight: 600;
+  }
 }
 
 /* —— Footprint tiers (palette micro = builder anb-palette__tile canon) —— */
@@ -215,6 +293,26 @@
   font-size: 0.34rem;
   padding: 0 1px;
   min-width: 0;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table col.tests-table-panel__name,
+.tests-table-host--tier-compact .tests-table-panel__table col.tests-table-panel__name {
+  width: 30%;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table col.tests-table-panel__status,
+.tests-table-host--tier-compact .tests-table-panel__table col.tests-table-panel__status {
+  width: 18%;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table col.tests-table-panel__trend,
+.tests-table-host--tier-compact .tests-table-panel__table col.tests-table-panel__trend {
+  width: 28%;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table col.tests-table-panel__stability,
+.tests-table-host--tier-compact .tests-table-panel__table col.tests-table-panel__stability {
+  width: 24%;
 }
 
 .widget-tile--tier-compact .tests-table-panel__table,
