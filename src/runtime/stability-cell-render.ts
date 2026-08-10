@@ -37,6 +37,8 @@ export interface BuildStabilityCellOptions {
   lang?: "ru" | "en";
   flipsLabel?: string;
   limit?: number;
+  /** Palette thumb — dots only, no flaky badge. */
+  hideFlaky?: boolean;
 }
 
 export function buildStabilityCell(
@@ -54,7 +56,7 @@ export function buildStabilityCell(
   const root = document.createElement("div");
   root.className = "stability-cell";
 
-  if (flips > 0) {
+  if (flips > 0 && !options.hideFlaky) {
     const badge = document.createElement("span");
     badge.className = "badge badge--flaky";
     badge.title = `${flipsLabel}: ${flips}`;

@@ -5,7 +5,7 @@
  * Visible row count follows collage parity: slice to host height (no scroll
  * viewport). ResizeObserver on the tile body recalculates maxRows on resize.
  */
-import type { KitTestsTableData, KitTestsTableRow } from "../types.js";
+import type { KitTestsTableData, KitTestsTableHistoryPoint, KitTestsTableRow } from "../types.js";
 import { buildSparkline, readSparklineTheme, type SparklineTheme } from "./sparkline-render.js";
 import { buildStabilityCell } from "./stability-cell-render.js";
 
@@ -18,6 +18,13 @@ const DEFAULT_EMPTY_ROWS = {
   ru: "Нет тестов в прогоне.",
   en: "No tests in this run.",
 } as const;
+
+/** Builder palette thumb — fixed row count, no height slice. */
+export const PALETTE_MICRO_ROWS = 5;
+
+const PALETTE_SHORT_NAMES = ["login", "reject", "checkout", "api", "legacy"] as const;
+
+type CssVarReader = (name: string, fallback?: string) => string;
 
 const COLUMN_CLASSES = [
   "tests-table-panel__name",
@@ -128,38 +135,150 @@ function buildRow(
   return tr;
 }
 
+function isPaletteHost(host: HTMLElement): boolean {
+  return Boolean(host.closest(".widget-tile--tier-micro, .tests-table-panel--palette"));
+}
+
+function paletteShortName(row: KitTestsTableRow, index: number): string {
+  const preset = PALETTE_SHORT_NAMES[index];
+  if (preset) {
+    return preset;
+  }
+  const raw = row.name || row.id || "—";
+  return raw.length > 10 ? raw.slice(0, 8) : raw;
+}
+
+function statusIndicatorTone(status: string): string {
+  const normalized = (status || "unknown").toLowerCase();
+  if (normalized === "passed") return "passed";
+  if (normalized === "failed") return "failed";
+  if (normalized === "broken") return "broken";
+  return "skipped";
+}
+
+function paletteSparklineHistory(
+  history: KitTestsTableHistoryPoint[] | undefined,
+): KitTestsTableHistoryPoint[] {
+  const points = (history ?? []).filter((point) => typeof point.durationSec === "number");
+  if (points.length >= 2) {
+    return points;
+  }
+  if (points.length === 1) {
+    const single = points[0]!;
+    return [single, { ...single }];
+  }
+  return [
+    { status: "passed", durationSec: 1 },
+    { status: "passed", durationSec: 1.1 },
+  ];
+}
+
+function paletteTrendStroke(
+  index: number,
+  cssVar: CssVarReader,
+  theme: SparklineTheme,
+): string {
+  switch (index) {
+    case 1:
+      return cssVar("--color-danger", theme.fail);
+    case 2:
+      return cssVar("--color-warning", theme.broken);
+    case 4:
+      return cssVar("--color-text-muted", theme.skip);
+    default:
+      return cssVar("--sparkline-accent", cssVar("--color-info", theme.accent));
+  }
+}
+
+function buildPaletteRow(
+  row: KitTestsTableRow,
+  index: number,
+  theme: SparklineTheme,
+  lang: "ru" | "en",
+  cssVar: CssVarReader,
+): HTMLTableRowElement {
+  const status = (row.status || "unknown").toLowerCase();
+  const tr = document.createElement("tr");
+  tr.dataset.testid = "tests-table-row";
+
+  const nameCell = document.createElement("td");
+  nameCell.className = "tests-table-panel__name";
+  nameCell.textContent = paletteShortName(row, index);
+
+  const statusCell = document.createElement("td");
+  statusCell.className = "tests-table-panel__status";
+  const dot = document.createElement("span");
+  dot.className = `indicator indicator--${statusIndicatorTone(status)} indicator--solid`;
+  dot.setAttribute("aria-hidden", "true");
+  statusCell.append(dot);
+
+  const trendCell = document.createElement("td");
+  trendCell.className = "tests-table-panel__trend";
+  trendCell.append(
+    buildSparkline(paletteSparklineHistory(row.history), theme, {
+      lang,
+      width: 40,
+      height: 12,
+      stroke: paletteTrendStroke(index, cssVar, theme),
+    }),
+  );
+
+  const stabilityCell = document.createElement("td");
+  stabilityCell.className = "tests-table-panel__stability";
+  stabilityCell.append(
+    buildStabilityCell(row.flakyFlips, row.history, theme, { lang, limit: 4, hideFlaky: true }),
+  );
+
+  tr.append(nameCell, statusCell, trendCell, stabilityCell);
+  return tr;
+}
+
 function fillTableBody(
   tbody: HTMLTableSectionElement,
   rows: KitTestsTableRow[],
   lang: "ru" | "en",
   theme: SparklineTheme,
+  palette: boolean,
+  cssVar: CssVarReader,
 ): void {
+  if (palette) {
+    tbody.replaceChildren(
+      ...rows.map((row, index) => buildPaletteRow(row, index, theme, lang, cssVar)),
+    );
+    return;
+  }
   tbody.replaceChildren(...rows.map((row) => buildRow(row, lang, theme)));
 }
 
-function buildTableShell(columns: string[]): HTMLTableElement {
+function buildTableShell(columns: string[], palette: boolean): HTMLTableElement {
   const table = document.createElement("table");
   table.className = "tests-table-panel__table";
   table.dataset.testid = "tests-table-panel";
 
   const colgroup = document.createElement("colgroup");
-  for (const className of COLUMN_CLASSES) {
+  const paletteColWidths = ["34%", "10%", "34%", "22%"] as const;
+  for (const [index, className] of COLUMN_CLASSES.entries()) {
     const col = document.createElement("col");
     col.className = className;
+    if (palette) {
+      col.style.width = paletteColWidths[index] ?? "";
+    }
     colgroup.append(col);
   }
   table.append(colgroup);
 
-  const head = document.createElement("thead");
-  const headRow = document.createElement("tr");
-  for (const [index, column] of columns.entries()) {
-    const th = document.createElement("th");
-    th.className = COLUMN_CLASSES[index] ?? "";
-    th.textContent = column;
-    headRow.append(th);
+  if (!palette) {
+    const head = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    for (const [index, column] of columns.entries()) {
+      const th = document.createElement("th");
+      th.className = COLUMN_CLASSES[index] ?? "";
+      th.textContent = column;
+      headRow.append(th);
+    }
+    head.append(headRow);
+    table.append(head);
   }
-  head.append(headRow);
-  table.append(head);
 
   const body = document.createElement("tbody");
   table.append(body);
@@ -192,21 +311,24 @@ export function renderTestsTableHost(
     return;
   }
 
-  const scroll = document.createElement("div");
-  scroll.className = "tests-table-panel";
+  const palette = isPaletteHost(host);
 
-  const table = buildTableShell(columns);
+  const scroll = document.createElement("div");
+  scroll.className = palette ? "tests-table-panel tests-table-panel--palette" : "tests-table-panel";
+
+  const table = buildTableShell(columns, palette);
   const tbody = table.querySelector("tbody");
   if (!tbody) {
     throw new Error("renderTestsTableHost: table body missing");
   }
 
   const syncRows = (): void => {
-    const hostHeight = host.clientHeight || host.getBoundingClientRect().height;
     const metrics = resolveTestsTableMetrics(host);
-    const maxRows = testsTableMaxRows(hostHeight, metrics);
+    const maxRows = palette
+      ? Math.min(PALETTE_MICRO_ROWS, rows.length)
+      : testsTableMaxRows(host.clientHeight || host.getBoundingClientRect().height, metrics);
     tbody.dataset.maxRows = String(maxRows);
-    fillTableBody(tbody, rows.slice(0, maxRows), lang, theme);
+    fillTableBody(tbody, rows.slice(0, maxRows), lang, theme, palette, options.cssVar);
   };
 
   scroll.append(table);

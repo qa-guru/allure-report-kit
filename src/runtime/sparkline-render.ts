@@ -47,7 +47,7 @@ export function readSparklineTheme(
   const site = isDark ? "dark" : "light";
   const fromSite = sparklineThemeFromSite(site);
   return {
-    accent: cssVar("--color-primary", fromSite.accent),
+    accent: cssVar("--sparkline-accent", cssVar("--color-info", fromSite.accent)),
     pass: cssVar("--color-success", fromSite.pass),
     fail: cssVar("--color-danger", fromSite.fail),
     broken: cssVar("--color-warning", fromSite.broken),
@@ -60,6 +60,8 @@ export interface BuildSparklineOptions {
   lang?: "ru" | "en";
   width?: number;
   height?: number;
+  /** Overrides theme.accent — builder palette uses status-family strokes. */
+  stroke?: string;
 }
 
 export function buildSparkline(
@@ -93,6 +95,7 @@ export function buildSparkline(
   const polyline = coords.join(" ");
   const area = `${pad},${height - pad} ${polyline} ${width - pad},${height - pad}`;
   const label = values.map((value, index) => `R${index + 1}: ${value.toFixed(2)}s`).join(" · ");
+  const stroke = options.stroke ?? theme.accent;
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("class", "sparkline sparkline--duration");
@@ -109,14 +112,14 @@ export function buildSparkline(
   const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
   polygon.setAttribute("class", "sparkline__area");
   polygon.setAttribute("points", area);
-  polygon.setAttribute("fill", theme.accent);
+  polygon.setAttribute("fill", stroke);
   polygon.setAttribute("fill-opacity", "0.14");
 
   const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   line.setAttribute("class", "sparkline__line");
   line.setAttribute("points", polyline);
   line.setAttribute("fill", "none");
-  line.setAttribute("stroke", theme.accent);
+  line.setAttribute("stroke", stroke);
   line.setAttribute("stroke-width", "1.5");
   line.setAttribute("stroke-linecap", "round");
   line.setAttribute("stroke-linejoin", "round");

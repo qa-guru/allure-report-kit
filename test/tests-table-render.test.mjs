@@ -11,6 +11,7 @@ declareSuite({
 });
 
 import {
+  PALETTE_MICRO_ROWS,
   TESTS_TABLE_HEADER_H,
   TESTS_TABLE_ROW_H,
   resolveTestsTableMetrics,
@@ -38,4 +39,8 @@ test("resolveTestsTableMetrics shrinks rows for micro footprint", () => {
   assert.equal(metrics.headerH, 0);
   assert.equal(metrics.rowH, 7);
   assert.equal(testsTableMaxRows(44, metrics), 6);
+});
+
+test("palette thumb uses fixed row count", () => {
+  assert.equal(PALETTE_MICRO_ROWS, 5);
 });

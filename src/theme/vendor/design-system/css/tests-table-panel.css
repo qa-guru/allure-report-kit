@@ -85,10 +85,15 @@
 .widget-tile--tier-micro .tests-table-panel {
   box-sizing: border-box;
   height: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm, 4px);
-  background: var(--color-surface);
   overflow: hidden;
+}
+
+/* Tile chrome is the only frame — no nested panel border inside widget-tile. */
+.widget-tile__body > .tests-table-panel,
+.widget-tile__body > .tests-table-panel--palette {
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 .widget-tile--tier-micro .tests-table-panel__table thead,
@@ -120,9 +125,30 @@
   border-bottom: none;
 }
 
-.widget-tile--tier-micro .tests-table-panel__name {
+.widget-tile--tier-micro .tests-table-panel__name,
+.tests-table-panel--palette .tests-table-panel__name {
   width: 34%;
   max-width: 34%;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table col.tests-table-panel__name {
+  width: 34%;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table col.tests-table-panel__status {
+  width: 10%;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table col.tests-table-panel__trend {
+  width: 34%;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table col.tests-table-panel__stability {
+  width: 22%;
 }
 
 .widget-tile--tier-micro .tests-table-panel__status {
@@ -139,13 +165,21 @@
   width: 22%;
 }
 
+.widget-tile--tier-micro .tests-table-panel__status .indicator,
+.tests-table-panel--palette .tests-table-panel__status .indicator {
+  --indicator-size: 4px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .widget-tile--tier-micro .tests-table-panel .badge,
-.tests-table-host--tier-micro .tests-table-panel .badge {
-  font-size: 0.38rem;
-  padding: 0 1px;
-  line-height: 1;
-  font-weight: 600;
-  border-radius: 2px;
+.tests-table-panel--palette .tests-table-panel .badge {
+  display: none;
+}
+
+.widget-tile--tier-micro .sparkline--empty,
+.tests-table-panel--palette .sparkline--empty {
+  display: none;
 }
 
 .widget-tile--tier-micro .tests-table-panel .sparkline {
@@ -153,6 +187,14 @@
   width: 100%;
   max-width: none;
   height: 5px;
+  max-height: 5px;
+}
+
+.widget-tile--tier-micro .tests-table-panel .sparkline.sparkline--duration {
+  overflow: hidden;
+  width: 100%;
+  height: 5px;
+  max-height: 5px;
 }
 
 .widget-tile--tier-micro .tests-table-panel .stability-cell {

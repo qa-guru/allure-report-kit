@@ -12,6 +12,7 @@
   --color-warning: #f59e0b;
   --color-danger: #f87171;
   --color-info: #61b6fb;
+  --sparkline-accent: #38bdf8;
   --color-border: rgba(255, 255, 255, 0.1);
   --color-brand-logo: #ffffff;
 
@@ -180,6 +181,7 @@ html.theme-light {
   --color-primary-on: #f1f5f9;
   --color-warning: #b45309;
   --color-info: #2f7fc4;
+  --sparkline-accent: #20aee3;
   --color-brand-logo: #1c1917;
   --layer-unit: #94ca66;
   --layer-component: #ff8200;
