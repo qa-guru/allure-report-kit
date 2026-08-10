@@ -89,6 +89,25 @@
   overflow: hidden;
 }
 
+/* —— Footprint tiles (explicit logical px from freeCellRect) —— */
+.ttc-footprint-tile.widget-tile {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ttc-footprint-tile .widget-tile__bar {
+  flex-shrink: 0;
+}
+
+.ttc-footprint-tile .widget-tile__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: auto;
+  width: 100%;
+}
+
 /* —— Editor chrome (anb-panel) —— */
 .ttc-editor-panel {
   display: flex;
@@ -129,28 +148,66 @@
   min-height: 0;
   padding: 6px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .ttc-editor-panel__host {
-  width: 100%;
-  height: 100%;
+  flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
   box-sizing: border-box;
 }
 
-/* Preview — single widget-tile chrome (no extra bordered wrapper). */
-.widget-tile .widget-tile__body {
-  aspect-ratio: auto;
-}
-
-/* —— 10×10 scaled strip —— */
-.ttc-cell--hero {
+/* —— CB-870 canvas stage (10×10 span visible on grid) —— */
+.ttc-canvas-stage {
+  position: relative;
+  overflow: hidden;
   flex-basis: 100%;
 }
 
-.ttc-cell--hero .ttc-editor-panel,
-.ttc-cell--hero .ttc-preview-tile {
+.ttc-canvas {
+  position: relative;
+  width: 870px;
+  height: 1080px;
   transform-origin: top left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-surface);
+  box-sizing: border-box;
+}
+
+.ttc-canvas__grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 87px 108px;
+  background-position: 0 0;
+}
+
+.ttc-canvas__badge {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-text) 8%, var(--color-surface));
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ttc-canvas__tile {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
 }
 
 .ttc-error {

@@ -17,13 +17,11 @@ const CANVAS = {
   gridRows: 10,
 };
 
+const CANVAS_HERO_SCALE = 0.45;
+
 /** Builder `freeCellRect` — logical canvas px. */
 function freeCellRect(item) {
-  const { width, height, cardGap, gridCols, gridRows } = {
-    ...CANVAS,
-    width: CANVAS.width,
-    height: CANVAS.height,
-  };
+  const { width, height, cardGap, gridCols, gridRows } = CANVAS;
   const half = Math.floor(cardGap / 2);
   const cellW = width / gridCols;
   const cellH = height / gridRows;
@@ -55,12 +53,13 @@ function tierForSpan(w, h) {
   return "compact";
 }
 
-const COLLAGE_FOOTPRINTS = [
+const STRIP_FOOTPRINTS = [
   { key: "1×2", w: 1, h: 2, x: 0, y: 0 },
   { key: "2×2", w: 2, h: 2, x: 0, y: 2 },
   { key: "3×4", w: 3, h: 4, x: 3, y: 0 },
-  { key: "10×10", w: 10, h: 10, x: 0, y: 0 },
 ];
+
+const HERO_FOOTPRINT = { key: "10×10", w: 10, h: 10, x: 0, y: 0 };
 
 const runtime = createKitRuntime({ theme: theme.qaGuru() });
 
@@ -77,11 +76,10 @@ function isDark() {
 }
 
 function mountTestsTable(body) {
-  renderTestsTableHost(
-    body,
-    testsTableFixture,
-    { cssVar: cssVar(body), isDark },
-  );
+  renderTestsTableHost(body, testsTableFixture, { cssVar: cssVar(body), isDark });
+  requestAnimationFrame(() => {
+    void body.offsetHeight;
+  });
 }
 
 function readRowMeta(body) {
@@ -92,13 +90,34 @@ function readRowMeta(body) {
   return { rows, maxRows, firstName };
 }
 
-function metaLine(rect, tier, extra) {
+function deferRowMeta(hostOrBody, callback) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      callback(readRowMeta(hostOrBody));
+    });
+  });
+}
+
+function updateMeta(meta, item, rect, tier, label, display, hostOrBody) {
+  deferRowMeta(hostOrBody, (info) => {
+    meta.innerHTML = metaLine(item, rect, tier, {
+      label,
+      ...(display ? { display } : {}),
+      ...info,
+    });
+  });
+}
+
+function metaLine(item, rect, tier, extra) {
   const parts = [
     `<strong>${extra.label}</strong>`,
-    `${rect.width}×${rect.height}px`,
-    `tier ${tier}`,
-    `${extra.rows} rows (max ${extra.maxRows})`,
+    `grid span ${item.w}×${item.h}`,
+    `logical ${rect.width}×${rect.height}px`,
   ];
+  if (extra.display) {
+    parts.push(`on-screen ${extra.display.width}×${extra.display.height}px (×${extra.display.scale})`);
+  }
+  parts.push(`tier ${tier}`, `${extra.rows} rows (max ${extra.maxRows})`);
   if (extra.firstName) {
     parts.push(`«${extra.firstName.slice(0, 28)}${extra.firstName.length > 28 ? "…" : ""}»`);
   }
@@ -120,7 +139,7 @@ function mountPalette(root) {
   slot.dataset.testid = "ttc-palette-2x2";
 
   const fig = document.createElement("figure");
-  fig.className = "widget-tile widget-tile--tier-micro widget-tile--layout-2x2";
+  fig.className = "widget-tile widget-tile--tier-micro widget-tile--layout-2x2 ttc-footprint-tile";
 
   const bar = document.createElement("div");
   bar.className = "widget-tile__bar";
@@ -133,6 +152,7 @@ function mountPalette(root) {
 
   const body = document.createElement("div");
   body.className = "widget-tile__body";
+  body.style.height = "106px";
 
   fig.append(bar, body);
   slot.append(fig);
@@ -143,40 +163,26 @@ function mountPalette(root) {
 
   root.append(slot);
   mountTestsTable(body);
-  const info = readRowMeta(body);
-  meta.innerHTML = metaLine({ width: 128, height: 128 }, "micro", {
-    label: "Palette 2×2",
-    ...info,
-  });
+  updateMeta(
+    meta,
+    { w: 2, h: 2 },
+    { width: 128, height: 128 },
+    "micro",
+    "Palette 2×2",
+    null,
+    body,
+  );
 }
 
-function editorBodySize(rect) {
-  // anb-panel: bar 31px + body pad 6×2; inner host fills body.
-  return {
-    width: rect.width,
-    height: Math.max(1, rect.height - CANVAS.headerHeight - CANVAS.tilePad * 2),
-  };
+function editorBodyHeight(rect) {
+  return Math.max(1, rect.height - CANVAS.headerHeight - CANVAS.tilePad * 2);
 }
 
-function mountEditorPanel(root, item) {
-  const rect = freeCellRect(item);
-  const tier = tierForSpan(item.w, item.h);
-  const bodySize = editorBodySize(rect);
-  const isHero = item.w >= 10;
-
-  const cell = document.createElement("div");
-  cell.className = isHero ? "ttc-cell ttc-cell--hero" : "ttc-cell";
-  cell.dataset.testid = `ttc-editor-${item.w}x${item.h}`;
-
+function createEditorPanel(rect, tier) {
   const panel = document.createElement("div");
   panel.className = "ttc-editor-panel";
   panel.style.width = `${rect.width}px`;
   panel.style.height = `${rect.height}px`;
-  if (isHero) {
-    const scale = 0.34;
-    panel.style.transform = `scale(${scale})`;
-    cell.style.height = `${Math.round(rect.height * scale)}px`;
-  }
 
   const bar = document.createElement("div");
   bar.className = "ttc-editor-panel__bar";
@@ -187,43 +193,21 @@ function mountEditorPanel(root, item) {
 
   const host = document.createElement("div");
   host.className = `ttc-editor-panel__host tests-table-host--tier-${tier}`;
-  host.style.width = "100%";
-  host.style.height = `${bodySize.height}px`;
+  host.style.height = `${editorBodyHeight(rect)}px`;
 
   bodyWrap.append(host);
   panel.append(bar, bodyWrap);
-  cell.append(panel);
-
-  const meta = document.createElement("p");
-  meta.className = "ttc-cell__meta";
-  cell.append(meta);
-
-  root.append(cell);
   mountTestsTable(host);
-  const info = readRowMeta(host);
-  meta.innerHTML = metaLine(rect, tier, { label: `Editor ${item.key}`, ...info });
+  return { panel, host };
 }
 
-function mountPreviewTile(root, item) {
-  const rect = freeCellRect(item);
-  const tier = tierForSpan(item.w, item.h);
-  const isHero = item.w >= 10;
-
-  const cell = document.createElement("div");
-  cell.className = isHero ? "ttc-cell ttc-cell--hero" : "ttc-cell";
-  cell.dataset.testid = `ttc-preview-${item.w}x${item.h}`;
-
+function createPreviewTile(rect, tier) {
   const tile = document.createElement("figure");
-  tile.className = `widget-tile widget-tile--tier-${tier}`;
+  tile.className = `widget-tile widget-tile--tier-${tier} ttc-footprint-tile`;
   tile.style.width = `${rect.width}px`;
   tile.style.height = `${rect.height}px`;
   tile.style.setProperty("--wt-bar-height", `${CANVAS.headerHeight}px`);
   tile.style.setProperty("--wt-pad", `${CANVAS.tilePad}px`);
-  if (isHero) {
-    const scale = 0.34;
-    tile.style.transform = `scale(${scale})`;
-    cell.style.height = `${Math.round(rect.height * scale)}px`;
-  }
 
   const bar = document.createElement("div");
   bar.className = "widget-tile__bar";
@@ -234,18 +218,100 @@ function mountPreviewTile(root, item) {
 
   const body = document.createElement("div");
   body.className = "widget-tile__body";
+  body.style.height = `${rect.height - CANVAS.headerHeight}px`;
 
   tile.append(bar, body);
-  cell.append(tile);
+  mountTestsTable(body);
+  return { tile, body };
+}
+
+function mountStripPanel(root, item, mode) {
+  const rect = freeCellRect(item);
+  const tier = tierForSpan(item.w, item.h);
+
+  const cell = document.createElement("div");
+  cell.className = "ttc-cell";
+  cell.dataset.testid = `ttc-${mode}-${item.w}x${item.h}`;
+
+  const built = mode === "editor"
+    ? createEditorPanel(rect, tier)
+    : createPreviewTile(rect, tier);
+  cell.append(mode === "editor" ? built.panel : built.tile);
 
   const meta = document.createElement("p");
   meta.className = "ttc-cell__meta";
   cell.append(meta);
-
   root.append(cell);
-  mountTestsTable(body);
-  const info = readRowMeta(body);
-  meta.innerHTML = metaLine(rect, tier, { label: `Preview ${item.key}`, ...info });
+
+  updateMeta(
+    meta,
+    item,
+    rect,
+    tier,
+    mode === "editor" ? `Editor ${item.key}` : `Preview ${item.key}`,
+    null,
+    built.host ?? built.body,
+  );
+}
+
+function mountCanvasHero(root, item, mode) {
+  const rect = freeCellRect(item);
+  const tier = tierForSpan(item.w, item.h);
+  const scale = CANVAS_HERO_SCALE;
+  const displayW = Math.round(CANVAS.width * scale);
+  const displayH = Math.round(CANVAS.height * scale);
+
+  const cell = document.createElement("div");
+  cell.className = "ttc-cell";
+  cell.dataset.testid = `ttc-${mode}-canvas-${item.w}x${item.h}`;
+
+  const stage = document.createElement("div");
+  stage.className = "ttc-canvas-stage";
+  stage.style.width = `${displayW}px`;
+  stage.style.height = `${displayH}px`;
+
+  const canvas = document.createElement("div");
+  canvas.className = "ttc-canvas";
+  canvas.style.transform = `scale(${scale})`;
+
+  const grid = document.createElement("div");
+  grid.className = "ttc-canvas__grid";
+  grid.setAttribute("aria-hidden", "true");
+
+  const badge = document.createElement("div");
+  badge.className = "ttc-canvas__badge";
+  badge.textContent = `CB-870 ${CANVAS.width}×${CANVAS.height} · 10×10 cells`;
+
+  const slot = document.createElement("div");
+  slot.className = "ttc-canvas__tile";
+  slot.style.left = `${rect.left}px`;
+  slot.style.top = `${rect.top}px`;
+  slot.style.width = `${rect.width}px`;
+  slot.style.height = `${rect.height}px`;
+
+  const built = mode === "editor"
+    ? createEditorPanel(rect, tier)
+    : createPreviewTile(rect, tier);
+  slot.append(mode === "editor" ? built.panel : built.tile);
+
+  canvas.append(grid, badge, slot);
+  stage.append(canvas);
+  cell.append(stage);
+
+  const meta = document.createElement("p");
+  meta.className = "ttc-cell__meta";
+  cell.append(meta);
+  root.append(cell);
+
+  updateMeta(
+    meta,
+    item,
+    rect,
+    tier,
+    mode === "editor" ? `Editor ${item.key} on canvas` : `Preview ${item.key} on canvas`,
+    { width: displayW, height: displayH, scale },
+    built.host ?? built.body,
+  );
 }
 
 function main() {
@@ -256,10 +322,12 @@ function main() {
   const previewRoot = document.getElementById("ttc-preview");
 
   mountPalette(paletteRoot);
-  for (const item of COLLAGE_FOOTPRINTS) {
-    mountEditorPanel(editorRoot, item);
-    mountPreviewTile(previewRoot, item);
+  for (const item of STRIP_FOOTPRINTS) {
+    mountStripPanel(editorRoot, item, "editor");
+    mountStripPanel(previewRoot, item, "preview");
   }
+  mountCanvasHero(editorRoot, HERO_FOOTPRINT, "editor");
+  mountCanvasHero(previewRoot, HERO_FOOTPRINT, "preview");
 }
 
 try {

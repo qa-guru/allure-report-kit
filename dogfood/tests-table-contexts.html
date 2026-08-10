@@ -44,7 +44,8 @@
         <h2 id="ttc-editor-title" class="ttc-section__title">2. Коллаж-редактор (footprint на сетке)</h2>
         <p class="ttc-section__desc">
           <code>anb-panel</code> chrome: editor bar 31px + body pad 6px.
-          Footprints 1×2, 2×2, 3×4; 10×10 — scale 0.34.
+          Полоски 1×2, 2×2, 3×4 — logical px как в grid; <strong>10×10</strong> — весь canvas CB-870
+          (870×1080) с сеткой, тайл на весь span (logical 842×1052, on-screen ×0.45).
         </p>
         <div id="ttc-editor" class="ttc-grid"></div>
       </section>
@@ -53,7 +54,7 @@
         <h2 id="ttc-preview-title" class="ttc-section__title">3. Превью (TG / export)</h2>
         <p class="ttc-section__desc">
           Product chrome: <code>widget-tile__bar</code> + title, body = kit table.
-          Те же logical px, что в <code>previewItemHtml</code>.
+          Те же logical px; 10×10 — на canvas CB-870, не «просто подпись».
         </p>
         <div id="ttc-preview" class="ttc-grid"></div>
       </section>
