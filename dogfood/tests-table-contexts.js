@@ -132,7 +132,7 @@ function mountPalette(root) {
   bar.append(title);
 
   const body = document.createElement("div");
-  body.className = "widget-tile__body ttc-editor-panel__host";
+  body.className = "widget-tile__body";
 
   fig.append(bar, body);
   slot.append(fig);
@@ -186,8 +186,8 @@ function mountEditorPanel(root, item) {
   bodyWrap.className = "ttc-editor-panel__body";
 
   const host = document.createElement("div");
-  host.className = `widget-tile widget-tile--tier-${tier} ttc-editor-panel__host`;
-  host.style.width = `${bodySize.width - CANVAS.tilePad * 2}px`;
+  host.className = `ttc-editor-panel__host tests-table-host--tier-${tier}`;
+  host.style.width = "100%";
   host.style.height = `${bodySize.height}px`;
 
   bodyWrap.append(host);
@@ -214,7 +214,7 @@ function mountPreviewTile(root, item) {
   cell.dataset.testid = `ttc-preview-${item.w}x${item.h}`;
 
   const tile = document.createElement("figure");
-  tile.className = `widget-tile widget-tile--tier-${tier} ttc-preview-tile`;
+  tile.className = `widget-tile widget-tile--tier-${tier}`;
   tile.style.width = `${rect.width}px`;
   tile.style.height = `${rect.height}px`;
   tile.style.setProperty("--wt-bar-height", `${CANVAS.headerHeight}px`);

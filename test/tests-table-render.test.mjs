@@ -10,7 +10,12 @@ declareSuite({
   severity: "normal",
 });
 
-import { TESTS_TABLE_HEADER_H, TESTS_TABLE_ROW_H, testsTableMaxRows } from "../dist/runtime/tests-table-render.js";
+import {
+  TESTS_TABLE_HEADER_H,
+  TESTS_TABLE_ROW_H,
+  resolveTestsTableMetrics,
+  testsTableMaxRows,
+} from "../dist/runtime/tests-table-render.js";
 
 test("testsTableMaxRows matches collage formula", () => {
   assert.equal(testsTableMaxRows(0), 1);
@@ -21,4 +26,16 @@ test("testsTableMaxRows matches collage formula", () => {
   assert.equal(testsTableMaxRows(220), Math.floor((220 - TESTS_TABLE_HEADER_H) / TESTS_TABLE_ROW_H));
   assert.equal(TESTS_TABLE_HEADER_H, 28);
   assert.equal(TESTS_TABLE_ROW_H, 32);
+});
+
+test("resolveTestsTableMetrics shrinks rows for micro footprint", () => {
+  const host = {
+    closest(selector) {
+      return String(selector).includes("micro") ? host : null;
+    },
+  };
+  const metrics = resolveTestsTableMetrics(host);
+  assert.equal(metrics.headerH, 0);
+  assert.equal(metrics.rowH, 11);
+  assert.equal(testsTableMaxRows(44, metrics), 4);
 });

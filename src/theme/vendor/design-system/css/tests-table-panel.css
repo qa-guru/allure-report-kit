@@ -76,6 +76,80 @@
   max-width: 0;
 }
 
+/* —— Footprint tiers (palette micro, collage compact strips) —— */
+.widget-tile--tier-micro .widget-tile__body,
+.tests-table-host--tier-micro {
+  --tests-table-pad-y: 0;
+  --tests-table-pad-x: 2px;
+}
+
+.widget-tile--tier-micro .widget-tile__body {
+  padding: 0;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table thead,
+.tests-table-host--tier-micro .tests-table-panel__table thead {
+  display: none;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table,
+.tests-table-host--tier-micro .tests-table-panel__table {
+  font-size: 0.5rem;
+  line-height: 1.1;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table tbody tr,
+.tests-table-host--tier-micro .tests-table-panel__table tbody tr {
+  height: 11px;
+}
+
+.widget-tile--tier-micro .tests-table-panel__table th,
+.widget-tile--tier-micro .tests-table-panel__table td,
+.tests-table-host--tier-micro .tests-table-panel__table td {
+  padding: 0 var(--tests-table-pad-x, 2px);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.widget-tile--tier-micro .tests-table-panel .badge,
+.tests-table-host--tier-micro .tests-table-panel .badge {
+  font-size: 0.42rem;
+  padding: 0 2px;
+  line-height: 1.1;
+  font-weight: 600;
+  border-radius: 2px;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table,
+.tests-table-host--tier-compact .tests-table-panel__table {
+  font-size: 0.625rem;
+  line-height: 1.15;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table thead tr,
+.tests-table-host--tier-compact .tests-table-panel__table thead tr {
+  height: 18px;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table tbody tr,
+.tests-table-host--tier-compact .tests-table-panel__table tbody tr {
+  height: 20px;
+}
+
+.widget-tile--tier-compact .tests-table-panel__table th,
+.widget-tile--tier-compact .tests-table-panel__table td,
+.tests-table-host--tier-compact .tests-table-panel__table th,
+.tests-table-host--tier-compact .tests-table-panel__table td {
+  padding: 2px 4px;
+}
+
+.widget-tile--tier-compact .tests-table-panel .badge,
+.tests-table-host--tier-compact .tests-table-panel .badge {
+  font-size: 0.55rem;
+  padding: 0 3px;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
 .tests-table-panel__empty {
   margin: 0;
   padding: var(--space-4);

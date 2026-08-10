@@ -33,11 +33,31 @@ export const TESTS_TABLE_HEADER_H = 28;
 export const TESTS_TABLE_ROW_H = 32;
 
 /** Collage parity: `max(1, floor((height - headerH) / rowH))`. */
-export function testsTableMaxRows(hostHeight: number): number {
+export interface TestsTableMetrics {
+  headerH: number;
+  rowH: number;
+}
+
+/** Row/header metrics from footprint tier on the host or ancestor tile. */
+export function resolveTestsTableMetrics(host: HTMLElement): TestsTableMetrics {
+  if (host.closest(".widget-tile--tier-micro, .tests-table-host--tier-micro")) {
+    return { headerH: 0, rowH: 11 };
+  }
+  if (host.closest(".widget-tile--tier-compact, .tests-table-host--tier-compact")) {
+    return { headerH: 18, rowH: 20 };
+  }
+  return { headerH: TESTS_TABLE_HEADER_H, rowH: TESTS_TABLE_ROW_H };
+}
+
+export function testsTableMaxRows(hostHeight: number, metrics?: TestsTableMetrics): number {
+  const { headerH, rowH } = metrics ?? {
+    headerH: TESTS_TABLE_HEADER_H,
+    rowH: TESTS_TABLE_ROW_H,
+  };
   if (hostHeight < 1) {
     return 1;
   }
-  return Math.max(1, Math.floor((hostHeight - TESTS_TABLE_HEADER_H) / TESTS_TABLE_ROW_H));
+  return Math.max(1, Math.floor((hostHeight - headerH) / rowH));
 }
 
 const teardownByHost = new WeakMap<HTMLElement, () => void>();
@@ -183,7 +203,8 @@ export function renderTestsTableHost(
 
   const syncRows = (): void => {
     const hostHeight = host.clientHeight || host.getBoundingClientRect().height;
-    const maxRows = testsTableMaxRows(hostHeight);
+    const metrics = resolveTestsTableMetrics(host);
+    const maxRows = testsTableMaxRows(hostHeight, metrics);
     tbody.dataset.maxRows = String(maxRows);
     fillTableBody(tbody, rows.slice(0, maxRows), lang, theme);
   };

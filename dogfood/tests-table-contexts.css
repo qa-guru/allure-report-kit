@@ -74,13 +74,19 @@
 
 .ttc-palette-slot .widget-tile {
   width: 100%;
-  --wt-pad: 4px;
+  display: flex;
+  flex-direction: column;
+  --wt-pad: 0;
   --wt-bar-height: 22px;
 }
 
 .ttc-palette-slot .widget-tile__body {
-  aspect-ratio: 1;
+  flex: 1;
+  min-height: 0;
   width: 100%;
+  aspect-ratio: auto;
+  padding: 0;
+  overflow: hidden;
 }
 
 /* —— Editor chrome (anb-panel) —— */
@@ -129,32 +135,12 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-}
-
-/* —— Preview (TG export) —— */
-.ttc-preview-tile {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md, 8px);
-  background: var(--color-surface);
   box-sizing: border-box;
 }
 
-.ttc-preview-tile .widget-tile__bar {
-  flex-shrink: 0;
-}
-
-.ttc-preview-tile .widget-tile__body {
-  flex: 1;
-  min-height: 0;
+/* Preview — single widget-tile chrome (no extra bordered wrapper). */
+.widget-tile .widget-tile__body {
   aspect-ratio: auto;
-}
-
-.ttc-preview-tile .widget-tile__title {
-  text-align: left;
 }
 
 /* —— 10×10 scaled strip —— */
