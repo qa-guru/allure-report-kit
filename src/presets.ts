@@ -2,8 +2,8 @@
  * Presets — ready tile groups from declarative preset configs.
  *
  * SSOT for the overview quad: `presets/overview-preset.mjs` (importable as
- * `@qa-guru/allure-report-kit/presets/overview-preset`). Ethalon copies or
- * re-exports it from `allure/overview-preset.mjs` next to awesome-charts.mjs.
+ * `@qa-guru/allure-report-kit/presets/overview-preset`). Ethalon re-exports it
+ * from `allure/overview-preset.mjs` with profile titles/layers overrides only.
  *
  * Lead section (indices 0–5): quality gates from `preset.qualityGates`, then
  * the overview chart quad. Use `fromLead` / `fromOverview` (default); use
@@ -11,6 +11,7 @@
  */
 import * as charts from "./charts.js";
 import * as panels from "./panels.js";
+import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
 import type {
   DotsSpec,
   KitChartTile,
@@ -23,16 +24,6 @@ import type {
   TileLayout,
   TileTier,
 } from "./types.js";
-
-/** Canon layer order, bottom to top. */
-export const PYRAMID_LAYERS = [
-  "unit",
-  "component",
-  "integration",
-  "api",
-  "e2e",
-  "manual",
-] as const;
 
 export type OverviewChart =
   | "currentStatus"
@@ -60,6 +51,12 @@ export interface OverviewPreset {
   titles?: Partial<Record<OverviewChart, string>>;
   pyramidLayers?: readonly string[];
 }
+
+/** Built-in overview preset — re-export of `presets/overview-preset.mjs`. */
+export const DEFAULT_OVERVIEW_PRESET = OVERVIEW_PRESET as OverviewPreset;
+
+/** Canon layer order, bottom to top — from the overview preset SSOT. */
+export const PYRAMID_LAYERS: readonly string[] = DEFAULT_OVERVIEW_PRESET.pyramidLayers ?? [];
 
 export interface FromOverviewOptions {
   preset?: OverviewPreset;
@@ -94,33 +91,10 @@ export interface FromLeadOptions extends FromOverviewOptions {
 }
 
 const DEFAULT_TITLES: Record<OverviewChart, string> = {
-  currentStatus: "Текущий статус",
-  durationDynamics: "Динамика длительности",
-  testingPyramid: "Пирамида тестирования",
-  durations: "Длительности по layer",
-};
-
-/** Built-in overview preset — same content as `presets/overview-preset.mjs`. */
-export const DEFAULT_OVERVIEW_PRESET: OverviewPreset = {
-  id: "overview",
-  qualityGates: [
-    { id: "allureQualityGate", layout: "2x1" },
-    { id: "sonarQualityGate", layout: "2x1" },
-  ],
-  tiles: [
-    { chart: "currentStatus" },
-    { chart: "durationDynamics", limit: 20 },
-    { chart: "testingPyramid", layersKey: "pyramidLayers" },
-    { chart: "durations", groupBy: "layer" },
-  ],
-  renderers: {
-    currentStatus: "stock",
-    durationDynamics: "stock",
-    testingPyramid: "svg",
-    durations: "stock",
-  },
-  titles: { ...DEFAULT_TITLES },
-  pyramidLayers: [...PYRAMID_LAYERS],
+  currentStatus: DEFAULT_OVERVIEW_PRESET.titles?.currentStatus ?? "Текущий статус",
+  durationDynamics: DEFAULT_OVERVIEW_PRESET.titles?.durationDynamics ?? "Динамика длительности",
+  testingPyramid: DEFAULT_OVERVIEW_PRESET.titles?.testingPyramid ?? "Пирамида тестирования",
+  durations: DEFAULT_OVERVIEW_PRESET.titles?.durations ?? "Длительности по layer",
 };
 
 function buildTile(
