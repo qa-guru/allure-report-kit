@@ -52,7 +52,16 @@ const forkArgs = ["scripts/publish-forks.mjs"];
 if (otp) {
   forkArgs.push(`--otp=${otp}`);
 }
-run(ROOT, ["node", ...forkArgs]);
+const forkResult = spawnSync("node", forkArgs, { cwd: ROOT, encoding: "utf8" });
+if (forkResult.stdout?.trim()) {
+  process.stdout.write(forkResult.stdout);
+}
+if (forkResult.stderr?.trim()) {
+  process.stderr.write(forkResult.stderr);
+}
+if (forkResult.status !== 0) {
+  throw new Error(`node ${forkArgs.join(" ")} failed (exit ${forkResult.status})`);
+}
 console.log("release-publish: done");
 
 function nodePackCheck() {
