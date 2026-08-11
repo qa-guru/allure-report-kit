@@ -3,8 +3,8 @@
  *
  * Families are the seven Allure 3 chart swatches used by the tile bar dots.
  * A series states its family explicitly whenever it can; when it only has a
- * colour, the nearest anchor in RGB space wins — the same "по факту" rule the
- * monorepo `dashboard-overrides.js` applies to rendered SVG fills.
+ * colour, the nearest anchor in RGB space wins — the same "по факту" rule kit
+ * applies to rendered SVG fills via `hostPalette` / soft-fork (overrides removed M3).
  */
 import { STATUS_FAMILIES, type StatusFamily } from "../types.js";
 

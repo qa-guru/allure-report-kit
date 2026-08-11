@@ -26,11 +26,7 @@ process.env.ALLURE_REPORT_KIT_SILENT = "1";
 const { createKitPlugin } = await import("../packages/plugin-core/src/index.js");
 const { charts, panels, presets, withKit } = await import("../dist/index.js");
 
-const leadCharts = () => [
-  panels.qualityGate({ id: "allureQualityGate" }),
-  panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
-  ...presets.fromOverview(),
-];
+const leadCharts = () => presets.fromOverview();
 
 const resolveFrom = createRequire(
   join(dirname(fileURLToPath(import.meta.url)), "../packages/plugin-awesome/src/index.js"),

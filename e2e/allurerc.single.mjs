@@ -12,7 +12,7 @@ import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/all
 
 import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
 
-const overviewTiles = presets.fromOverview({
+const leadTiles = presets.fromOverview({
   preset: OVERVIEW_PRESET,
   renderers: { durations: "highcharts" },
 });
@@ -40,7 +40,7 @@ export default withKit({
         reportName: "allure-report-kit e2e — single file",
         reportLanguage: "ru",
         charts: [
-          ...overviewTiles,
+          ...leadTiles,
 
           // No widget to fetch: the data has to reach the tile through the
           // manifest instead.

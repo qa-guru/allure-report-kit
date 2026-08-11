@@ -3,8 +3,8 @@
  *
  * Owns the testing pyramid: rounded tiers, narrow top → wide bottom, gap taken
  * from the durations histogram so the two tiles read as one family. Geometry is
- * the design-system canon (`widget-tile-mocks.js` → `pyramidSvg`); the same
- * shape the allure-notifications Telegram collage renders.
+ * the DS report canon (`widget-tile-mocks.js` → `pyramidSvg`, `rx=4`, `minFrac=0.2`);
+ * Telegram collage uses `@qa-guru/allure-notifications-pyramid` — different constants.
  *
  * Also draws the gauge, for the same reason: an arc with a number in it needs no
  * library, and keeping it here means a gauge panel renders in a report that

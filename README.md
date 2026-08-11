@@ -190,11 +190,7 @@ export default withKit({
     awesome: {
       options: {
         charts: [
-          ...presets.fromOverview({ renderers: { durations: "highcharts" } }),
-          panels.qualityGate({
-            id: "allureQualityGate",
-            title: "Allure Quality Gate",
-          }),
+          ...presets.fromLead({ renderers: { durations: "highcharts" } }),
           panels.custom({
             id: "servicesCurrentStatus",
             title: "Текущий статус по сервисам",
@@ -222,7 +218,10 @@ Full example: `examples/minimal/allurerc.mjs`. E2e with Allure **and** Sonar QG:
 | `panels.fromRun` / `panels.fromHistory` | Panel whose data the plugin computes from the run / history |
 | `theme.qaGuru / tokensOnly / header` | Token sets and the report header |
 | `renderers.stock / nivo / highcharts / amcharts / svg / dom` | Renderer specs (inert data) |
-| `presets.fromOverview / overview / matchesOverview / matchesLeadLayout` | Overview preset (`presets/overview-preset.mjs`) |
+| `presets.fromLead / overview` | Lead section: quality gates + overview chart quad (indices 0–5) |
+| `presets.fromOverview` | Same as `fromLead` when `includeQualityGates: true` (default); charts-only when `false` |
+| `presets.fromOverviewCharts` | Overview chart quad only — no quality-gate panels |
+| `presets.matchesOverview / matchesLeadLayout` | Validate tile order against `presets/overview-preset.mjs` |
 | `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, QG/Sonar render, `mountReportHeader` |
 
 ## Renderers
@@ -327,23 +326,37 @@ A panel can also point at a widget you write yourself with `dataUrl`.
 
 ## Overview preset
 
-`presets.fromOverview()` builds tiles from `presets/overview-preset.mjs` (or a
-custom `OverviewPreset`). Ethalon keeps its copy in `allure/overview-preset.mjs`
-next to `awesome-charts.mjs` / `dashboard-layout.mjs`.
+Lead section (indices 0–5): quality gates, then overview chart quad. SSOT:
+`presets/overview-preset.mjs` (ethalon: `allure/overview-preset.mjs`).
+
+| API | Emits |
+|-----|-------|
+| `presets.fromLead(options)` | Quality gates + chart quad (alias: `presets.overview`) |
+| `presets.fromOverview()` | Same as `fromLead` — default `includeQualityGates: true` |
+| `presets.fromOverviewCharts()` | Chart quad only |
+| `fromOverview({ includeQualityGates: false })` | Same as `fromOverviewCharts` |
+
+Sonar/Allure panel data and labels — via `gatePanels` / consumer seam, not embedded
+in kit core. If you already spread `buildQualityGatePanels()` separately, call
+`fromOverviewCharts` (or `fromOverview({ includeQualityGates: false })`) — default
+`fromOverview` would duplicate the gates.
 
 ```js
-import { OVERVIEW_PRESET, buildOverviewTiles } from "./allure/overview-preset.mjs";
+import { presets } from "@qa-guru/allure-report-kit";
 
-export function buildAwesomeCharts() {
-  return [...buildOverviewTiles(), /* … */];
-}
+// Lead section (QG + charts)
+charts: [...presets.fromLead({ renderers: { durations: "highcharts" } })],
+
+// Charts only (e.g. after separate QG builders)
+charts: [...presets.fromOverviewCharts()],
 ```
 
-Default tile order:
+Tile order (indices 0–5 after gates):
 
 ```
-[0] currentStatus (pie)   [1] durationDynamics
-[2] testingPyramid        [3] durations (groupBy: layer)
+[0] allureQualityGate   [1] sonarQualityGate
+[2] currentStatus       [3] durationDynamics
+[4] testingPyramid      [5] durations (groupBy: layer)
 ```
 
 Renderers are per-preset / per-call overrides. Validation reads the same preset file:

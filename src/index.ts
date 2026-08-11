@@ -17,6 +17,8 @@ export { PYRAMID_LAYERS } from "./presets.js";
 export {
   overview,
   fromOverview,
+  fromOverviewCharts,
+  fromLead,
   matchesOverview,
   matchesLeadLayout,
   leadOffset,
@@ -27,6 +29,8 @@ export type {
   OverviewTileSpec,
   OverviewQualityGateSpec,
   FromOverviewOptions,
+  FromLeadOptions,
+  QualityGatePanelOverrides,
 } from "./presets.js";
 export { themeToCss } from "./theme.js";
 export { STATUS_FAMILIES } from "./types.js";

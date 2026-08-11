@@ -10,41 +10,8 @@ import { sonarProjectStatusToQualityGateOptions } from "@qa-guru/allure-report-k
 import { OVERVIEW_PRESET } from "../presets/overview-preset.mjs";
 import testsTableFixture from "../test/fixtures/tests-table-panel.json" with { type: "json" };
 
-const overviewTiles = presets.fromOverview({
-  preset: OVERVIEW_PRESET,
-  renderers: { durations: "highcharts" },
-});
-
-/** Panel with no test data behind it — nine services, seven healthy. */
-const servicesPanel = () =>
-  panels.custom({
-    id: "servicesCurrentStatus",
-    title: "Текущий статус по сервисам",
-    renderer: "highcharts",
-    dots: "fromSeries",
-    data: {
-      total: 9,
-      unit: "из",
-      series: [
-        { id: "healthy", label: "healthy", value: 7, color: "var(--ark-status-passed)", family: "green" },
-        { id: "degraded", label: "degraded", value: 2, color: "var(--ark-status-orange)", family: "orange" },
-      ],
-    },
-  });
-
-const allureQualityGatePanel = () =>
-  panels.qualityGate({
-    id: "allureQualityGate",
-    title: "Allure Quality Gate",
-    labels: {
-      passed: { ru: "Allure Quality Gate пройден", en: "Allure Quality Gate passed" },
-      failed: { ru: "Allure Quality Gate не пройден", en: "Allure Quality Gate failed" },
-    },
-  });
-
-/** Sonar QG — fixture shaped like the DS components demo (passed). */
-const sonarQualityGatePanel = () => {
-  const data = sonarProjectStatusToQualityGateOptions(
+const sonarQualityGateData = () =>
+  sonarProjectStatusToQualityGateOptions(
     {
       status: "OK",
       project_key: "reference-app-backend",
@@ -83,17 +50,40 @@ const sonarQualityGatePanel = () => {
     },
   );
 
-  return panels.custom({
-    id: "sonarQualityGate",
-    title: "Sonar Quality Gate",
-    kind: "qualityGate",
-    dots: false,
-    // KitQualityGateData — rules path, not series.
-    data,
-  });
-};
+const leadTiles = presets.fromLead({
+  preset: OVERVIEW_PRESET,
+  renderers: { durations: "highcharts" },
+  gatePanels: {
+    allureQualityGate: {
+      title: "Allure Quality Gate",
+      labels: {
+        passed: { ru: "Allure Quality Gate пройден", en: "Allure Quality Gate passed" },
+        failed: { ru: "Allure Quality Gate не пройден", en: "Allure Quality Gate failed" },
+      },
+    },
+    sonarQualityGate: {
+      title: "Sonar Quality Gate",
+      data: sonarQualityGateData(),
+    },
+  },
+});
 
-const leadQualityGates = () => [allureQualityGatePanel(), sonarQualityGatePanel()];
+/** Panel with no test data behind it — nine services, seven healthy. */
+const servicesPanel = () =>
+  panels.custom({
+    id: "servicesCurrentStatus",
+    title: "Текущий статус по сервисам",
+    renderer: "highcharts",
+    dots: "fromSeries",
+    data: {
+      total: 9,
+      unit: "из",
+      series: [
+        { id: "healthy", label: "healthy", value: 7, color: "var(--ark-status-passed)", family: "green" },
+        { id: "degraded", label: "degraded", value: 2, color: "var(--ark-status-orange)", family: "orange" },
+      ],
+    },
+  });
 
 const testsTablePanel = () =>
   panels.testsTable({
@@ -136,8 +126,7 @@ export default withKit({
         reportName: "allure-report-kit e2e",
         reportLanguage: "ru",
         charts: [
-          ...leadQualityGates(),
-          ...overviewTiles,
+          ...leadTiles,
           testsTablePanel(),
 
           servicesPanel(),
@@ -162,8 +151,7 @@ export default withKit({
         reportName: "allure-report-kit e2e — Dashboard",
         reportLanguage: "ru",
         layout: [
-          ...leadQualityGates(),
-          ...overviewTiles,
+          ...leadTiles,
           testsTablePanel(),
 
           servicesPanel(),

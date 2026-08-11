@@ -19,7 +19,7 @@ import { charts, panels, presets, renderers, theme, withKit } from "@qa-guru/all
 import { OVERVIEW_PRESET } from "../../presets/overview-preset.mjs";
 
 /** Overview preset — see `presets/overview-preset.mjs`. */
-const overviewTiles = presets.fromOverview({
+const leadTiles = presets.fromOverview({
   preset: OVERVIEW_PRESET,
   renderers: { durations: "highcharts" },
 });
@@ -54,7 +54,7 @@ export default withKit({
         reportName: "Reference App",
         reportLanguage: "ru",
         charts: [
-          ...overviewTiles,
+          ...leadTiles,
 
           // Kit panel: nine services, seven healthy. Dots resolve to the two
           // families really on the donut — orange + green. Data comes from a
@@ -87,7 +87,7 @@ export default withKit({
         reportName: "Reference App — Dashboard",
         reportLanguage: "ru",
         layout: [
-          ...overviewTiles,
+          ...leadTiles,
           panels.fromRun({
             id: "layersTable",
             title: "Тесты по слоям",

@@ -45,23 +45,21 @@ const config = withKit({
     awesome: {
       options: {
         charts: [
-          panels.qualityGate({ id: "allureQualityGate", title: "Allure Quality Gate" }),
-          panels.custom({
-            id: "sonarQualityGate",
-            title: "Sonar Quality Gate",
-            kind: "qualityGate",
-            dots: false,
-            data: {
-              status: "OK",
-              passed: true,
-              title: "Sonar Quality Gate",
-              rules: [],
-            },
-          }),
-          // overview preset — mixed renderers on purpose
-          ...presets.fromOverview({
+          ...presets.fromLead({
             preset: OVERVIEW_PRESET,
             renderers: { durations: "highcharts" },
+            gatePanels: {
+              allureQualityGate: { title: "Allure Quality Gate" },
+              sonarQualityGate: {
+                title: "Sonar Quality Gate",
+                data: {
+                  status: "OK",
+                  passed: true,
+                  title: "Sonar Quality Gate",
+                  rules: [],
+                },
+              },
+            },
           }),
           // custom panel + bar indicators from the series actually drawn
           panels.custom({

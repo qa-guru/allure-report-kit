@@ -24,11 +24,7 @@ const { kitDisabledReason, rekeyChartSection, seriesFromHistory, seriesFromRun, 
 );
 const { withKit, charts, panels, presets, theme } = await import("../dist/index.js");
 
-const leadCharts = () => [
-  panels.qualityGate({ id: "allureQualityGate" }),
-  panels.custom({ id: "sonarQualityGate", kind: "qualityGate" }),
-  ...presets.fromOverview(),
-];
+const leadCharts = () => presets.fromOverview();
 
 const manifestOf = (config, plugin = "awesome") => config.plugins[plugin].options.kit;
 
