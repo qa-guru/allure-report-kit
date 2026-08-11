@@ -60,6 +60,7 @@
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "typecheck:fork": "node scripts/typecheck-fork.mjs",
     "check:upstream": "node scripts/check-upstream.mjs",
+    "check:kit-pin": "node scripts/check-kit-pin.mjs",
     "sync:ds": "node scripts/sync-ds.mjs",
     "sync:ds:check": "node scripts/sync-ds.mjs --check",
     "test": "node scripts/run-tests.mjs",

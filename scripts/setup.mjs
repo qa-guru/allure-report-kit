@@ -16,6 +16,17 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
+function runNode(label, script) {
+  process.stdout.write(`setup: ${label}\n`);
+  const result = spawnSync("node", [script], { cwd: ROOT, stdio: "inherit" });
+  if (result.status !== 0) {
+    console.error(`setup: FAILED at ${label}`);
+    process.exit(result.status ?? 1);
+  }
+}
+
+runNode("check-kit-pin", "scripts/check-kit-pin.mjs");
+
 /** Install order is a dependency order, not an alphabet. */
 const STEPS = [
   { label: "kit", dir: ".", install: true, build: true },

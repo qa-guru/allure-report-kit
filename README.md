@@ -397,6 +397,12 @@ The packages are linked with `file:` rather than an npm workspace root, because
 each forked bundle carries its own large upstream tree — so install order
 matters and `setup` owns it.
 
+In git, every fork that depends on the kit pins
+`"@qa-guru/allure-report-kit": "file:../.."` — never registry semver (lock
+alone is not enough). `npm run check:kit-pin` fails closed on a semver pin;
+`npm run setup` runs it first. `publish-forks` rewrites to `KIT_VERSION` only
+during publish, then restores `package.json`.
+
 ```bash
 npm run build          # tsc → dist/
 npm test               # node --test
@@ -404,6 +410,7 @@ npm run sync:ds        # refresh vendored design-system primitives
 npm run verify         # build + unit tests + dogfood smoke
 
 npm run build:fork     # webpack → packages/web-{awesome,dashboard}/dist
+npm run check:kit-pin  # fork package.json must use file:../.. (not registry semver)
 npm run typecheck:fork # type-check the fork delta (see soft-fork/README.md)
 npm run verify:report  # build + forks + real reports + report smoke
 npm run smoke:ci       # both smokes on servers the script owns (no stands)
