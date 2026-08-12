@@ -24,6 +24,8 @@ const otp = process.env.NPM_OTP ?? (otpArg ? otpArg.slice("--otp=".length) : und
 
 const kit = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 const KIT_VERSION = kit.version;
+/** Libraries publish a caret range so patch kit bumps do not nest a second kit. */
+const KIT_DEP_RANGE = `^${KIT_VERSION}`;
 
 function readPkg(rel) {
   return JSON.parse(readFileSync(join(ROOT, rel, "package.json"), "utf8"));
@@ -37,16 +39,16 @@ const webDashboardVersion = readPkg("packages/web-dashboard").version;
 const PACKAGES = [
   {
     dir: "packages/plugin-core",
-    publishDeps: { "@qa-guru/allure-report-kit": KIT_VERSION },
+    publishDeps: { "@qa-guru/allure-report-kit": KIT_DEP_RANGE },
   },
   {
     dir: "packages/web-awesome",
-    publishDeps: { "@qa-guru/allure-report-kit": KIT_VERSION },
+    publishDeps: { "@qa-guru/allure-report-kit": KIT_DEP_RANGE },
     files: ["dist", "types.d.ts"],
   },
   {
     dir: "packages/web-dashboard",
-    publishDeps: { "@qa-guru/allure-report-kit": KIT_VERSION },
+    publishDeps: { "@qa-guru/allure-report-kit": KIT_DEP_RANGE },
     files: ["dist", "types.d.ts"],
   },
   {

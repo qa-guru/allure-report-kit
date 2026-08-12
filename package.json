@@ -100,7 +100,7 @@
     }
   },
   "devDependencies": {
-    "@qa-guru/allure-notifications": "6.2.0",
+    "@qa-guru/allure-notifications": "6.2.1",
     "allure": "3.14.3",
     "allure-js-commons": "3.10.2",
     "allure-node-test": "3.10.2",
