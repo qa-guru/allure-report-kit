@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit-dashboard",
-  "version": "3.14.3-3",
+  "version": "3.14.3-4",
   "allureUpstream": "3.14.3",
   "description": "Allure 3 Dashboard plugin wired to the allure-report-kit renderer registry",
   "license": "Apache-2.0",

@@ -125,6 +125,16 @@ export function canKitRender(tile: ResolvedTile, model: ChartModel | undefined):
   return Boolean(renderer?.supports(model));
 }
 
+/**
+ * Whether the fork seam should mount {@link KitTile} instead of Allure stock.
+ *
+ * Panels have no `charts.json` entry — falling through to `getChartWidgetByType`
+ * would pass `undefined` and throw. They always route to kit (registry stub).
+ */
+export function shouldMountKitTile(tile: ResolvedTile, model: ChartModel | undefined): boolean {
+  return Boolean(tile.panel) || canKitRender(tile, model);
+}
+
 /** Tier thresholds by cell width, in px. Below `micro` labels stop fitting. */
 const TIERS: [number, TileTier][] = [
   [560, "hero"],

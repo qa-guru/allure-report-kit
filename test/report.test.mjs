@@ -18,7 +18,7 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { pairTiles, tilesForList, readManifest, isKitOwned, withReportLayout, resolveTileModel, canKitRender, REPORT_TILE_LAYOUT } =
+const { pairTiles, tilesForList, readManifest, isKitOwned, withReportLayout, resolveTileModel, canKitRender, shouldMountKitTile, REPORT_TILE_LAYOUT } =
   await import("../dist/allure/report.js");
 const { withKit, charts, panels, presets } = await import("../dist/index.js");
 
@@ -227,6 +227,22 @@ test("resolveTileModel loads a panel or maps chart data", async () => {
 test("canKitRender refuses a missing model when no runtime is mounted", () => {
   const [tile] = tilesOf(awesome([charts.currentStatus({ renderer: "highcharts" })]));
   assert.equal(canKitRender(tile, undefined), false);
+});
+
+test("shouldMountKitTile keeps panels on kit even when the backend cannot render", async () => {
+  const [panelTile] = tilesOf(
+    awesome([panels.custom({ id: "services", kind: "bar", data: { series: [{ id: "a", label: "a", value: 1 }] } })]),
+  );
+  const model = await resolveTileModel(panelTile, undefined);
+
+  assert.ok(panelTile.panel);
+  assert.equal(canKitRender(panelTile, model), false);
+  assert.equal(shouldMountKitTile(panelTile, model), true);
+});
+
+test("shouldMountKitTile defers unsupported charts to Allure", () => {
+  const [tile] = tilesOf(awesome([charts.currentStatus({ renderer: "highcharts" })]));
+  assert.equal(shouldMountKitTile(tile, undefined), false);
 });
 
 test("pairTiles without tiles keeps every chart entry for Allure", () => {

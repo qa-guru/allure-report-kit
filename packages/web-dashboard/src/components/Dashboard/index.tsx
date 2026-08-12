@@ -13,7 +13,7 @@ import { Grid, GridItem, Loadable, PageLoader, ThemeProvider } from "@allurerepo
 import type { ResolvedTile } from "@qa-guru/allure-report-kit";
 import type { AllureChartData } from "@qa-guru/allure-report-kit/allure";
 import {
-  canKitRender,
+  shouldMountKitTile,
   getKitRuntime,
   isKitOwned,
   observeCell,
@@ -120,8 +120,8 @@ export const Dashboard = () => {
                   : chartData
                     ? toChartModel(chartDataForKit(chartData))
                     : undefined;
-                // A backend that cannot draw this kind leaves the tile to Allure.
-                if (canKitRender(tile, model)) {
+                // Panels always mount kit; charts the backend cannot draw stay on Allure.
+                if (shouldMountKitTile(tile, model)) {
                   return (
                     <KitTile
                       key={chartId}
