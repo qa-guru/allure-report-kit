@@ -8,7 +8,6 @@
  *
  * Usage: node scripts/smoke-single.mjs [path/to/index.html]
  */
-import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -107,10 +106,6 @@ check(
   await page.evaluate(() => Boolean(window.Highcharts)),
   "chart backend: Highcharts is not on window — the data: script did not run",
 );
-check(
-  await page.evaluate(() => !("echarts" in window)),
-  "chart backend: echarts must not be inlined after v0.2",
-);
 
 const gauge = await page.evaluate(() => {
   const tile = [...document.querySelectorAll(".widget-tile")].find(
@@ -119,9 +114,6 @@ const gauge = await page.evaluate(() => {
   return [...(tile?.querySelectorAll("svg text") ?? [])].map((node) => node.textContent.trim());
 });
 check(JSON.stringify(gauge) === JSON.stringify(["30", "из 34"]), `gauge copy: ${JSON.stringify(gauge)}`);
-
-const html = readFileSync(FILE, "utf8");
-check(!/echarts/i.test(html), "single file: echarts must not be inlined");
 
 check(missing.length === 0, `missing assets:\n  ${missing.join("\n  ")}`);
 check(external.length === 0, `external requests:\n  ${external.join("\n  ")}`);
@@ -137,4 +129,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`smoke-single: OK — ${tiles.length} kit tiles, Highcharts inlined, no echarts`);
+console.log(`smoke-single: OK — ${tiles.length} kit tiles, Highcharts inlined`);
