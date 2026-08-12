@@ -297,11 +297,39 @@ test("panel factories set kind, canon renderer and caption fields", () => {
   assert.equal(testsTable.renderer, "dom");
   assert.equal(testsTable.dots, false);
   assert.deepEqual(testsTable.data.columns, ["name", "status"]);
-  // Donut/bar inherit page default — no forced renderer.
-  assert.equal(panels.donut({ id: "d" }).renderer, undefined);
-  assert.equal(panels.bar({ id: "b" }).renderer, undefined);
+  // Donut/bar/line use the Highcharts canon — stock Allure skips custom panels.
+  assert.equal(panels.donut({ id: "d" }).renderer, "highcharts");
+  assert.equal(panels.bar({ id: "b" }).renderer, "highcharts");
+  assert.equal(panels.line({ id: "l" }).renderer, "highcharts");
 });
 
+test("custom panels on a stock page stay kit-owned with a non-stock renderer", () => {
+  const config = withKit({
+    name: "T",
+    renderer: renderers.stock(),
+    softFork: true,
+    plugins: {
+      awesome: {
+        options: {
+          charts: [
+            panels.donut({ id: "d", data: panels.series([{ id: "a", label: "a", value: 1 }]) }),
+            panels.bar({ id: "b", data: panels.series([{ id: "a", label: "a", value: 1 }]) }),
+            panels.fromRun({ id: "run-bar", groupBy: "status", kind: "bar" }),
+            panels.fromHistory({ id: "hist-line", metric: "passRate" }),
+          ],
+        },
+      },
+    },
+  });
+
+  const tiles = awesomeManifest(config).tiles;
+  assert.equal(tiles.length, 4);
+  for (const tile of tiles) {
+    assert.ok(tile.panel, "expected a custom panel tile");
+    assert.notEqual(tile.renderer.id, "stock");
+    assert.notEqual(tile.renderer.id, "nivo");
+  }
+});
 test("fromRun and fromHistory carry source folds without inlining series", () => {
   const run = panels.fromRun({
     id: "by-owner",

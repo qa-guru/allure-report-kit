@@ -99,7 +99,14 @@ export function getKitRuntime(): KitRuntime | undefined {
 
 /** A tile the kit draws itself, as opposed to leaving it to Allure. */
 export function isKitOwned(tile: ResolvedTile | undefined): tile is ResolvedTile {
-  return Boolean(tile) && tile!.renderer.id !== "stock" && tile!.renderer.id !== "nivo";
+  if (!tile) {
+    return false;
+  }
+  // Custom panels are absent from charts.json — stock Allure never renders them.
+  if (tile.panel) {
+    return true;
+  }
+  return tile.renderer.id !== "stock" && tile.renderer.id !== "nivo";
 }
 
 /**

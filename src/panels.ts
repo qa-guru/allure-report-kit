@@ -43,6 +43,9 @@ export interface CustomPanelOptions {
  * chart backend draws rows. An explicit `renderer` in the config still wins.
  */
 const CANON_RENDERER: Partial<Record<PanelKind, RendererRef>> = {
+  donut: "highcharts",
+  bar: "highcharts",
+  line: "highcharts",
   pyramid: "svg",
   gauge: "svg",
   table: "dom",

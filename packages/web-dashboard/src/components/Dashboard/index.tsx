@@ -132,7 +132,8 @@ export const Dashboard = () => {
                 }
               }
 
-              if (!chartData) {
+              // Custom panels have no charts.json entry — must not vanish here.
+              if (!chartData && !tile?.panel) {
                 return null;
               }
 

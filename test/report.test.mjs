@@ -164,7 +164,7 @@ test("readManifest is absent outside a report window", () => {
   assert.equal(readManifest(), undefined);
 });
 
-test("isKitOwned leaves stock and nivo to Allure", () => {
+test("isKitOwned leaves stock and nivo charts to Allure", () => {
   const [kitTile] = tilesOf(awesome([charts.currentStatus({ renderer: "highcharts" })]));
   const stock = { ...kitTile, renderer: { id: "stock" } };
   const nivo = { ...kitTile, renderer: { id: "nivo" } };
@@ -173,6 +173,17 @@ test("isKitOwned leaves stock and nivo to Allure", () => {
   assert.equal(isKitOwned(stock), false);
   assert.equal(isKitOwned(nivo), false);
   assert.equal(isKitOwned(kitTile), true);
+});
+
+test("isKitOwned claims custom panels even when the page renderer is stock", () => {
+  const [panelTile] = tilesOf(
+    awesome([panels.donut({ id: "d", data: { series: [{ id: "a", label: "a", value: 1 }] } })]),
+  );
+  const stockPanel = { ...panelTile, renderer: { id: "stock" } };
+
+  assert.ok(panelTile.panel);
+  assert.equal(isKitOwned(panelTile), true);
+  assert.equal(isKitOwned(stockPanel), true);
 });
 
 test("withReportLayout fills the wide default and keeps an explicit layout", () => {

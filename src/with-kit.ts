@@ -93,7 +93,7 @@ function resolveTiles(
       diagnostics.push({
         level: "info",
         code: "renderer-unknown",
-        message: `${where}[${index}]: renderer "${renderer.id}" is not built in — the registry must be extended at runtime, otherwise the tile falls back to stock.`,
+        message: `${where}[${index}]: renderer "${renderer.id}" is not built in — the registry must be extended at runtime, otherwise the tile is left to Allure.`,
       });
     }
     const resolved: ResolvedTile = {
