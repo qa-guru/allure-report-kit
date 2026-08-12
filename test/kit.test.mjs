@@ -12,8 +12,18 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { charts, panels, presets, renderers, theme, withKit, matchesOverview, matchesLeadLayout, themeToCss } =
-  await import("../dist/index.js");
+const {
+  charts,
+  panels,
+  presets,
+  renderers,
+  theme,
+  withKit,
+  matchesOverview,
+  matchesLeadLayout,
+  themeToCss,
+  DEFAULT_OVERVIEW_PRESET,
+} = await import("../dist/index.js");
 const { resolveDots } = await import("../dist/runtime/indicators.js");
 const { familyForColor, orderFamilies } = await import("../dist/runtime/palette.js");
 
@@ -132,6 +142,36 @@ test("softFork rewrites the plugin import but keeps an explicit one", () => {
     },
   });
   assert.equal(withExplicit.plugins.awesome.import, "./my-plugin.js");
+});
+
+test("ethalon-like title and pyramid overrides do not false-warn overview-preset", () => {
+  const layers = ["unit", "e2e"];
+  const config = withKit({
+    name: "T",
+    softFork: true,
+    plugins: {
+      awesome: {
+        options: {
+          charts: presets.fromLead({
+            preset: {
+              ...DEFAULT_OVERVIEW_PRESET,
+              titles: {
+                currentStatus: "Текущий статус по сервисам",
+                durationDynamics: "Динамика длительности",
+                testingPyramid: "Пирамида тестирования",
+                durations: "Длительности по layer",
+              },
+              pyramidLayers: layers,
+            },
+            layers,
+          }),
+        },
+      },
+    },
+  });
+
+  const codes = awesomeManifest(config).diagnostics.map((d) => d.code);
+  assert.ok(!codes.includes("overview-preset"));
 });
 
 test("breaking the lead layout is reported", () => {

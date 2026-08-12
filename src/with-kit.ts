@@ -9,7 +9,11 @@
  * Nothing here imports a chart library or touches the DOM.
  */
 import { DEFAULT_RENDERER, normalizeRenderer } from "./renderers.js";
-import { matchesLeadLayout, DEFAULT_OVERVIEW_PRESET } from "./presets.js";
+import {
+  matchesLeadLayout,
+  DEFAULT_OVERVIEW_PRESET,
+  type OverviewPreset,
+} from "./presets.js";
 import { mergeTheme, qaGuru } from "./theme.js";
 import type {
   DotsSpec,
@@ -114,17 +118,34 @@ function resolveTiles(
   });
 }
 
+function leadPresetForTiles(tiles: KitTile[]): OverviewPreset {
+  const gateCount = DEFAULT_OVERVIEW_PRESET.qualityGates?.length ?? 0;
+  const pyramidIndex =
+    gateCount +
+    DEFAULT_OVERVIEW_PRESET.tiles.findIndex((spec) => spec.chart === "testingPyramid");
+  const layers = (tiles[pyramidIndex] as { layers?: string[] } | undefined)?.layers;
+  if (!layers?.length) {
+    return DEFAULT_OVERVIEW_PRESET;
+  }
+  return { ...DEFAULT_OVERVIEW_PRESET, pyramidLayers: layers };
+}
+
 function checkOverviewPreset(tiles: KitTile[], where: string, diagnostics: KitDiagnostic[]): void {
   if (tiles.length === 0) {
     return;
   }
-  if (!matchesLeadLayout(tiles, DEFAULT_OVERVIEW_PRESET)) {
-    diagnostics.push({
-      level: "warn",
-      code: "overview-preset",
-      message: `${where}: leading tiles do not match the overview preset (see presets/overview-preset.mjs). Run validate-allurerc.mjs.`,
-    });
+  if (matchesLeadLayout(tiles, DEFAULT_OVERVIEW_PRESET)) {
+    return;
   }
+  const inferred = leadPresetForTiles(tiles);
+  if (inferred !== DEFAULT_OVERVIEW_PRESET && matchesLeadLayout(tiles, inferred)) {
+    return;
+  }
+  diagnostics.push({
+    level: "warn",
+    code: "overview-preset",
+    message: `${where}: leading tiles do not match the overview preset (see presets/overview-preset.mjs). Run validate-allurerc.mjs.`,
+  });
 }
 
 function checkPanelsNeedFork(
