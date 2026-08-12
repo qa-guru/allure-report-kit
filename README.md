@@ -222,6 +222,7 @@ Full example: `examples/minimal/allurerc.mjs`. E2e with Allure **and** Sonar QG:
 | `presets.fromOverview` | Same as `fromLead` when `includeQualityGates: true` (default); charts-only when `false` |
 | `presets.fromOverviewCharts` | Overview chart quad only — no quality-gate panels |
 | `presets.matchesOverview / matchesLeadLayout` | Validate tile order against `presets/overview-preset.mjs` |
+| `@qa-guru/allure-report-kit/collage` | Collage `STATUS_COLORS`, layer hex pins, `CORNER_RATIO` / `TIER_GAP_RATIO` (Telegram collage + builder) |
 | `@qa-guru/allure-report-kit/runtime` | Browser side: `createKitRuntime`, tile shell, QG/Sonar render, `mountReportHeader` |
 
 ## Renderers
