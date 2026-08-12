@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "DX kit for Allure Report 3: theme, pluggable chart renderers, custom panels, DS report header",
   "keywords": [
     "allure",
@@ -36,6 +36,10 @@
     "./allure": {
       "types": "./dist/allure/index.d.ts",
       "default": "./dist/allure/index.js"
+    },
+    "./collage": {
+      "types": "./dist/collage.d.ts",
+      "default": "./dist/collage.js"
     },
     "./theme.css": "./src/theme/kit.css",
     "./theme/*": "./src/theme/*",
@@ -100,7 +104,7 @@
     }
   },
   "devDependencies": {
-    "@qa-guru/allure-notifications": "6.2.1",
+    "@qa-guru/allure-notifications": "6.2.2",
     "allure": "3.14.3",
     "allure-js-commons": "3.10.2",
     "allure-node-test": "3.10.2",
