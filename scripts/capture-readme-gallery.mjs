@@ -47,7 +47,7 @@ async function shotReportWidget(p, file, titleSubstring, opts = {}) {
   const { kit = null } = opts;
   const handle = await p.evaluateHandle(
     ({ titleSubstring, kit }) => {
-      for (const node of document.querySelectorAll(".widget-tile, .styles_widget__JLpmE")) {
+      for (const node of document.querySelectorAll('.widget-tile, [class*="styles_widget"]')) {
         const isKit = node.classList.contains("widget-tile");
         if (kit === true && !isKit) continue;
         if (kit === false && isKit) continue;
