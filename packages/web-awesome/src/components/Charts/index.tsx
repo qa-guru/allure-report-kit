@@ -13,6 +13,7 @@
  * shared with the Dashboard fork.
  */
 import { themeStore } from "@allurereport/web-commons";
+import type { UIChartData } from "@allurereport/web-commons";
 import { Grid, GridItem, Loadable, PageLoader, ThemeProvider } from "@allurereport/web-components";
 import type { ResolvedTile } from "@qa-guru/allure-report-kit";
 import type { AllureChartData } from "@qa-guru/allure-report-kit/allure";
@@ -37,6 +38,7 @@ import { currentEnvironment } from "@/stores/env";
 import { useI18n } from "@/stores/locale";
 
 import { getChartWidgetByType } from "./stockWidgets";
+import { chartDataForKit } from "./chartSeam";
 import * as styles from "./styles.scss";
 
 const currentTheme = computed(() => themeStore.value.current);
@@ -110,13 +112,25 @@ export const Charts = () => {
             return null;
           }
 
-          const charts = pairTiles(Object.entries(currentChartsData), tilesForList(manifest, "charts")).map(
-            ({ chartId, chartData, tile }) => {
+          const charts = pairTiles<UIChartData>(
+            Object.entries(currentChartsData) as [string, UIChartData][],
+            tilesForList(manifest, "charts"),
+          ).map(({ chartId, chartData, tile }) => {
               if (isKitOwned(tile)) {
-                const model = tile.panel ? toPanelModel(tile.panel) : toChartModel(chartData as any);
+                const model = tile.panel
+                  ? toPanelModel(tile.panel)
+                  : chartData
+                    ? toChartModel(chartDataForKit(chartData))
+                    : undefined;
                 // A backend that cannot draw this kind leaves the tile to Allure.
                 if (canKitRender(tile, model)) {
-                  return <KitTile key={chartId} tile={tile} chartData={chartData as any} />;
+                  return (
+                    <KitTile
+                      key={chartId}
+                      tile={tile}
+                      chartData={chartData ? chartDataForKit(chartData) : undefined}
+                    />
+                  );
                 }
               }
 
