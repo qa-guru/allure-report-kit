@@ -181,3 +181,28 @@ html.theme-light #app-header {
   --color-status-passed-chart: #3bc95d;
   --hover-bg: rgba(28, 25, 23, 0.06);
 }
+
+/* Focus SSOT — scoped to the report header (host keeps its own rings). */
+#app-header {
+  -webkit-tap-highlight-color: transparent;
+}
+#app-header :focus {
+  outline: none;
+}
+#app-header :focus-visible {
+  outline: none !important;
+}
+html[data-keyboard-intent] #app-header :focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+}
+#app-header button::-moz-focus-inner {
+  border: 0;
+}
+#app-header button,
+#app-header [type="button"],
+#app-header [type="submit"],
+#app-header [type="reset"],
+#app-header [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
