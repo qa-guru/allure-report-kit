@@ -2,15 +2,16 @@
  * Realtime lifecycle — `start` → `update` without `done`.
  *
  * `allure watch` never calls `done` until SIGINT, so kit readiness must happen on
- * the first `update`. These tests mock upstream and reportFiles rather than
- * generating a full report.
+ * the first `update`. These tests mock upstream, reportFiles, and the fork /
+ * upstream web packages rather than generating a full report. The unit CI job
+ * does not run `npm run setup`, so `@qa-guru/allure-report-kit-web-awesome` is
+ * not installed there.
  */
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { test } from "node:test";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { after, test } from "node:test";
 
 import { declareSuite } from "./test-meta.mjs";
 
@@ -28,9 +29,51 @@ const { charts, panels, presets, withKit } = await import("../dist/index.js");
 
 const leadCharts = () => presets.fromOverview();
 
-const resolveFrom = createRequire(
-  join(dirname(fileURLToPath(import.meta.url)), "../packages/plugin-awesome/src/index.js"),
+const FORK_PACKAGE = "@qa-guru/allure-report-kit-web-awesome";
+const UPSTREAM_PACKAGE = "@allurereport/web-awesome";
+const FORK_MAIN = "app-test.js";
+const FORK_CSS = "styles-test.css";
+
+const stubRoot = await mkdtemp(join(tmpdir(), "ark-realtime-"));
+after(() => rm(stubRoot, { recursive: true, force: true }));
+
+const forkRoot = join(stubRoot, "fork");
+const upstreamRoot = join(stubRoot, "upstream");
+await mkdir(join(forkRoot, "dist/multi"), { recursive: true });
+await mkdir(join(upstreamRoot, "dist/multi"), { recursive: true });
+await writeFile(
+  join(forkRoot, "package.json"),
+  JSON.stringify({ name: FORK_PACKAGE, version: "0.0.0-test" }),
 );
+await writeFile(
+  join(forkRoot, "dist/multi/manifest.json"),
+  JSON.stringify({ "main.js": FORK_MAIN, "main.css": FORK_CSS }),
+);
+await writeFile(join(forkRoot, "dist/multi", FORK_MAIN), "// fake fork bundle\n");
+await writeFile(join(forkRoot, "dist/multi", FORK_CSS), "/* fake fork css */\n");
+await writeFile(
+  join(upstreamRoot, "dist/multi/manifest.json"),
+  JSON.stringify({ "main.js": "app-upstream.js", "main.css": "styles-upstream.css" }),
+);
+
+const stubModules = {
+  [`${FORK_PACKAGE}/package.json`]: join(forkRoot, "package.json"),
+  [`${UPSTREAM_PACKAGE}/dist/multi/manifest.json`]: join(
+    upstreamRoot,
+    "dist/multi/manifest.json",
+  ),
+};
+
+const resolveFrom = {
+  resolve(spec) {
+    if (stubModules[spec]) {
+      return stubModules[spec];
+    }
+    const error = new Error(`Cannot find module '${spec}'`);
+    error.code = "MODULE_NOT_FOUND";
+    throw error;
+  },
+};
 
 const RUN = [
   { status: "passed", duration: 1000, labels: [{ name: "layer", value: "unit" }] },
@@ -92,8 +135,8 @@ function createHarness(options) {
   const KitPlugin = createKitPlugin({
     id: "awesome",
     UpstreamPlugin: createMockUpstream(),
-    forkPackage: "@qa-guru/allure-report-kit-web-awesome",
-    upstreamPackage: "@allurereport/web-awesome",
+    forkPackage: FORK_PACKAGE,
+    upstreamPackage: UPSTREAM_PACKAGE,
     tilesKey: "charts",
     resolveFrom,
   });
@@ -130,16 +173,9 @@ test("update without done injects the kit bundle and re-keys charts", async () =
   await plugin.start(context, store, true);
   await plugin.update(context, store);
 
-  const forkMain = JSON.parse(
-    await readFile(
-      join(dirname(fileURLToPath(import.meta.url)), "../packages/web-awesome/dist/multi/manifest.json"),
-      "utf8",
-    ),
-  )["main.js"];
-
   const html = files.get("index.html")?.toString("utf8") ?? "";
   assert.match(html, /window\.allureReportKit\s*=/);
-  assert.match(html, new RegExp(`src="${forkMain}"`));
+  assert.match(html, new RegExp(`src="${FORK_MAIN}"`));
 
   const chartsJson = JSON.parse(files.get("widgets/charts.json")?.toString("utf8") ?? "{}");
   assert.ok(chartsJson.general["ark-charts-2"]);
