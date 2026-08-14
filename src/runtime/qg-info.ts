@@ -1,6 +1,36 @@
-import { highlightJson } from "./code-highlight.js";
+import { paintHighlightedJson } from "./code-highlight.js";
 
-const INFO_ICON = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.25"/><path d="M8 7.25v3.5"/><circle cx="8" cy="5.15" r="0.65" fill="currentColor" stroke="none"/></svg>`;
+const SVG_NS = "http://www.w3.org/2000/svg";
+let qgInfoSeq = 0;
+
+function createInfoIcon(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.5");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+
+  const ring = document.createElementNS(SVG_NS, "circle");
+  ring.setAttribute("cx", "8");
+  ring.setAttribute("cy", "8");
+  ring.setAttribute("r", "6.25");
+
+  const stem = document.createElementNS(SVG_NS, "path");
+  stem.setAttribute("d", "M8 7.25v3.5");
+
+  const dot = document.createElementNS(SVG_NS, "circle");
+  dot.setAttribute("cx", "8");
+  dot.setAttribute("cy", "5.15");
+  dot.setAttribute("r", "0.65");
+  dot.setAttribute("fill", "currentColor");
+  dot.setAttribute("stroke", "none");
+
+  svg.append(ring, stem, dot);
+  return svg;
+}
 
 const VIEWPORT_MARGIN = 32;
 const POPOVER_GAP = 6;
@@ -298,31 +328,44 @@ export function createQgInfo(
   const payload = typeof content === "string" ? null : content;
   const code = typeof content === "string" ? content : JSON.stringify(content, null, 2);
   const dangerLiterals = payload ? collectQgInfoDeviationLiterals(payload) : undefined;
-  const popoverId = `qg-info-${Math.random().toString(36).slice(2, 9)}`;
+  qgInfoSeq += 1;
+  const popoverId = `qg-info-${qgInfoSeq}`;
 
   const root = document.createElement("div");
   root.className = "qg-info";
   root.dataset.testid = "qg-info";
-  root.innerHTML = `
-    <button type="button" class="icon-btn qg-info__trigger" aria-label="Quality gate config" aria-haspopup="dialog" aria-expanded="false" aria-controls="${popoverId}">
-      <span class="icon">${INFO_ICON}</span>
-    </button>
-    <div class="qg-info__popover" id="${popoverId}" role="dialog" aria-label="Quality gate config"></div>
-  `;
 
-  const popover = root.querySelector(".qg-info__popover");
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "icon-btn qg-info__trigger";
+  trigger.setAttribute("aria-label", "Quality gate config");
+  trigger.setAttribute("aria-haspopup", "dialog");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.setAttribute("aria-controls", popoverId);
+
+  const icon = document.createElement("span");
+  icon.className = "icon";
+  icon.append(createInfoIcon());
+  trigger.append(icon);
+
+  const popover = document.createElement("div");
+  popover.className = "qg-info__popover";
+  popover.id = popoverId;
+  popover.setAttribute("role", "dialog");
+  popover.setAttribute("aria-label", "Quality gate config");
+
+  root.append(trigger, popover);
+
   const paths = createQgInfoPaths(fileSource);
-  if (popover instanceof HTMLElement) {
-    if (paths) {
-      popover.append(paths);
-    }
-    popover.classList.add("ch-theme--vscode");
-    const pre = document.createElement("pre");
-    pre.className = "qg-info__code ch-code";
-    pre.setAttribute("aria-label", "Quality gate JSON");
-    pre.innerHTML = highlightJson(code, { dangerLiterals });
-    popover.append(pre);
+  if (paths) {
+    popover.append(paths);
   }
+  popover.classList.add("ch-theme--vscode");
+  const pre = document.createElement("pre");
+  pre.className = "qg-info__code ch-code";
+  pre.setAttribute("aria-label", "Quality gate JSON");
+  paintHighlightedJson(pre, code, { dangerLiterals });
+  popover.append(pre);
 
   wireQgInfoPopover(root);
   return root;
