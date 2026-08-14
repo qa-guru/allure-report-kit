@@ -66,7 +66,7 @@ export const sonarQualityGateModel = {
     },
     config: {
       profile: "qa-guru-canon",
-      projectKey: "reference-app-backend",
+      projectKey: "autotests-ai-multistack-app-backend-java-spring",
       conditions: [
         {
           metric: "coverage",
@@ -78,10 +78,10 @@ export const sonarQualityGateModel = {
       source: {
         configFile: "docs/sonar/quality-gate-profile.json",
         profile: "qa-guru-canon",
-        projectKey: "reference-app-backend",
+        projectKey: "autotests-ai-multistack-app-backend-java-spring",
         hrefBase: "https://github.com/qa-guru/zero-design-system/blob/master/",
         profileHref: "https://sonar.qa.guru/profiles/show?name=qa-guru-canon",
-        projectHref: "https://sonar.qa.guru/dashboard?id=reference-app-backend",
+        projectHref: "https://sonar.qa.guru/dashboard?id=autotests-ai-multistack-app-backend-java-spring",
       },
     },
   },

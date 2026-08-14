@@ -98,7 +98,7 @@
   ],
   "config": {
     "profile": "qa-guru-canon-long",
-    "projectKey": "reference-app-backend",
+    "projectKey": "autotests-ai-multistack-app-backend-java-spring",
     "conditions": [
       {
         "metric": "coverage",
@@ -164,16 +164,16 @@
     "source": {
       "configFile": "docs/sonar/quality-gate-profile.json",
       "profile": "qa-guru-canon-long",
-      "projectKey": "reference-app-backend",
+      "projectKey": "autotests-ai-multistack-app-backend-java-spring",
       "hrefBase": "https://github.com/qa-guru/zero-design-system/blob/master/",
       "profileHref": "https://sonar.qa.guru/profiles/show?name=qa-guru-canon-long",
-      "projectHref": "https://sonar.qa.guru/dashboard?id=reference-app-backend"
+      "projectHref": "https://sonar.qa.guru/dashboard?id=autotests-ai-multistack-app-backend-java-spring"
     }
   },
   "infoPayload": {
     "qualityGate": {
       "profile": "qa-guru-canon-long",
-      "projectKey": "reference-app-backend",
+      "projectKey": "autotests-ai-multistack-app-backend-java-spring",
       "conditions": [
         {
           "metric": "coverage",
@@ -241,7 +241,7 @@
       "status": "ERROR",
       "passed": false,
       "analysisId": "AXfixtureLongAnalysis",
-      "dashboardUrl": "https://sonar.qa.guru/dashboard?id=reference-app-backend",
+      "dashboardUrl": "https://sonar.qa.guru/dashboard?id=autotests-ai-multistack-app-backend-java-spring",
       "conditions": [
         {
           "status": "ERROR",

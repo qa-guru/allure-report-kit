@@ -14,9 +14,9 @@ const sonarQualityGateData = () =>
   sonarProjectStatusToQualityGateOptions(
     {
       status: "OK",
-      project_key: "reference-app-backend",
+      project_key: "autotests-ai-multistack-app-backend-java-spring",
       analysis_id: "AXdemoPassedAnalysis",
-      dashboard_url: "https://sonar.qa.guru/dashboard?id=reference-app-backend",
+      dashboard_url: "https://sonar.qa.guru/dashboard?id=autotests-ai-multistack-app-backend-java-spring",
       conditions: [
         {
           status: "OK",
@@ -44,7 +44,7 @@ const sonarQualityGateData = () =>
       source: {
         configFile: "docs/sonar/quality-gate-profile.json",
         profile: "qa-guru-canon",
-        projectKey: "reference-app-backend",
+        projectKey: "autotests-ai-multistack-app-backend-java-spring",
         hrefBase: "https://github.com/qa-guru/zero-design-system/blob/master/",
       },
     },
