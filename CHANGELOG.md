@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.5 — 2026-08-14
+
+### English
+
+- **quality-gate info** — paint the JSON popover with DOM nodes (`textContent`), not `innerHTML`.
+- **fixtures** — Sonar demo `projectKey` / dashboard URLs match the live backend key.
+
+### Russian
+
+- **quality-gate info** — JSON в popover через DOM, без `innerHTML`.
+- **fixtures** — demo Sonar `projectKey` совпадает с живым backend.
+
 ## v0.3.4 — 2026-08-14
 
 ### English
