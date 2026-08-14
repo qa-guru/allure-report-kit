@@ -373,12 +373,6 @@ export function toChartModel(chartData: AllureChartData): ChartModel | undefined
 
 /** Panel kind → model kind. Only `donut` is renamed; the rest map through. */
 function panelModelKind(panel: KitCustomPanel): ChartModel["kind"] {
-  if (panel.kind === "qualityGate") {
-    return "qualityGate";
-  }
-  if (panel.kind === "testsTable") {
-    return "testsTable";
-  }
   return panel.kind === "donut" || panel.kind === undefined
     ? "pie"
     : (panel.kind as ChartModel["kind"]);

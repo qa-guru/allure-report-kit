@@ -102,7 +102,16 @@ test("fixtures feed toPanelModel / renderQualityGateHost without remapping", asy
 test("parseKitQualityGateData rejects empty / invalid payloads", async () => {
   const { parseKitQualityGateData, isKitQualityGateData } = await import("../dist/quality-gate/parse.js");
 
-  assert.equal(isKitQualityGateData(null), false);
+  assert.equal(
+    isKitQualityGateData({
+      passed: true,
+      rules: [null],
+    }),
+    false,
+  );
+  assert.equal(isKitQualityGateData([]), false);
+  assert.equal(isKitQualityGateData("nope"), false);
+  assert.equal(isKitQualityGateData({ passed: "yes", rules: [{ id: "x", message: "m", passed: true }] }), false);
   assert.equal(isKitQualityGateData({ passed: true, rules: [] }), false);
   assert.equal(
     isKitQualityGateData({
@@ -111,7 +120,92 @@ test("parseKitQualityGateData rejects empty / invalid payloads", async () => {
     }),
     false,
   );
+  assert.equal(
+    isKitQualityGateData({
+      passed: true,
+      rules: [{ id: "", message: "m", passed: true }],
+    }),
+    false,
+  );
+  assert.equal(
+    isKitQualityGateData({
+      passed: true,
+      rules: [{ id: "x", message: 1, passed: true }],
+    }),
+    false,
+  );
+  assert.equal(
+    isKitQualityGateData({
+      passed: true,
+      rules: [{ id: "x", message: "m", passed: "yes" }],
+    }),
+    false,
+  );
+  assert.equal(
+    isKitQualityGateData({
+      passed: true,
+      rules: [{ id: "x", message: "m", passed: true, comparator: "NOPE" }],
+    }),
+    false,
+  );
+  assert.equal(
+    isKitQualityGateData({
+      passed: true,
+      rules: [{ id: "x", message: "m", passed: true }],
+      kind: "other",
+    }),
+    false,
+  );
+  assert.equal(
+    isKitQualityGateData({
+      passed: true,
+      rules: [{ id: "x", message: "m", passed: true }],
+      lang: "de",
+    }),
+    false,
+  );
   assert.throws(() => parseKitQualityGateData({ passed: true, rules: [] }), /KitQualityGateData/);
+});
+
+test("formatQualityGateRuleFormula covers comparators and id fallbacks", async () => {
+  const { formatQualityGateRuleFormula, resolveQualityGateRuleExpected } = await import(
+    "../dist/quality-gate/rule-format.js"
+  );
+
+  assert.equal(resolveQualityGateRuleExpected({ id: "x", passed: true, message: "" }), undefined);
+  assert.equal(
+    resolveQualityGateRuleExpected({ id: "x", passed: true, message: "", expected: null, threshold: null }),
+    undefined,
+  );
+  assert.equal(
+    formatQualityGateRuleFormula({ id: "x", passed: false, message: "", actual: 1 }),
+    "",
+  );
+
+  const base = { id: "cov", passed: false, message: "", actual: 1, expected: 2 };
+  assert.equal(formatQualityGateRuleFormula({ ...base, comparator: "LT" }), "FAIL: 1 < 2");
+  assert.equal(formatQualityGateRuleFormula({ ...base, comparator: "LTE" }), "FAIL: 1 ≤ 2");
+  assert.equal(formatQualityGateRuleFormula({ ...base, comparator: "GT" }), "FAIL: 1 > 2");
+  assert.equal(formatQualityGateRuleFormula({ ...base, comparator: "GTE" }), "FAIL: 1 ≥ 2");
+  assert.equal(formatQualityGateRuleFormula({ ...base, comparator: "EQ" }), "FAIL: 1 = 2");
+  assert.equal(formatQualityGateRuleFormula({ ...base, comparator: "NE" }), "FAIL: 1 ≠ 2");
+
+  assert.equal(
+    formatQualityGateRuleFormula({ id: "minTestsCount", passed: false, message: "", actual: 1, expected: 10 }),
+    "FAIL: 1 < 10",
+  );
+  assert.equal(
+    formatQualityGateRuleFormula({ id: "successRate", passed: false, message: "", actual: 80, expected: 90 }),
+    "FAIL: 80% < 90%",
+  );
+  assert.equal(
+    formatQualityGateRuleFormula({ id: "maxDuration", passed: false, message: "", actual: 12, expected: 5 }),
+    "FAIL: 12s > 5s",
+  );
+  assert.equal(
+    formatQualityGateRuleFormula({ id: "other", passed: false, message: "", actual: 1, expected: 2 }),
+    "FAIL: 1 vs 2",
+  );
 });
 
 test("sonarProjectStatusToQualityGateOptions output matches contract", async () => {
@@ -135,4 +229,12 @@ test("sonarProjectStatusToQualityGateOptions output matches contract", async () 
   assert.equal(data.kind, "sonar");
   assert.equal(data.passed, true);
   assert.equal(data.rules[0].id, "coverage");
+});
+
+test("resolveQualityGateFileSource maps knownIssuesPath", async () => {
+  const { resolveQualityGateFileSource } = await import("../dist/quality-gate/info-payload.js");
+  assert.equal(resolveQualityGateFileSource(), undefined);
+  assert.deepEqual(resolveQualityGateFileSource({ knownIssuesPath: "issues.json" }), {
+    knownIssuesFile: "issues.json",
+  });
 });

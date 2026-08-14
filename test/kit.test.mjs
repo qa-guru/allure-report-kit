@@ -21,6 +21,7 @@ const {
   withKit,
   matchesOverview,
   matchesLeadLayout,
+  leadOffset,
   themeToCss,
   DEFAULT_OVERVIEW_PRESET,
 } = await import("../dist/index.js");
@@ -49,6 +50,20 @@ test("fromOverviewCharts matches overview chart quad only", () => {
   ]);
   assert.ok(!tiles[2].layers.includes("visual"));
   assert.ok(matchesOverview(tiles));
+  assert.equal(matchesOverview([]), false);
+  const swapped = presets.fromOverviewCharts();
+  swapped[0] = { ...swapped[0], type: "durations" };
+  assert.equal(matchesOverview(swapped), false);
+  const regrouped = presets.fromOverviewCharts();
+  regrouped[3] = { ...regrouped[3], groupBy: "status" };
+  assert.equal(matchesOverview(regrouped), false);
+  assert.throws(
+    () =>
+      presets.fromOverviewCharts({
+        preset: { ...DEFAULT_OVERVIEW_PRESET, tiles: [{ chart: "notAChart" }] },
+      }),
+    /Unknown overview chart/,
+  );
 });
 
 test("fromLead and fromOverview default include quality gates before charts", () => {
@@ -518,4 +533,55 @@ test("collectQgInfoDeviationLiterals marks Allure and Sonar failed actuals", asy
     }),
   );
   assert.deepEqual([...sonar], ["72.4"]);
+});
+
+test("an unknown panel kind does not invent a renderer", () => {
+  const panel = panels.custom({ id: "mystery", kind: "not-a-kind" });
+  assert.equal(panel.kind, "not-a-kind");
+  assert.equal(panel.renderer, undefined);
+});
+
+test("matchesOverview rejects a pyramid that still lists visual", () => {
+  const layers = [...DEFAULT_OVERVIEW_PRESET.pyramidLayers, "visual"];
+  const preset = { ...DEFAULT_OVERVIEW_PRESET, pyramidLayers: layers };
+  const tiles = presets.fromOverviewCharts({ layers, preset });
+  assert.equal(matchesOverview(tiles, preset), false);
+});
+
+test("leadOffset follows qualityGates length", () => {
+  assert.equal(leadOffset(), 2);
+  assert.equal(leadOffset({ ...DEFAULT_OVERVIEW_PRESET, qualityGates: undefined }), 0);
+});
+
+test("matchesLeadLayout rejects a lead that swapped the gate id", () => {
+  const lead = presets.fromLead();
+  lead[0] = { type: "custom", id: "not-allure-quality-gate" };
+  assert.equal(matchesLeadLayout(lead), false);
+});
+
+test("withKit copies qualityGate rules and knownIssuesPath onto the manifest", () => {
+  const config = withKit({
+    name: "T",
+    qualityGate: {
+      rules: [{ maxFailures: 0 }],
+      source: { configFile: "quality-gate.json" },
+    },
+    knownIssuesPath: "known-issues.json",
+    plugins: {
+      awesome: {
+        options: { charts: [charts.currentStatus()] },
+      },
+    },
+  });
+  const kit = awesomeManifest(config);
+  assert.deepEqual(kit.qualityGate.rules, [{ maxFailures: 0 }]);
+  assert.equal(kit.qualityGate.knownIssuesPath, "known-issues.json");
+  assert.equal(kit.qualityGate.source.configFile, "quality-gate.json");
+});
+
+test("themeToCss skips empty token blocks", () => {
+  assert.equal(
+    themeToCss({ id: "empty", tokens: {}, tokensLight: {}, tokensDark: {}, hostPalette: false }),
+    "",
+  );
 });

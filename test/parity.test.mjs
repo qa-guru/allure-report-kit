@@ -234,6 +234,57 @@ test("panel models rename donut to pie and keep other kinds", () => {
   assert.equal(table.kind, "table");
   assert.deepEqual(table.columns, ["name"]);
   assert.deepEqual(table.categories, ["x"]);
+
+  const testsTableEmpty = toPanelModel({ type: "custom", id: "tt", kind: "testsTable" });
+  assert.equal(testsTableEmpty.kind, "testsTable");
+  assert.equal(testsTableEmpty.testsTable, undefined);
+
+  const testsTable = toPanelModel({
+    type: "custom",
+    id: "tt2",
+    kind: "testsTable",
+    lang: "en",
+    data: {
+      rows: [{ name: "login", status: "passed" }],
+      columns: ["name", "status"],
+      emptyRowsLabel: "none",
+      lang: "ru",
+    },
+  });
+  assert.equal(testsTable.testsTable.rows.length, 1);
+  assert.deepEqual(testsTable.testsTable.columns, ["name", "status"]);
+  assert.equal(testsTable.testsTable.emptyRowsLabel, "none");
+  assert.equal(testsTable.testsTable.lang, "en");
+
+  const gateEmpty = toPanelModel({ type: "custom", id: "qg", kind: "qualityGate", data: { passed: true } });
+  assert.equal(gateEmpty.kind, "qualityGate");
+  assert.equal(gateEmpty.qualityGate, undefined);
+
+  const gate = toPanelModel({
+    type: "custom",
+    id: "qg2",
+    kind: "qualityGate",
+    title: "From panel",
+    lang: "en",
+    labels: { passed: "ok" },
+    data: {
+      passed: true,
+      rules: [{ id: "x", message: "m", passed: true }],
+      title: "From data",
+      barTitle: "Bar",
+      lang: "ru",
+      kind: "sonar",
+      testId: "sonar-quality-gate",
+      config: { knownIssuesPath: "k.json" },
+      infoPayload: { a: 1 },
+    },
+  });
+  assert.equal(gate.qualityGate.passed, true);
+  assert.equal(gate.qualityGate.title, "From panel");
+  assert.equal(gate.qualityGate.barTitle, "Bar");
+  assert.equal(gate.qualityGate.lang, "en");
+  assert.equal(gate.qualityGate.kind, "sonar");
+  assert.equal(gate.qualityGate.testId, "sonar-quality-gate");
 });
 
 test("loadPanelModel prefers dataUrl and falls back on a failed fetch", async () => {

@@ -187,12 +187,16 @@ const testsTablePanel = await page.$eval(
       return Math.abs(th.getBoundingClientRect().left - td.getBoundingClientRect().left);
     }),
     firstName: body.querySelector("tbody tr:first-child td.tests-table-panel__name")?.textContent?.trim() ?? "",
-    firstNameOverflow: (() => {
-      const cell = body.querySelector("tbody tr:first-child td.tests-table-panel__name");
-      if (!cell) {
+    nameCellWidth:
+      body.querySelector("tbody tr:first-child td.tests-table-panel__name")?.clientWidth ?? 0,
+    firstStatusOverflow: (() => {
+      const badge = body.querySelector(
+        "tbody tr:first-child td.tests-table-panel__status .badge",
+      );
+      if (!badge) {
         return true;
       }
-      return cell.scrollWidth > cell.clientWidth + 1;
+      return badge.scrollWidth > badge.clientWidth + 1;
     })(),
     hostHeight: body.clientHeight,
   }),
@@ -204,7 +208,8 @@ const testsTablePanel = await page.$eval(
   header: [],
   columnShift: [999],
   firstName: "",
-  firstNameOverflow: true,
+  nameCellWidth: 0,
+  firstStatusOverflow: true,
   hostHeight: 0,
 }));
 check(testsTablePanel.rows >= 4, `tests table: expected height-sliced rows, got ${testsTablePanel.rows}`);
@@ -228,8 +233,12 @@ check(
   `tests table name: got "${testsTablePanel.firstName}"`,
 );
 check(
-  !testsTablePanel.firstNameOverflow,
-  "tests table name: ellipsis while column has free width",
+  testsTablePanel.nameCellWidth >= 80,
+  `tests table name: column collapsed to ${testsTablePanel.nameCellWidth}px`,
+);
+check(
+  !testsTablePanel.firstStatusOverflow,
+  "tests table status: badge ellipsis (STATUS must fit RU/EN labels)",
 );
 
 const testsTableRowsBeforeResize = testsTablePanel.rows;

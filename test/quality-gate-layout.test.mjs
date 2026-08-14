@@ -76,6 +76,18 @@ test("failed body lists only failing rules with formulas", async () => {
   assert.ok(sqgLong.body.rows.every((row) => row.formula?.startsWith("FAIL:")));
 });
 
+test("string labels win over the default aria copy", async () => {
+  const { buildQualityGateLayout } = await import("../dist/quality-gate/layout/index.js");
+
+  const layout = buildQualityGateLayout({
+    passed: true,
+    rules: [{ id: "ok", message: "ok", passed: true }],
+    labels: { passed: "All green", failed: "Not green" },
+    lang: "en",
+  });
+  assert.equal(layout.ariaLabel, "All green");
+});
+
 test("layout metrics and tokens match DS canon exports", async () => {
   const { QUALITY_GATE_LAYOUT_METRICS, QUALITY_GATE_LAYOUT_TOKENS } = await import(
     "../dist/quality-gate/layout/index.js"

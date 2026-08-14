@@ -235,8 +235,12 @@ async function checkPalette(page, label) {
 async function checkResize(page, label) {
   const layoutOf = () =>
     page.evaluate(() => {
-      const tile = document.querySelector(".widget-tile[data-ark-rendered-by]");
-      return [...tile.classList].filter((name) => name.startsWith("widget-tile--layout-"));
+      // Quality-gate lead tiles pin `layout: "2x1"` in the overview preset —
+      // measured geometry never replaces an explicit layout.
+      const tile = [...document.querySelectorAll(".widget-tile[data-ark-rendered-by]")].find(
+        (node) => !node.classList.contains("widget-tile--quality-gate"),
+      );
+      return [...(tile?.classList ?? [])].filter((name) => name.startsWith("widget-tile--layout-"));
     });
 
   const wide = await layoutOf();
