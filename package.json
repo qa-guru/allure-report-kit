@@ -1,6 +1,6 @@
 {
   "name": "@qa-guru/allure-report-kit",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "DX kit for Allure Report 3: theme, pluggable chart renderers, custom panels, DS report header",
   "keywords": [
     "allure",
