@@ -1,6 +1,6 @@
 # Test layers (allure-report-kit)
 
-Two-layer pyramid for **lib/cli** variant — not the full reference-app stack (`api` · `integration` · `manual` are **N/A**).
+Two-layer pyramid for **lib/cli** variant — not the full Multistack stack (`api` · `integration` · `manual` are **N/A**).
 
 Meta-канон: [`docs/testing/SERVICE-QUALITY-CONTOUR.md`](../../../docs/testing/SERVICE-QUALITY-CONTOUR.md) · instance [`docs/allure-report-kit/QUALITY-CONTOUR.md`](../../../docs/allure-report-kit/QUALITY-CONTOUR.md).
 
@@ -53,4 +53,4 @@ After each run, `scripts/check-allure-labels.mjs` requires `epic`, `feature`, `s
 
 - Post-hoc layer inference — labels only via `declareSuite` / smoke harness
 - `@allure.label.*` in test title strings
-- reference-app pyramid slices (`api`, `integration`, `manual`, `component` tier) in this repo
+- Multistack pyramid slices (`api`, `integration`, `manual`, `component` tier) in this repo
