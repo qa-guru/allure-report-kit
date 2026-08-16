@@ -76,7 +76,7 @@ async function checkHeader(page, label, { expectSwitcher }) {
   }, expectSwitcher);
 
   check(header.brand, `${label} header: DS brand missing — this is not the shared primitive`);
-  check(header.product === "Reference App", `${label} header: product name "${header.product}"`);
+  check(header.product === "Multistack", `${label} header: product name "${header.product}"`);
   check(
     header.appPadTop >= header.bandHeight,
     `${label} header: report padded ${header.appPadTop}px under a ${header.bandHeight}px band`,

@@ -25,7 +25,7 @@ const leadTiles = presets.fromOverview({
 });
 
 export default withKit({
-  name: "Reference App Tests",
+  name: "Multistack Tests",
   output: "./allure-report",
   historyPath: "./history.jsonl",
   appendHistory: true,
@@ -36,7 +36,7 @@ export default withKit({
 
   theme: theme.qaGuru({
     header: theme.header({
-      productName: "Reference App",
+      productName: "Multistack",
       brandHref: "https://qa.guru/",
     }),
   }),
@@ -51,7 +51,7 @@ export default withKit({
   plugins: {
     awesome: {
       options: {
-        reportName: "Reference App",
+        reportName: "Multistack",
         reportLanguage: "ru",
         charts: [
           ...leadTiles,
@@ -84,7 +84,7 @@ export default withKit({
 
     dashboard: {
       options: {
-        reportName: "Reference App — Dashboard",
+        reportName: "Multistack — Dashboard",
         reportLanguage: "ru",
         layout: [
           ...leadTiles,

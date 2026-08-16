@@ -261,7 +261,7 @@ test("quality gate evaluation mirrors analytics-index rules", () => {
 test("theme.header without the soft-fork is reported", () => {
   const config = withKit({
     name: "T",
-    theme: theme.qaGuru({ header: theme.header({ productName: "Reference App" }) }),
+    theme: theme.qaGuru({ header: theme.header({ productName: "Multistack" }) }),
     plugins: { awesome: { options: { charts: leadCharts() } } },
   });
 

@@ -28,7 +28,7 @@ export default withKit({
 
   theme: theme.qaGuru({
     header: theme.header({
-      productName: "Reference App",
+      productName: "Multistack",
       brandHref: "https://qa.guru/",
     }),
   }),

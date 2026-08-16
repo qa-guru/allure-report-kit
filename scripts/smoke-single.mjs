@@ -63,7 +63,7 @@ const header = await page.evaluate(() => ({
   toggle: Boolean(document.querySelector('[data-testid="header-theme-toggle"]')),
 }));
 check(header.brand, "header: DS brand missing — the inlined module did not mount");
-check(header.product === "Reference App", `header: product name "${header.product}"`);
+check(header.product === "Multistack", `header: product name "${header.product}"`);
 
 await page.getByText("Отчет", { exact: true }).first().click();
 await page.getByText("Графики", { exact: true }).first().click();

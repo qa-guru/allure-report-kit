@@ -173,13 +173,13 @@ npm i -D highcharts
 import { withKit, charts, panels, presets, renderers, theme } from "@qa-guru/allure-report-kit";
 
 export default withKit({
-  name: "Reference App Tests",
+  name: "Multistack Tests",
   historyPath: "./history.jsonl",
   renderer: renderers.stock(),
   softFork: true,
 
   theme: theme.qaGuru({
-    header: theme.header({ productName: "Reference App" }),
+    header: theme.header({ productName: "Multistack" }),
   }),
 
   qualityGate: {

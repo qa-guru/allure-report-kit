@@ -32,7 +32,7 @@ const config = withKit({
   qualityGate: { rules: [{ maxFailures: 0 }] },
   theme: theme.qaGuru({
     header: theme.header({
-      productName: "Reference App",
+      productName: "Multistack",
       brandHref: "https://qa.guru/",
       nav: [
         { href: "#", label: "Отчёт", active: true },

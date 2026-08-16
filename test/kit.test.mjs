@@ -282,11 +282,11 @@ test("the host report's own chart swatches follow the canon", () => {
 });
 
 test("theme.header is the DS primitive and stays under theme", () => {
-  const configured = theme.qaGuru({ header: theme.header({ productName: "Reference App" }) });
+  const configured = theme.qaGuru({ header: theme.header({ productName: "Multistack" }) });
 
   assert.equal(configured.header.enabled, true);
   assert.equal(configured.header.source, "design-system");
-  assert.equal(configured.header.productName, "Reference App");
+  assert.equal(configured.header.productName, "Multistack");
   assert.equal(configured.chrome, undefined);
 });
 

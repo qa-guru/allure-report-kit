@@ -279,7 +279,7 @@ const header = await page.$eval("#app-header", (node) => ({
 })).catch(() => ({ hasHeader: false, product: undefined }));
 
 check(header.hasHeader, "theme.header: DS .header did not mount into #app-header");
-check(header.product === "Reference App", `theme.header: product name is "${header.product}"`);
+check(header.product === "Multistack", `theme.header: product name is "${header.product}"`);
 
 // Compare grid — same models, different backends (structural baseline source).
 const COMPARE_KEYS = [
