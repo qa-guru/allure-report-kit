@@ -34,7 +34,7 @@ function findSsotPath() {
   for (let i = 0; i < 12; i++) {
     const candidate = join(
       dir,
-      "stacks/java-spring/tests/allure/pyramid-layers.json",
+      "projects/autotests-ai-multistack-home/ethalon/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layers.json",
     );
     if (existsSync(candidate)) {
       return candidate;
@@ -62,7 +62,7 @@ test("tierGapPx / tierCornerRadius mirror Java clamps", () => {
   assert.equal(tierCornerRadius(20, 100), 10);
 });
 
-test("collage palette matches stacks/java-spring/tests/allure/pyramid-layers.json", (t) => {
+test("collage palette matches hub ethalon pyramid-layers.json", (t) => {
   const ssot = loadSsot();
   if (!ssot) {
     t.skip("SSOT only in zero-design-system checkout (standalone CI skips)");
