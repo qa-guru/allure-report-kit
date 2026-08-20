@@ -1,7 +1,7 @@
 /**
  * Themes — token sets plus the report header configuration.
  *
- * Palette SSOT is `projects/autotests-ai-multistack-home/ethalon/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layers.json` in the
+ * Palette SSOT is `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layers.json` in the
  * zero-design-system monorepo (checked by `scripts/pyramid_palette_sync.py`).
  * The values below are a pinned copy; `npm run sync:ds` refreshes them together
  * with the vendored design-system CSS.

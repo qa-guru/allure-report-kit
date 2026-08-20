@@ -34,7 +34,7 @@ function findSsotPath() {
   for (let i = 0; i < 12; i++) {
     const candidate = join(
       dir,
-      "projects/autotests-ai-multistack-home/ethalon/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layers.json",
+      "projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layers.json",
     );
     if (existsSync(candidate)) {
       return candidate;
