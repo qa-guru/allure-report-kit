@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### English
+
+- **testingPyramid** — tier width follows test count (peak layer fills the funnel). Stack order is still unit→…→e2e; the shape is a chart, not a decorative cone.
+
+### Russian
+
+- **testingPyramid** — ширина яруса по числу тестов (максимум заполняет воронку). Порядок слоёв прежний; форма — график, не декоративный конус.
+
 ## v0.3.5 — 2026-08-14
 
 ### English

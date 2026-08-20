@@ -5,7 +5,7 @@
  * equal-height tiers; only width steps; count lives in the label.
  *
  * Report SVG (`testingPyramid` chart) uses different geometry — DS `widget-tile-mocks`
- * (`rx=4`, `minFrac=0.2`); these constants are collage-only.
+ * (`rx=4`, width ∝ count); these constants are collage-only.
  */
 
 /** Corner radius as a fraction of tier height (quiet, not capsule). */

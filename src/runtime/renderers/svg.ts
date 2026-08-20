@@ -1,10 +1,11 @@
 /**
  * SVG renderer — kit canon, no chart library.
  *
- * Owns the testing pyramid: rounded tiers, narrow top → wide bottom, gap taken
- * from the durations histogram so the two tiles read as one family. Geometry is
- * the DS report canon (`widget-tile-mocks.js` → `pyramidSvg`, `rx=4`, `minFrac=0.2`);
- * Telegram collage uses `@qa-guru/allure-notifications-pyramid` — different constants.
+ * Owns the testing pyramid: rounded tiers stacked in layer order, width ∝ test
+ * count (peak layer fills the funnel). Gap matches the durations histogram so
+ * the two tiles read as one family. Geometry is the DS report canon
+ * (`widget-tile-mocks.js` → `pyramidSvg`, `rx=4`); collage uses
+ * `testing-pyramid-geometry.ts` — different constants.
  *
  * Also draws the gauge, for the same reason: an arc with a number in it needs no
  * library, and keeping it here means a gauge panel renders in a report that
@@ -18,8 +19,22 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 /** Half the tier radius of the regular tier — matches the DS canon. */
 const CHART_RX = 4;
-const MIN_FRACTION = 0.2;
 const BAR_FILL = 0.72;
+
+/**
+ * Funnel width of a pyramid tier: the largest count is 1, zeros vanish.
+ * Layer order is the stack; this is the quantitative axis.
+ */
+export function pyramidValueFraction(value: number | undefined, peak: number): number {
+  if (!(peak > 0)) {
+    return 0;
+  }
+  const count = value ?? 0;
+  if (!(count > 0)) {
+    return 0;
+  }
+  return count / peak;
+}
 
 interface Geometry {
   width: number;
@@ -98,7 +113,7 @@ function renderPyramid(context: RenderContext): RenderResult {
   const { host, model, tile } = context;
   const box = viewBox(tile.layout);
   const geometry = geometryFor(tile.tier, box.width, box.height);
-  const rows = [...model.series].reverse();
+  const rows = [...model.series].reverse().filter((series) => (series.value ?? 0) > 0);
   const count = rows.length;
 
   const svg = element("svg", {
@@ -117,12 +132,11 @@ function renderPyramid(context: RenderContext): RenderResult {
     (geometry.height - geometry.padY * 2 - geometry.gap * (count - 1)) / count;
   const centerX = geometry.width / 2;
   const funnelWidth = geometry.width - geometry.padX * 2;
+  const peak = rows.reduce((max, series) => Math.max(max, series.value ?? 0), 0);
   const families = new Set<StatusFamily>();
 
   rows.forEach((series, index) => {
-    const fraction =
-      count === 1 ? 1 : MIN_FRACTION + (1 - MIN_FRACTION) * (index / (count - 1));
-    const width = funnelWidth * fraction;
+    const width = funnelWidth * pyramidValueFraction(series.value, peak);
     const y = geometry.padY + index * (bandHeight + geometry.gap);
     const color = series.color ?? context.cssVar(`--ark-layer-${series.id}`, "#64748b");
 
@@ -167,6 +181,13 @@ function renderPyramid(context: RenderContext): RenderResult {
   return { families: orderFamilies(families), renderedBy: "svg" };
 }
 
+function measuredTextLength(label: SVGTextElement): number {
+  if (typeof label.getComputedTextLength !== "function") {
+    return 0;
+  }
+  return label.getComputedTextLength();
+}
+
 /**
  * Band ink is only legible on the band itself, so a label wider than its tier
  * has to shrink: full name → count → initial → nothing. Measured after the SVG
@@ -178,12 +199,12 @@ function fitLabels(svg: SVGSVGElement): void {
     const fallbacks = JSON.parse(label.dataset.arkFallbacks ?? "[]") as string[];
 
     for (const candidate of fallbacks) {
-      if (label.getComputedTextLength() <= available) {
+      if (measuredTextLength(label) <= available) {
         break;
       }
       label.textContent = candidate;
     }
-    if (label.getComputedTextLength() > available) {
+    if (measuredTextLength(label) > available) {
       label.remove();
       continue;
     }

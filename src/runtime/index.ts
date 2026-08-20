@@ -298,7 +298,7 @@ export type {
 } from "../quality-gate/layout/index.js";
 export { createQgInfo, collectQgInfoDeviationLiterals } from "./qg-info.js";
 export { stockRenderer, createStockRenderer } from "./renderers/stock.js";
-export { svgRenderer } from "./renderers/svg.js";
+export { svgRenderer, pyramidValueFraction } from "./renderers/svg.js";
 export { domRenderer } from "./renderers/dom.js";
 export { highchartsRenderer } from "./renderers/highcharts.js";
 export { amchartsRenderer } from "./renderers/amcharts.js";
