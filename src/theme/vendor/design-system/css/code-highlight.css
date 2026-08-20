@@ -1,7 +1,6 @@
 /* vendored from zero-design-system/projects/design-system-home/design-system — do not edit, run `npm run sync:ds` */
 /* Code highlight — JSON / shell token palettes (primitive).
-   Pairs with panel__code; standalone .ch-code for bare pre.
-   React mirror: packages/react-ui/src/styles/code-highlight.css */
+   Pairs with panel__code; standalone .ch-code for bare pre. */
 
 .ch-code {
   --ch-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

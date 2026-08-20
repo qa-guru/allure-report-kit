@@ -70,13 +70,13 @@
  *   ≤196px (#1–3)  TEST + STATUS
  *   197–249px (#4) + TREND
  *   250–479px (#5–9) all four — name may ellipsis
- *   ≥480px (#10 / 2×2 dashboard) status keeps badge-label room; name ellipsis OK
+ *   ≥480px (#10 / wide) Test:Status:Trend:Stability = 4:2:2:2
  *
- * Width intent: status fits RU/EN badge labels (ПРОЙДЕН / НЕИЗВЕСТЕН / PASSED)
- * without ellipsis — ~+100px vs prior 15% at 2×2 dashboard (~590px), taken from name.
- * Trend / stability stay content-ish (sparkline / dots+flaky). Hidden columns must
- * also zero matching `col` widths (table-layout:fixed still allocates % to cols
- * whose cells are display:none).
+ * Width intent: on a wide tile the three trailing columns sit left of a 40% name
+ * track (not content-capped against the right edge). Status still fits RU/EN
+ * badges (ПРОЙДЕН / НЕИЗВЕСТЕН / PASSED). Hidden columns must also zero matching
+ * `col` widths (table-layout:fixed still allocates % to cols whose cells are
+ * display:none).
  */
 .tests-table-panel__table col.tests-table-panel__name {
   width: 32%;
@@ -156,27 +156,27 @@
   }
 }
 
-/* #10 / ≥480px panel — 2×2 dashboard: steal ~100px from name so status badges read in full */
+/* #10 / ≥480px — 4:2:2:2 Test | Status | Trend | Stability */
 @container tests-table (min-width: 480px) {
   .tests-table-panel__table col.tests-table-panel__name {
-    width: 33%;
+    width: 40%;
   }
 
   .tests-table-panel__table col.tests-table-panel__status {
-    width: 32%;
+    width: 20%;
   }
 
   .tests-table-panel__table th.tests-table-panel__status,
   .tests-table-panel__table td.tests-table-panel__status {
-    width: 32%;
+    width: 20%;
   }
 
   .tests-table-panel__table col.tests-table-panel__trend {
-    width: 17%;
+    width: 20%;
   }
 
   .tests-table-panel__table col.tests-table-panel__stability {
-    width: 18%;
+    width: 20%;
   }
 }
 .tests-table-panel__table tbody tr:last-child td {
