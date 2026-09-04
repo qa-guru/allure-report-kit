@@ -17,3 +17,7 @@ config/*.runtime.json
 # stray allure artifacts (e2e keeps its own under e2e/)
 history.jsonl
 known.json
+
+# local collage comparison dumps (README canon shots stay tracked)
+docs/readme/builder-collage-*.png
+docs/readme/stock-vs-kit.html
