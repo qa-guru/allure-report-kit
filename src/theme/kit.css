@@ -74,6 +74,7 @@
   --layer-component: var(--ark-layer-component, #ff8200);
   --layer-integration: var(--ark-layer-integration, #7e22ce);
   --layer-api: var(--ark-layer-api, #e8bd00);
+  --layer-ui: var(--ark-layer-ui, #db2777);
   --layer-e2e: var(--ark-layer-e2e, #dc2626);
   --layer-manual: var(--ark-layer-manual, #459bde);
   --layer-other: var(--ark-layer-other, #64748b);

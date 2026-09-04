@@ -1,7 +1,7 @@
 /**
  * Collage palette SSOT (hex strings).
  *
- * Upstream SSOT: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layers.json`
+ * Upstream SSOT: `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-junit5-rest_assured-selenide/allure/pyramid-layers.json`
  * (verified by monorepo `python scripts/pyramid_palette_sync.py --check`
  * and by kit unit tests).
  *
@@ -18,6 +18,7 @@ export type KnownLayer =
   | "component"
   | "integration"
   | "api"
+  | "ui"
   | "e2e"
   | "manual";
 
@@ -29,6 +30,7 @@ export const LAYER_ORDER: readonly KnownLayer[] = [
   "component",
   "integration",
   "api",
+  "ui",
   "e2e",
   "manual",
 ] as const;
@@ -50,6 +52,7 @@ export type StatusKey = keyof typeof STATUS_COLORS;
 /** Layer → collage status / brand mapping (informational; matches SSOT). */
 export const STATUS_MAPPING = {
   unit: "passed",
+  ui: "brand-pink",
   e2e: "failed",
   api: "broken",
   integration: "unknown",
@@ -64,6 +67,7 @@ export const PYRAMID_COLORS_LIGHT: Record<LayerKey, string> = {
   component: "#ff8200",
   integration: "#7e22ce",
   api: "#e8bd00",
+  ui: "#db2777",
   e2e: "#dc2626",
   manual: "#459bde",
   other: "#64748b",
@@ -75,6 +79,7 @@ export const PYRAMID_COLORS_DARK: Record<LayerKey, string> = {
   component: "#ffa833",
   integration: "#a65ac4",
   api: "#ffd833",
+  ui: "#f472b6",
   e2e: "#ff574f",
   manual: "#61b6fb",
   other: "#5d6876",

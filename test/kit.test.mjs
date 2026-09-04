@@ -45,6 +45,7 @@ test("fromOverviewCharts matches overview chart quad only", () => {
     "component",
     "integration",
     "api",
+    "ui",
     "e2e",
     "manual",
   ]);
@@ -249,6 +250,7 @@ test("theme serialises tokens per colour scheme", () => {
 
   assert.match(css, /--ark-status-failed: #fd5a3e;/);
   // Bare attribute selector — Allure may carry `data-theme` off the root.
+  assert.match(css, /\[data-theme="dark"\] \{[\s\S]*--ark-layer-ui: #f472b6;/);
   assert.match(css, /\[data-theme="dark"\] \{[\s\S]*--ark-layer-e2e: #ff574f;/);
   assert.doesNotMatch(css, /html\[data-theme/);
   assert.match(css, /--indicator-mix: 100%;/);

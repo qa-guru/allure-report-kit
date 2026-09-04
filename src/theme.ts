@@ -1,7 +1,7 @@
 /**
  * Themes — token sets plus the report header configuration.
  *
- * Palette SSOT is `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-gradle-junit5-allure3-selenide/allure/pyramid-layers.json` in the
+ * Palette SSOT is `projects/autotests-ai-multistack-home/autotests-ai-multistack-app/tests/java/tests-java-junit5-rest_assured-selenide/allure/pyramid-layers.json` in the
  * zero-design-system monorepo (checked by `scripts/pyramid_palette_sync.py`).
  * The values below are a pinned copy; `npm run sync:ds` refreshes them together
  * with the vendored design-system CSS.
@@ -23,6 +23,7 @@ const LAYER_TOKENS_LIGHT: KitTokens = {
   "--ark-layer-component": "#ff8200",
   "--ark-layer-integration": "#7e22ce",
   "--ark-layer-api": "#e8bd00",
+  "--ark-layer-ui": "#db2777",
   "--ark-layer-e2e": "#dc2626",
   "--ark-layer-manual": "#459bde",
   "--ark-layer-other": "#64748b",
@@ -34,6 +35,7 @@ const LAYER_TOKENS_DARK: KitTokens = {
   "--ark-layer-component": "#ffa833",
   "--ark-layer-integration": "#a65ac4",
   "--ark-layer-api": "#ffd833",
+  "--ark-layer-ui": "#f472b6",
   "--ark-layer-e2e": "#ff574f",
   "--ark-layer-manual": "#61b6fb",
   "--ark-layer-other": "#5d6876",

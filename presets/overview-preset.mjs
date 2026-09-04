@@ -34,6 +34,7 @@ export const OVERVIEW_PRESET = {
     "component",
     "integration",
     "api",
+    "ui",
     "e2e",
     "manual",
   ],

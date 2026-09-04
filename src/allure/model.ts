@@ -33,6 +33,7 @@ const LAYER_FAMILIES: Record<string, StatusFamily> = {
   component: "orange",
   integration: "purple",
   api: "yellow",
+  ui: "red",
   e2e: "red",
   manual: "blue",
   other: "gray",

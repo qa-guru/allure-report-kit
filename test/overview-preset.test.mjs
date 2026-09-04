@@ -41,6 +41,7 @@ test("overview preset SSOT lead contract (gates + quad)", () => {
     "component",
     "integration",
     "api",
+    "ui",
     "e2e",
     "manual",
   ]);
