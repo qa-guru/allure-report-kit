@@ -70,33 +70,33 @@
  *   ≤196px (#1–3)  TEST + STATUS
  *   197–249px (#4) + TREND
  *   250–479px (#5–9) all four — name may ellipsis
- *   ≥480px (#10 / wide) Test:Status:Trend:Stability = 4:2:2:2
+ *   ≥480px (#10 / wide) Test:Status:Trend:Stability ≈ 36:28:18:18
  *
- * Width intent: on a wide tile the three trailing columns sit left of a 40% name
+ * Width intent: on a wide tile the three trailing columns sit left of a ~36% name
  * track (not content-capped against the right edge). Status still fits RU/EN
  * badges (ПРОЙДЕН / НЕИЗВЕСТЕН / PASSED). Hidden columns must also zero matching
  * `col` widths (table-layout:fixed still allocates % to cols whose cells are
  * display:none).
  */
 .tests-table-panel__table col.tests-table-panel__name {
-  width: 32%;
+  width: 28%;
 }
 
 .tests-table-panel__table col.tests-table-panel__status {
-  width: 32%;
+  width: 40%;
 }
 
 .tests-table-panel__table th.tests-table-panel__status,
 .tests-table-panel__table td.tests-table-panel__status {
-  width: 32%;
+  width: 40%;
 }
 
 .tests-table-panel__table col.tests-table-panel__trend {
-  width: 22%;
+  width: 20%;
 }
 
 .tests-table-panel__table col.tests-table-panel__stability {
-  width: 14%;
+  width: 12%;
 }
 
 /* #1–3 / ≤196px — TEST + STATUS only */
@@ -156,27 +156,27 @@
   }
 }
 
-/* #10 / ≥480px — 4:2:2:2 Test | Status | Trend | Stability */
+/* #10 / ≥480px — Status must fit RU/EN badges (ПРОЙДЕН / PASSED), not 4:2:2:2 */
 @container tests-table (min-width: 480px) {
   .tests-table-panel__table col.tests-table-panel__name {
-    width: 40%;
+    width: 36%;
   }
 
   .tests-table-panel__table col.tests-table-panel__status {
-    width: 20%;
+    width: 28%;
   }
 
   .tests-table-panel__table th.tests-table-panel__status,
   .tests-table-panel__table td.tests-table-panel__status {
-    width: 20%;
+    width: 28%;
   }
 
   .tests-table-panel__table col.tests-table-panel__trend {
-    width: 20%;
+    width: 18%;
   }
 
   .tests-table-panel__table col.tests-table-panel__stability {
-    width: 20%;
+    width: 18%;
   }
 }
 .tests-table-panel__table tbody tr:last-child td {
@@ -206,14 +206,15 @@
   margin: 0;
 }
 
-/* Cell content must stay inside its column (badge/sparkline were visually breaking the grid). */
+/* Badge must size to the RU/EN label — ellipsis fails kit smoke (scrollWidth). */
 .tests-table-panel__status .badge {
   display: inline-block;
   box-sizing: border-box;
-  max-width: 100%;
+  max-width: none;
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  padding-inline: var(--space-2);
+  overflow: visible;
+  text-overflow: clip;
   vertical-align: middle;
 }
 
