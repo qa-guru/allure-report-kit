@@ -14,6 +14,11 @@ export { createKitPlugin } from "./create-kit-plugin.js";
 export { kitDisabledReason } from "./kit-disabled.js";
 export { rekeyChartSection } from "./rekey-charts.js";
 export {
+  enrichSearchDocuments,
+  EXTRA_SEARCHABLE_LABELS,
+  isSearchIndexPath,
+} from "./search-index.js";
+export {
   evaluateQualityGate,
   RETRY_METRICS,
   seriesFromHistory,

@@ -17,6 +17,7 @@ import {
 import { kitDisabledReason } from "./kit-disabled.js";
 import { evaluateQualityGate, RETRY_METRICS, seriesFromHistory, seriesFromRun } from "./panels.js";
 import { rekeyChartSection } from "./rekey-charts.js";
+import { enrichSearchIndexFile, isSearchIndexPath } from "./search-index.js";
 
 const require = createRequire(import.meta.url);
 
@@ -212,7 +213,7 @@ export function createKitPlugin({
      * installed later would never see `widgets/*`. `#upstreamAssets` is still
      * empty at that point, which is correct — the bundle is written in `done`.
      */
-    #wrapContext(context) {
+    #wrapContext(context, store) {
       const addFile = context.reportFiles.addFile.bind(context.reportFiles);
 
       return {
@@ -229,6 +230,9 @@ export function createKitPlugin({
             if (path === CHARTS_WIDGET) {
               const charts = this.#transformCharts(JSON.parse(data.toString("utf8")));
               return addFile(path, Buffer.from(JSON.stringify(charts), "utf8"));
+            }
+            if (isSearchIndexPath(path)) {
+              return addFile(path, await enrichSearchIndexFile(data, store));
             }
             return addFile(path, data);
           },
@@ -398,8 +402,8 @@ export function createKitPlugin({
     }
 
     /** Raw context while the kit is off, proxied while it is on. */
-    #contextFor(context) {
-      return this.#kitActive() ? this.#wrapContext(context) : context;
+    #contextFor(context, store) {
+      return this.#kitActive() ? this.#wrapContext(context, store) : context;
     }
 
     /**
@@ -459,7 +463,7 @@ export function createKitPlugin({
     }
 
     start = async (context, store, realtimeSubscriber) =>
-      this.#upstream.start?.(this.#contextFor(context), store, realtimeSubscriber);
+      this.#upstream.start?.(this.#contextFor(context, store), store, realtimeSubscriber);
 
     update = async (context, store) => {
       this.#watchMode = true;
@@ -471,13 +475,13 @@ export function createKitPlugin({
       }
 
       await this.#ensureKitReady();
-      await this.#upstream.update?.(this.#wrapContext(context), store);
+      await this.#upstream.update?.(this.#wrapContext(context, store), store);
 
       const panelWidgets = await this.#resolveRunPanels(store);
       await this.#shipKitOutputs(context, panelWidgets);
     };
 
-    info = async (context, store) => this.#upstream.info?.(this.#contextFor(context), store);
+    info = async (context, store) => this.#upstream.info?.(this.#contextFor(context, store), store);
 
     done = async (context, store) => {
       const off = this.#kitOffReason();
@@ -497,7 +501,7 @@ export function createKitPlugin({
         await this.#loadInlineAssets(panelWidgets);
       }
 
-      await this.#upstream.done(this.#wrapContext(context), store);
+      await this.#upstream.done(this.#wrapContext(context, store), store);
       await this.#shipKitOutputs(context, panelWidgets);
 
       log(

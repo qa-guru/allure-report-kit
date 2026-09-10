@@ -19,9 +19,16 @@ declareSuite({
 
 process.env.ALLURE_REPORT_KIT_SILENT = "1";
 
-const { kitDisabledReason, rekeyChartSection, seriesFromHistory, seriesFromRun, evaluateQualityGate } = await import(
-  "../packages/plugin-core/src/index.js"
-);
+const {
+  kitDisabledReason,
+  rekeyChartSection,
+  seriesFromHistory,
+  seriesFromRun,
+  evaluateQualityGate,
+  enrichSearchDocuments,
+  EXTRA_SEARCHABLE_LABELS,
+  isSearchIndexPath,
+} = await import("../packages/plugin-core/src/index.js");
 const { withKit, charts, panels, presets, theme } = await import("../dist/index.js");
 
 const leadCharts = () => presets.fromOverview();
@@ -288,4 +295,42 @@ test("a run panel without the soft-fork is reported", () => {
   assert.ok(
     manifestOf(config).diagnostics.some((entry) => entry.code === "run-panels-need-soft-fork"),
   );
+});
+
+test("search-index paths cover the env widget and the merged one", () => {
+  assert.equal(isSearchIndexPath("widgets/default/search-index.json"), true);
+  assert.equal(isSearchIndexPath("search-index.json"), true);
+  assert.equal(isSearchIndexPath("widgets/tree.json"), false);
+});
+
+test("search-index gets module/layer so ?query=backend-java-spring hits", () => {
+  assert.deepEqual(EXTRA_SEARCHABLE_LABELS, ["module", "layer", "language", "scope"]);
+
+  const [doc] = enrichSearchDocuments(
+    [
+      {
+        id: "tr-1",
+        name: "admits a configured origin",
+        fullName: "dev.multistack.app.config.CorsConfigTest.apiCorsChecksOrigin",
+        labels: "owner:stanislav epic:Security",
+      },
+    ],
+    [
+      {
+        id: "tr-1",
+        labels: [
+          { name: "module", value: "backend-java-spring" },
+          { name: "layer", value: "unit" },
+          { name: "language", value: "java" },
+          { name: "owner", value: "stanislav" },
+        ],
+      },
+    ],
+  );
+
+  assert.match(doc.labels, /module:backend-java-spring/);
+  assert.match(doc.labels, /backend-java-spring/);
+  assert.match(doc.labels, /layer:unit/);
+  assert.match(doc.labels, /language:java/);
+  assert.match(doc.labels, /owner:stanislav/);
 });
