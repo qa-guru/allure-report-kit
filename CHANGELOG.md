@@ -1,24 +1,16 @@
 # Changelog
 
-## Unreleased
+## v0.3.6 — 2026-09-30
 
 ### English
 
 - **testingPyramid** — tier width follows test count (peak layer fills the funnel). Stack order is still unit→…→e2e; the shape is a chart, not a decorative cone.
-
-### Russian
-
-- **testingPyramid** — ширина яруса по числу тестов (максимум заполняет воронку). Порядок слоёв прежний; форма — график, не декоративный конус.
-
-## v0.3.6 — 2026-09-10
-
-### English
-
 - **search-index** — fold `module` / `layer` / `language` / `scope` into awesome `search-index.json` so `?query=backend-java-spring` hits the teaching cell.
 - **testsTable** — Status column / badge size to RU/EN labels (`ПРОЙДЕН` / `PASSED`) without ellipsis on 2×2 dogfood tiles.
 
 ### Russian
 
+- **testingPyramid** — ширина яруса по числу тестов (максимум заполняет воронку). Порядок слоёв прежний; форма — график, не декоративный конус.
 - **search-index** — `module` / `layer` / `language` / `scope` в awesome search-index, `?query=backend-java-spring` находит ячейку.
 - **testsTable** — колонка «Статус» и бейдж без ellipsis на тайле 2×2.
 
