@@ -208,6 +208,18 @@ export default withKit({
 Full example: `examples/minimal/allurerc.mjs`. E2e with Allure **and** Sonar QG:
 `e2e/allurerc.mjs`.
 
+## Stock Allure 3 vs kit — required files
+
+| Mode | Must-have |
+|------|-----------|
+| **Stock Allure 3** | `allure-results/` · `allurerc.mjs` (or `.json` / `.yaml`) · `history.jsonl` (`historyPath`) · `known.json` (`knownIssuesPath`) · `qualityGate.rules` in the config · `allure` CLI (`generate` / `quality-gate`) · TestOps separately: `allurectl` + `ALLURE_*` env vars (not report files) |
+| **Kit (`withKit` / ethalon)** | everything above **plus** `@qa-guru/allure-report-kit*` packages · `allure/overview-preset.mjs` · `allure/quality-gate-panels.mjs` · `allure/tests-table-{fixture,panels}.mjs` · `pyramid-layers.json` / `pyramid-layer-colors.mjs` · a thin `allurerc.mjs` delegating to `allure/*.mjs` (ethalon layout) |
+
+A stock config that skips the kit modules is **not** a broken Allure setup —
+kit panels simply do not render without the fork. And `panels.qualityGate` (a
+report tile) is unrelated to the Gradle `allureQualityGate` task in legacy
+Java builds — same words, different mechanism.
+
 ## API
 
 | Export | Purpose |
